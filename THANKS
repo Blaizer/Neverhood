@@ -1,0 +1,23 @@
+Thanks to:
+
+#sdl:
+Contributors to SDL on #sdl, for making SDL_Perl what it is today
+Also specifically, kthakore, FROGGS and Alias for their help or praise
+
+Programs used:
+The Neverhood :-)
+Perl
+Notepad++        text editing
+FRAPS            losslessly capturing the video and sound of the game, and being my fps indicator
+Sony Vegas Pro   losslessly saving the video as separate images
+GIMP             image editing
+pngout           reducing the size of every png image by ~10%
+
+Perl modules used:
+Alien::SDL
+SDL
+Module::Build
+File::ShareDir
+Test::More
+
+And of course, libsdl, even though you're ugly

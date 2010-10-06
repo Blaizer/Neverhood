@@ -1,0 +1,11 @@
+^\.
+^blib/
+^Build$
+^Build\.bat$
+^_build/
+\.tar\.gz$
+\.bak$
+^MANIFEST\.skip$
+^MYMETA\.yml$
+^img/
+^(base|crop|dup|tile|zero)$

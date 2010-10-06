@@ -8,15 +8,48 @@ use Games::Neverhood::Holder;
 our $Nursery1 = Games::Neverhood::Scene->new(
 	folder => 'nursery_1',
 	fps => 24,
-	bounds => [ 0, 639 ],
-	klaymen_start => 200,
-	# exits => [ [0, 0, $Nursery2], [...], ],
+	bounds => [ 151, 60, 500, 479 ],
 	ground => 43,
-	# cursor => sub {
+	# cursors => sub {
 		# return $CursorRight->flip if $_[0] < 100;
 		# return $CursorRight if $_[0] > 540;
 		# ...
 	# },
+	event_rects => {
+		lever => [40, 300, 60, 80],
+		door => [520, 220, 60, 220],
+		window => [0, 0, 0, 0],
+		button => [0, 0, 0, 0],
+	},
+	moves => sub {
+		my ($self, $click, $klaymen) = @_;
+		if($klaymen->sprite_name eq 'snore' and @$click) {
+			shift_click();
+			$klaymen->sprite_name = 'wake';
+		}
+		elsif($self->rect('lever')) {
+			$self->move_to(151, 'pull_lever');
+		}
+		elsif($self->rect('door')) {
+			if($self->sprite('door')->hide) {
+				$self->move_to(700);
+			}
+			else {
+				$self->move_to(500, 'think');
+			}
+		}
+		else {
+			'_';
+		}
+		# lever 151
+		# left window 300
+		# right window 391
+		# button 370
+	},
+	events => {
+		pull_lever => sub { $_[2]->sprite_name = 'pull_lever' },
+		think      => sub { $_[2]->sprite_name = 'idle_think' },
+	},
 	
 	holders => [
 		{ background => {} },
@@ -27,6 +60,15 @@ our $Nursery1 = Games::Neverhood::Scene->new(
 				[ 0 ],
 				[ 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 4, 4, 3, 3, 2, 2, 1, 1 ],
 			],
+			events => {
+				0 => sub {
+					if($_[1]->{klaymen}->sprite_name eq 'pull_lever' and int $_[1]->{klaymen}->sprite->frame == 26) {
+						$_[0]->sequence_num = 1;
+						$_[0]->frame = 0 + $_[1]->{klaymen}->sprite->frame_remainder;
+					}
+				},
+				1 => sub { $_[0]->sequence_num = 0 if $_[1]->{end}; }
+			}
 		}, pos => [ 65, 313 ]},
 		
 		{ window => {
@@ -62,6 +104,18 @@ our $Nursery1 = Games::Neverhood::Scene->new(
 		
 		{ foreground => {}, pos => [ 574, 246 ] },
 	],	
+);
+
+our $Nursery1OutWindow = Games::Neverhood::Scene->new(
+	folder => 'nursery_1',
+	fps => 24,
+	bounds => [ 151, 60, 500, 479 ],
+	ground => 43,
+	# cursor => sub {
+		# return $CursorRight->flip if $_[0] < 100;
+		# return $CursorRight if $_[0] > 540;
+		# ...
+	# },
 );
 
 1;

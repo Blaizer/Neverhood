@@ -6,6 +6,7 @@ use warnings;
 use SDLx::Surface;
 use SDL::Image;
 use SDL::Video;
+use SDL::GFX::Rotozoom;
 use Data::Dumper;
 
 sub new {
@@ -46,17 +47,32 @@ sub new {
 }
 
 sub load {
-	while(my ($name, $v) = each %{$_[0]->sprites}) {
+	my ($self) = @_;
+	while(my ($name, $v) = each %{$self->sprites}) {
 		warn "No folder for $name" unless defined $v->folder;
 		my $path = $Games::Neverhood::M{folder} . '/' . $v->folder . '/' . ($v->name || $name) . '.png';
-		$v->surface = SDLx::Surface->new(surface => SDL::Image::load($path) || die($path), flags => SDL_HWSURFACE)
+		$v->surface = SDLx::Surface->new(surface => SDL::Image::load($path) || die($path, ' not found'), flags => SDL_HWSURFACE)
 			unless $v->surface =~ /=/;
+		if($v->flipable) {
+			$v->surface_flip = SDLx::Surface->new(surface => SDL::GFX::Rotozoom::zoom_surface($v->surface, -1, 1, 0));
+		}
 	}
-	$_[0];
+	$self;
 }
 
 sub klaymen {
-	$_[0] eq $Games::Neverhood::Klaymen;
+	$Games::Neverhood::Klaymen if $_[0] eq $Games::Neverhood::Klaymen;
+}
+
+sub flip {
+	my ($self, $flip) = @_;
+	if(defined $flip) {
+		$self->{flip} = $flip;
+		return $self;
+	}
+	else {
+		return $self->{flip};
+	}
 }
 
 ###################################ACCESSORS###################################

@@ -1,0 +1,59 @@
+Games::Neverhood
+Blaise Roth
+
+The game works perfectly without installing, as long as you have all the prereqs.
+If you do, just run:
+ perl nhc.pl
+
+To install, run the following commands:
+ perl Build.PL
+ ./Build
+ ./Build test
+ ./Build install
+
+Once installed, run the game with:
+ nhc
+
+Press Escape to quit at any time.
+
+
+"Hello.  Me Willie.  Me Willie Trombone.  You read this, you do good.  Willie happy.
+You play Neverhood you do more good.  And look out for bad.
+Willie knows, bad is always where you forget to look."
+
+The Open Neverhood is a fully open-source remake of the 1996 "The Neverhood".  It aims to make you feel like you're playing the original.
+
+The game is being recreated entirely from screenshots and recordings, and programmed in SDL_Perl from the ground up.  The only things changed are the few things deemed to be a "bug", which are being fixed.  It's also portable, and will run on most Windows, Linux and Mac systems.
+
+
+"Story about good.  Story about bad."
+The Neverhood Chronicles is a goal oriented puzzle game.  Wake up Klaymen and explore your world.  Go where you want, but you can't get too far without solving the puzzles.  Willie has sent you some hints, available from the mail room below the nursery.
+
+
+"Me know what to do."
+Blah blah blah.
+
+
+"Willie know that once you know this truth, then you know what to do."
+If you are stuck at any point in the game, and Willie's mail wont help you, don't head to a walkthrough. Instead, head to the official Neverhood website:
+http://www.neverhood.se/olde/nev/
+There are hints there that don't spoil the puzzles, available in the Hints & Mail section.
+(It's an archive of the original website. The original original website was taken down over a decade ago)
+
+
+"How do you spell Hoborg?"
+Hitting Escape at any time won't bring up the option screen.
+
+OPTIONS
+New Game        Starts a new game.  Click it.  Play it.
+Load Game       Lets you resume a previously saved game.  Load it.  Play it.
+Save Game       Lets you save your place in the game.  Name it.  Save it.
+Resume Playing  Takes you back to the game you were playing.
+Quit            Kicks you out to windows.  Bye bye.
+Credits         Lets you see who made this mess.
+About           Lets you see How we made this mess.
+Delete Game     Let's you remove a saved game.  Note: There is no warning on this function and once a game is deleted it's gone for good.
+Music on/Off    Removes incidental music from the game but leaves music for animation scenes and all sound effects.
+
+
+"Now go and explore your new home.  Bye."

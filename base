@@ -1,0 +1,34 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+
+use SDL;
+use SDLx::Surface;
+use SDL::Video;
+use SDL::Image;
+
+my $bas = $ARGV[0];
+$bas =~ s/\/(?!.*\/).*/\//;
+die "no base" unless -f "${bas}base.bmp";
+my $img = SDLx::Surface->new(surface => SDL::Image::load("${bas}base.bmp"));
+my $base = SDLx::Surface->new(w => $img->w, h => $img->h, d => 24);
+$img->blit($base);
+$base = [ map \@{$base->[$_]}, 0..$base->w-1 ];
+
+while(glob "$ARGV[0]*.bmp") {
+	next if /(?:^|\/)base\.bmp$/ or /\/B(?!.*\/)/ or /^B(?!.*\/)/;
+	my $img = SDLx::Surface->new(surface => SDL::Image::load($_));
+	my $surf = SDLx::Surface->new(w => $img->w, h => $img->h, d => 24);
+	$img->blit($surf);
+	
+	for my $x (0..$surf->w-1) {
+		for my $y (0..$surf->h-1) {
+			if($surf->[$x][$y] == ($base->[$x][$y])) {
+				$surf->[$x][$y] = 0x2df07aff; #random non-8-bit colour
+			}
+		}
+	}
+
+	s/\/(?!.*\/)/\/B/ or s/^/B/;
+	SDL::Video::save_BMP($surf, $_) and die "Could not save bmp: " . SDL::get_error;
+}
