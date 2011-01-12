@@ -1,7 +1,7 @@
 Games::Neverhood
 Blaise Roth
 
-The game works perfectly without installing, as long as you have all the prereqs.
+The game works perfectly without installing as long as you have all the prereqs.
 If you do, just run:
  perl nhc.pl
 
