@@ -11,18 +11,27 @@ use SDL::Video;
 use SDL::Mouse;
 use File::ShareDir;
 use Data::Dumper;
+use File::Spec;
 
-our %M;
+our $Scene;
+our $Folder;
+our $Fullscreen;
+our $Cheat;
+our $Remainder;
+our $FastForward;
+our %MoveTo;
 BEGIN {
-	
-	%M = (
-		defined $M{folder} ? () : (folder => File::ShareDir::dist_dir('Games-Neverhood')),
-		%M,
-		fullscreen => $ARGV[0] ? 0 : SDL_FULLSCREEN,
-		mouse      => [],
-		click      => [],
-	);
+	$Folder //= File::ShareDir::dist_dir('Games-Neverhood');
+	$Fullscreen = !$ARGV[0];
+	$Cheat = '';
+	$Remainder = 0;
+	$FastForward = 0;
 }
+
+use Games::Neverhood::Cursor;
+our $Cursor;
+use Games::Neverhood::Klaymen;
+our $Klaymen;
 
 our $App;
 sub init {
@@ -32,31 +41,28 @@ sub init {
 		h => 480,
 		d => 32,
 		title => 'The Neverhood',
-		$M{fullscreen} ? () : (min_t => 0),
+		# $Fullscreen ? () : (min_t => 0),
+		fullscreen => $Fullscreen,
 		flags =>
-			# SDL_ASYNCBLIT |
-			# SDL_SWSURFACE |
+#			SDL_ASYNCBLIT |
+#			SDL_SWSURFACE |
 			SDL_HWSURFACE |
 
-			SDL_ANYFORMAT |
-			SDL_HWPALETTE |
-			SDL_HWACCEL |
-			SDL_DOUBLEBUF |
-			$M{fullscreen} |
-			SDL_NOFRAME |
-			# SDL_PREALLOC |
-
+#			SDL_ANYFORMAT  |
+			SDL_HWPALETTE  |
+			SDL_HWACCEL    |
+			SDL_DOUBLEBUF  |
+			SDL_NOFRAME    |
+#			SDL_PREALLOC   |
 			0,
 	);
 	SDL::Mouse::show_cursor(SDL_DISABLE);
-	SDL::Video::wm_set_icon(SDL::Image::load("$M{folder}/misc/icon.png" or die SDL::get_error));
+	SDL::Video::wm_set_icon(SDLx::Surface->load( File::Spec->catfile($Folder, 'misc', 'icon.png') ));
 
-	$Games::Neverhood::Scene::Nursery1->set;
-
-	$App->add_event_handler(\&stop);
 	$App->add_event_handler(\&window);
 	$App->add_event_handler(\&mouse);
 	$App->add_event_handler(\&keyboard);
+	$App->add_event_handler(\&pause);
 
 	$App->add_move_handler(\&move_sprites);
 	$App->add_move_handler(\&move_scene);
@@ -64,53 +70,50 @@ sub init {
 
 	$App->add_show_handler(\&show_sprites);
 	$App->add_show_handler(sub{$App->flip});
+	
+	use Games::Neverhood::Scene::Nursery::One '';
+	$Scene = $Games::Neverhood::Scene::Nursery::One;
+	$Scene->call($Scene->setup, $Scene, {
+		klaymen => $Klaymen,
+	});
+	$App->dt(1 / $Scene->fps);
 
 	$App->run;
 }
 
-use Games::Neverhood::Scene;
-use Games::Neverhood::Holder;
-use Games::Neverhood::Sprite;
-
-use Games::Neverhood::Cursor;
-our $Cursor;
-use Games::Neverhood::Klaymen;
-our $Klaymen;
-
-use Games::Neverhood::Scene::Nursery;
-
 #####################################EVENT###################################
-
-sub stop {
-	my ($e) = @_;
-	$App->stop if $e->type == SDL_QUIT;
-}
 
 sub window {
 	my ($e) = @_;
-	if($e->type == SDL_ACTIVEEVENT) {
+	if($e->type == SDL_QUIT) {
+		$App->stop;
+	}
+	elsif($e->type == SDL_ACTIVEEVENT) {
 		if($e->active_state & SDL_APPMOUSEFOCUS) {
-			$M{scene}->cursor->hide = !$e->active_gain;
+			$Cursor->hide(!$e->active_gain); #cursor in window
 		}
-		if($e->active_state & (SDL_APPINPUTFOCUS)) {
+		if($e->active_state & SDL_APPINPUTFOCUS) {
 			return 1 if $e->active_gain;
 			$App->pause(\&window);
 		}
 	}
-	$M{fullscreen};
+	$Fullscreen;
 }
 
 sub mouse {
 	my ($e) = @_;
-	if($e->type == SDL_MOUSEBUTTONDOWN) {
+	if($e->type == SDL_MOUSEBUTTONDOWN and $e->button_button & (SDL_BUTTON_LEFT | SDL_BUTTON_MIDDLE | SDL_BUTTON_RIGHT) and !$Cursor->hide) {
 		my @pos = ($e->button_x, $e->button_y);
-		$M{scene}->cursor(@pos);
-		$M{click}[defined $M{click}[0] ? 1 : 0]
-			= [@pos, $M{event}] if $e->button_button & (SDL_BUTTON_LEFT | SDL_BUTTON_MIDDLE | SDL_BUTTON_RIGHT);
+		my (undef, $event) = $Scene->cursors->(@pos);
+		$event = 'click' unless defined $event;
+		$Cursor->clicked([@pos, $event]);
 	}
 	elsif($e->type == SDL_MOUSEMOTION) {
-		$M{mouse}[0] = $e->motion_x;
-		$M{mouse}[1] = $e->motion_y;
+		my @pos = ($e->motion_x, $e->motion_y);
+		my ($sprite) = $Scene->cursors->(@pos);
+		$sprite = 'click' unless defined $sprite;
+		$Cursor->sprite($sprite);
+		$Cursor->pos(\@pos);
 	}
 }
 
@@ -120,142 +123,258 @@ sub keyboard {
 		my $name = SDL::Events::get_key_name($e->key_sym);
 		given($name) {
 			when('escape') {
-				$e->type(SDL_QUIT);
-				&stop;
+				$App->stop;
 			}
 			when('space') {
 
 			}
-			when('enter') {
-				given($M{cheat}) {
-					when('fastforward') {
-						$M{fast_forward} = !$M{fast_forward};
-						$M{scene}->dt *= 3;
-					}
-					when('happybirthdayklaymen') {
-						if(
-							$M{scene} eq $Games::Neverhood::Scene::Nursery1 or
-							$M{scene} eq $Games::Neverhood::Scene::Nursery1OutWindow
-						) {
-
-						}
-					}
-					delete $M{cheat}
+			when('return') {
+				if($Cheat eq 'fastforward') {
+					$FastForward = !$FastForward;
+					$App->dt($App->dt / 100);
 				}
+				elsif($Cheat eq 'happybirthdayklaymen') {
+					if(
+						$Scene == $Games::Neverhood::Scene::Nursery1 or
+						$Scene == $Games::Neverhood::Scene::Nursery1OutWindow
+					) {
+
+					}
+				}
+				$Cheat = '';
 			}
-			when(/[a-z]/) {
-				$M{cheat} .= $name;
-				delete $M{cheat} if length $M{cheat} > 20;
+			when(/^[a-z]$/) {
+				$Cheat .= $name;
+				$Cheat = '-' if length $Cheat > 19;
+			}
+			when(/ctrl$/) {
+				$ARGV[1] = !$ARGV[1];
+				$App->draw_rect([], 0) if $ARGV[1];
 			}
 		}
+	}
+}
+
+sub pause {
+	my ($e) = @_;
+	if($e->type == SDL_KEYDOWN and $e->key_sym == SDLK_LALT or $e->key_sym == SDLK_RALT) {
+		$App->pause(sub{1});
 	}
 }
 
 #####################################MOVE####################################
 
 sub move_sprites {
-	return unless $_[0];
-	for(@{$M{scene}->holders}, $M{scene}->cursor) {
-		my $frame = $_->sprite->frame + $_[0];
-		if($frame >= @{$_->sprite->sequence}) {
-			$frame = 0;
+	my ($step) = @_;
+	return unless $step;
+	$Remainder += $step;
+	$Remainder -= int $Remainder;
+	for my $sprite (@{$Scene->sprites}, $Cursor) {
+		next unless $sprite;
+		my $frame = $sprite->frame + $step;
+		if(int $frame eq $sprite->to_frame or $sprite->to_frame eq 'end') {
+			$sprite->to_frame(-1, int $frame);
 		}
-		$_->sprite->frame = $frame;
-		$_->sprite->events_sequence->(
-			$_->sprite,
-			{
-				frame   => int $frame,
-				end     => $frame == 0,
-				step    => $_[0],
-				klaymen => $Klaymen,
-				scene   => $M{scene},
+		else {
+			$sprite->to_frame((int $frame) x 2);
+		}
+		if($frame >= @{$sprite->this_sequence}) {
+			$frame = $Remainder;
+			$sprite->to_frame(0, 'end');
+		}
+		$sprite->frame = $frame;
+		my $arg = {
+			step    => $step,
+			klaymen => $Klaymen,
+			scene   => $Scene,
+		};
+		for(my $i = 0; $i < @{$sprite->events_sequence}; $i++) {
+			my $condition = $sprite->events_sequence->[$i++];
+			if(
+				ref $condition and ref $condition eq 'CODE' and $Scene->call($condition, $sprite, $arg)
+				or !ref $condition and (
+				$condition eq 'true'
+				or $sprite->get(undef, 'end') )
+			) {
+				$Scene->call($sprite->events_sequence->[$i], $sprite, $arg);
 			}
-		);
+		}
 	}
 }
 
 sub move_scene {
-	if(@{$M{click}}) {
-		my $return = $M{scene}->move($M{click}, $Klaymen);
-		if(defined $return and $return eq '_') {
-			my $click = shift @{$M{click}};
-			my $bound = $M{scene}->bounds;
-			if(
-				$bound->[0] <= $click->[0] and $bound->[1] <= $click->[1]
-				and $bound->[2] >= $click->[0] and $bound->[2] >= $click->[1]
-			) {
-				$M{scene}->move_to($click->[0], undef, 1);
+	if(my $click = $Cursor->clicked) {
+		my $event = $click->[2];
+		die "click fail\n", Dumper $click unless defined $event;
+		my $arg = {
+			click   => $click,
+			klaymen => $Klaymen,
+			scene   => $Scene,
+		};
+		for my $sprite (grep ref $_->$event, @{$Scene->sprites}) {
+			for(my $i = 0; $i < @{$sprite->$event}; $i++) {
+				my $condition = $sprite->$event->[$i++];
+				if(
+					ref $condition and ( ref $condition eq 'ARRAY' and $sprite->rect(@$condition)
+					or ref $condition eq 'CODE' and $Scene->call($condition, $sprite, $arg) )
+					or !ref $condition and ( $condition eq 'true'
+					or $Klaymen->sprite =~ /$condition/ )
+				) {
+					my $return = $Scene->call($sprite->$event->[$i], $sprite, $arg);
+					$return = '' unless defined $return;
+					unless($return eq 'no') {
+						$Scene->delete_clicked unless $return eq 'not_yet';
+						return;
+					}
+				}
 			}
+		}
+		if($Scene->klaymen and $Klaymen->sprite =~ /^idle/) {
+			my $bound;
+			if(
+				$bound = $Scene->bounds and
+				$bound->[0] <= $click->[0] and $bound->[1] <= $click->[1]
+				and $bound->[2] >= $click->[0] and $bound->[3] >= $click->[1]
+
+				and !$Klaymen->sprite eq 'idle' || ($click->[0] < $Klaymen->pos->[0] - 38 || $click->[0] > $Klaymen->pos->[0] + 38)
+			) {
+				$Klaymen->move_to(to => $click->[0]);
+			}
+			$Scene->delete_clicked;
+			return;
 		}
 	}
 }
 
 sub move_klaymen {
-	my ($step) = @_;
-	if($M{scene}->klaymen) {
-		if($Klaymen->sprite_name ~~ [qw/idle/]) {
-			if(defined $M{blink_in}) {
-				$M{blink_in} -= $_[0];
-				$M{random_in} -= $_[0];
-				if($M{blink_in} <= 0) {
-					$Klaymen->sprite->sequence_num = 1;
-					delete $M{blink_in};
+	if($Scene->klaymen) {
+		if($Klaymen->sprite eq 'idle') {
+			if(defined $Klaymen->blink_in) {
+				$Klaymen->blink_in($Klaymen->blink_in - $_[0]);
+				$Klaymen->random_in($Klaymen->random_in - $_[0]);
+				if($Klaymen->blink_in <= 0) {
+					$Klaymen->sequence(1);
+					$Klaymen->blink_in(undef);
 				}
-				if($M{random_in} <= 0) {
-					$Klaymen->sprite_name = 'idle_random_' . int rand(5);
-					$Klaymen->sprite->frame = 0;
-					$Klaymen->sprite->sequence_num = 0;
-					delete $M{random_in};
-					delete $M{blink_in};
+				if($Klaymen->random_in <= 0) {
+					$Klaymen->sprite('idle_random_' . int rand 5);
+					$Klaymen->random_in(undef);
 				}
 			}
-			$M{blink_in} = int rand(40) + 30 unless defined $M{blink_in};
-			$M{random_in} = int rand(40) + 600 unless defined $M{random_in} 
+			$Klaymen->blink_in(int rand(40) + 30) unless defined $Klaymen->blink_in;
+			$Klaymen->random_in(int rand(40) + 600) unless defined $Klaymen->random_in;
 		}
 		else {
-			delete $M{blink_in};
+			$Klaymen->blink_in(undef);
+			$Klaymen->random_in(undef);
 		}
-		if($Klaymen->sprite_name =~ /^idle/ and defined $M{move_to} and @{$M{move_to}}) {
-			my $speed = 6 * $step;
-			$Klaymen->sprite_name = 'idle';
-			delete $M{blink_in};
-			delete $M{random_in};
-			if($M{move_to}[0] > $Klaymen->pos->[0]) {
-				$Klaymen->sprite->flip(0);
-				$Klaymen->pos->[0] += $speed;
-				$Klaymen->pos->[0] = $M{move_to}[0] if $Klaymen->pos->[0] > $M{move_to}[0];
-			}
-			elsif($M{move_to}[0] < $Klaymen->pos->[0]) {
-				$Klaymen->sprite->flip(1);
-				$Klaymen->pos->[0] -= $speed;
-				$Klaymen->pos->[0] = $M{move_to}[0] if $Klaymen->pos->[0] < $M{move_to}[0];
-			}
-			if($Klaymen->pos->[0] == $M{move_to}[0]) {
-				if(defined $M{move_to}[1]) {
-					$M{scene}->event($M{click}, $Klaymen, $M{move_to}[1])
-				}
-				delete $M{move_to};
-			}
-		}
+		# if(my $move = $M{move_to}) {
+			# my ($to, @type);
+			# {
+				# no warnings 'uninitialized';
+				# my $min = 1e100;
+				# for(qw/left right to/) {
+					# my $v;
+					# if($_ eq 'to') {
+						# $v = $move->{to};
+					# }
+					# else {
+						# (undef, $v) = each @{$move->{$_}[0]};
+					# }
+					# next unless defined $v;
+					# my $new = abs($v - $Klaymen->pos->[0]);
+					# if($new < $min) {
+						# ($min, $to) = ($new, $v);
+						# @type = $_;
+					# }
+					# elsif($new == $min and $to == $v) {
+						# push @type, $_;
+					# }
+					# redo unless $_ eq 'to';
+				# }
+			# }
+			;#( $maximum, $minimum )
+			# my $adjust = (5,  );
+			# my @shuffle = (20, $adjust);
+			# my @slide = (100, $shuffle[0]);
+			# my @walk_stop = (40, $shuffle[0]);
+			# my $further = abs($to - $Klaymen->pos->[0]);
+			# my $dir = $to <=> $Klaymen->pos->[0];
+			# my $left = $dir - 1;
+			# if($Klaymen->pos->[0] == $to) {
+				# if($Klaymen->get('idle')) {
+					# if(defined $move->{do}) {
+						# $M{scene}->call(
+							# $move->{do}, $move->{sprite},
+							# {
+								# klaymen => $Klaymen,
+								# scene => $M{scene},
+								# click => $M{click}
+							# }
+						# );
+					# }
+					# if(defined $move->{set}) {
+						# $Klaymen->set(@{$move->{set}});
+					# }
+					# elsif(!defined $move->{do}) {
+						# $Klaymen->set('idle');
+					# }
+					# delete $M{move_to};
+				# }
+			# }
+			# elsif($Klaymen->flip == ($Klaymen->pos->[0] > $to ? 1 : 0)) {
+				# if($Klaymen->get('idle_walk')) {
+					# if($further >= $walk_stop[0]) {
+						# if($Klaymen->to_frame > 0 and not $Klaymen->to_frame % 2) {
+							# $Klaymen->pos->[0] += 10 * $dir;
+						# }
+						# elsif($Klaymen->to_frame eq 'end') {
+							# $Klaymen->pos->[0] += 20 * $dir;
+						# }
+					# }
+					# elsif(1) { }
+				# }
+				# elsif($Klaymen->get('idle_walk_start')) {
+				
+				# }
+				# elsif($Klaymen->get('idle_walk_end')) {
+				
+				# }
+				# elsif($Klaymen->get('idle_shuffle')) {
+				
+				# }
+				# elsif($Klaymen->get('idle_shuffle_end')) {
+				
+				# }
+				# elsif($Klaymen->get('idle_slide')) {
+				
+				# }
+				# elsif($Klaymen->get('idle_slide_end')) {
+				
+				# }
+			# }
+			# elsif($further <= $adjust) {
+				# my $speed = 5;
+				# $Klaymen->flip($left);
+				# $Klaymen->pos->[0] += $speed * $dir * $_[0];
+				# $Klaymen->pos->[0] = $to if $further <= $speed * $_[0];
+			# }
+			# if($to > $Klaymen->pos->[0]) {
+				# $Klaymen->flip(0);
+			# }
+			# elsif($to < $Klaymen->pos->[0]) {
+				# $Klaymen->flip(1);
+			# }
+		# }
 	}
 }
 
 #####################################SHOW####################################
 
 sub show_sprites {
-	for(@{$M{scene}->holders}) {
-		$_->sprite->show;
+	for(@{$Scene->sprites}, $Cursor) {
+		$_->show unless $ARGV[1] and $_ != $Klaymen;
 	}
-	if($ARGV[1]) {
-		for(values %{$M{scene}->event_rects}) {
-			if($_->[2] and $_->[3]) {
-				my $rect = SDLx::Surface->new(w => $_->[2], h => $_->[3], d => 32, color => 0xFF000000);
-				SDL::Video::set_alpha($rect, 0, 128) and die SDL::get_error;
-				$rect->blit($App, [0, 0, $_->[2], $_->[3]], [$_->[0], $_->[1]]);
-			}
-		}
-	}
-	$M{scene}->cursor->sprite->show;
 }
 
 1;

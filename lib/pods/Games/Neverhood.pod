@@ -1,0 +1,11 @@
+=pod
+
+=head1 NAME
+
+Games::Neverhood - The Neverhood - gloriously remade in Perl
+
+=head1 AUTHOR
+
+Blaise Roth <blaizer@cpan.org>
+
+=cut

@@ -1,0 +1,9 @@
+blib*
+Build*
+_build*
+*.tar.gz
+*.bak
+MANIFEST
+META.yml
+MYMETA.yml
+img

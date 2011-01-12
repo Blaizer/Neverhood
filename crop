@@ -7,7 +7,7 @@ use SDLx::Surface;
 use SDL::Video;
 use SDL::Image;
 
-for(grep { !/\/C(?!.*\/)/ and !/^C(?!.*\/)/ } glob "$ARGV[0]*.bmp") {
+for(grep { !/\/C(?!.*\/)/ and !/^C(?!.*\/)/ } glob "img/$ARGV[0]*.bmp") {
 	my $surf = SDLx::Surface->new(surface => SDL::Image::load($_));
 	my $crop = SDLx::Surface->new(w => $ARGV[3], h => $ARGV[4], d => $surf->format->BitsPerPixel);
 	

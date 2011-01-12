@@ -1,4 +1,12 @@
 Revision history for Games::Neverhood
 
 * 0.001 - 27 Sep 2010
+	- Modules for scenes import and load images as you go
+	- Turned Sprite back inside-in with a new design
+	- Accessors are no longer lvalues, args set instead
+	- Made separate global variables instead of shoving them all in %M
+	- First screen animations and triggers working
+	- Removed need for Holder class by turning it inside-out
+	- Classes Scene, Holder and Sprite started
+	- Image assets for first room obtained
 	- Project start

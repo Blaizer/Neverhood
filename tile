@@ -7,7 +7,7 @@ use SDLx::Surface;
 use SDL::Video;
 use SDL::Image;
 
-my @file = grep !/(?:^|\/)Tiled\.bmp$/, glob "$ARGV[0]*.bmp";
+my @file = grep !/(?:^|\/)Tiled\.bmp$/, glob "img/$ARGV[0]*.bmp";
 my $first = 1;
 my ($strip, $h);
 for(0..$#file) {

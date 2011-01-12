@@ -6,7 +6,7 @@ use SDL;
 use SDLx::Surface;
 use SDL::Image;
 
-my @name = sort glob "$ARGV[0]*.bmp";
+my @name = sort glob "img/$ARGV[0]*.bmp";
 for(@name) {
 	my $old = $_;
 	if(s/\/D(?!.*\/)/\// or s/^D(?!.*\/)//) {
@@ -60,6 +60,6 @@ while(grep !defined, @new) {
 	$look++;
 }
 
-open SEQUENCE, ">$ARGV[0]sequence.txt" or die join ", ", @new;
+open SEQUENCE, ">img/$ARGV[0]sequence.txt" or die join ", ", @new;
 print SEQUENCE join ", ", @new;
 close SEQUENCE;

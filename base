@@ -7,7 +7,7 @@ use SDLx::Surface;
 use SDL::Video;
 use SDL::Image;
 
-my $bas = $ARGV[0];
+my $bas = "img/$ARGV[0]";
 $bas =~ s/\/(?!.*\/).*/\//;
 die "no base" unless -f "${bas}base.bmp";
 my $img = SDLx::Surface->new(surface => SDL::Image::load("${bas}base.bmp"));
@@ -15,7 +15,7 @@ my $base = SDLx::Surface->new(w => $img->w, h => $img->h, d => 24);
 $img->blit($base);
 $base = [ map \@{$base->[$_]}, 0..$base->w-1 ];
 
-while(glob "$ARGV[0]*.bmp") {
+while(glob "img/$ARGV[0]*.bmp") {
 	next if /(?:^|\/)base\.bmp$/ or /\/B(?!.*\/)/ or /^B(?!.*\/)/;
 	my $img = SDLx::Surface->new(surface => SDL::Image::load($_));
 	my $surf = SDLx::Surface->new(w => $img->w, h => $img->h, d => 24);

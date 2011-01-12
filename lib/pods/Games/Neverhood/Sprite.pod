@@ -1,0 +1,17 @@
+=pod
+
+=head1 NAME
+
+Games::Neverhood::Sprite - Holds all the data for an animated image
+
+=head1 METHODS
+
+=head2 new
+
+
+
+=head3 folder
+
+
+
+=cut

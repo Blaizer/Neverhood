@@ -1,0 +1,108 @@
+=pod
+
+=head1 NAME
+
+Games::Neverhood::Scene - Holds all the data for a game scene
+
+=head1 METHODS
+
+=head2 new
+
+The constructor takes several named parameters, which are explained below.
+It returns the new object.
+
+ our $Nursery1 = Games::Neverhood::Scene->new(
+     folder  => 'nursery_1',
+     fps     => 24,
+     bounds  => [ 100, 100, 500, 400 ],
+     cursors => \&cursors_out,
+     sprites => [
+         { background => { ... }, ... },
+         $Games::Neverhood::Klaymen,
+     ],
+ );
+
+=head3 folder
+
+ folder => 'nursery_1'
+ folder => [ 'nursery', 1 ]
+
+If this parameter is specified, every sprite that belongs to the scene will get it's folder value set to it, unless the sprite has a folder already.
+
+If an array is specified, the elements will be joined with C<File::Spec->catfile> (C<'nursery/1'>).
+
+=head3 fps
+
+ fps => 24
+
+The desired frames-per-second of the scene.
+The sprites' frames will be updated at this speed.
+Defaults to 24.
+
+=head3 bounds
+
+ bounds  => [ $left, $top, $right, $bottom ]
+
+A 4 element list of the pixel values of the bounds.
+If the bounds is specified, and is clicked within, and Klaymen is set to a sprite with a name that matches C<<  /^idle/ >>, Klaymen will walk to the C<x> coordinate clicked.
+
+=head3 cursors
+
+ cursors => sub { 0 }
+ cursors => sub { $Games::Neverhood::Cursor::Left if $_[0] < 400 }
+ cursors => \&cursors_out
+
+A callback that is passed the C<x> and C<y> coordinates of where the cursor is as arguments, and should return a sprite object.
+If C<undef> is returned, the default click cursor is used.
+If 0 is returned, no cursor is used.
+Defaults to C<return undef>
+
+=head3 sprites
+
+ sprites => [
+     { background => { ... }, ... },
+     $Games::Neverhood::Klaymen,
+     ...
+ ]
+
+An ordered list of the scene's sprites.
+They are drawn in order, so the sprites at the start of the list will be at the back, and the sprites at the end will be at the fore.
+An anonymous hash is accepted, which will be turned into a sprite for you like this:
+
+                              { background => { ... }, ... }
+
+ Games::Neverhood::Sprite->new( background => { ... }, ... )
+
+=head2 set
+
+ $Nursery1->set
+ 
+Sets the new current scene, calls C<load_sprites>, sets the new framerate.
+Returns the scene.
+
+=head2 load_sprites
+
+ $Nursery1->load_sprites
+ 
+Loads all images for the sprites of the scene, if they haven't already been loaded.
+Returns the scene.
+
+=head2 unload_sprites
+
+ $Nursery1->unload_sprites
+ 
+Forgets all the image data for the sprites of the scene, if they haven't already been unloaded.
+Returns the scene.
+
+=head2 cursor
+
+If arguments are given, returns the event of the coordinates specified.
+If no argments are given, returns the current cursor.
+
+=head2 klaymen
+
+Returns true if the scene has Klaymen in it, false otherwise.
+
+=head2 wertyui
+
+=cut

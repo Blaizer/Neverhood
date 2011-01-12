@@ -7,7 +7,7 @@ use SDLx::Surface;
 use SDL::Video;
 use SDL::Image;
 
-my @file = glob "$ARGV[0]*.bmp";
+my @file = glob "img/$ARGV[0]*.bmp";
 my $length = 0;
 for(@file) {
 	if(/(\d+)(?!.*\d)/) {
