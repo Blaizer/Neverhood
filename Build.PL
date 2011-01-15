@@ -10,7 +10,7 @@ my $build = Module::Build->new(
 	requires => {
 		'perl'           => 5.01,
 		'Alien::SDL'     => 1.421,
-		'SDL'            => 2.518,
+		'SDL'            => 2.526,
 		'Test::More'     => 0,
 		'File::ShareDir' => 0,
 	},

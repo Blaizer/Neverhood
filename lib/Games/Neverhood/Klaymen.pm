@@ -198,5 +198,9 @@ sub random_in {
 	if(@_ > 1) { $_[0]->{random_in} = $_[1]; return $_[0]; }
 	$_[0]->{random_in};
 }
+sub moving_to {
+	if(@_ > 1) { $_[0]->{moving_to} = $_[1]; return $_[0]; }
+	$_[0]->{moving_to};
+}
 
 1;

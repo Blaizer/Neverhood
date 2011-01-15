@@ -79,7 +79,7 @@ sub delete_clicked {
 }
 
 sub klaymen {
-	for($_[0]->sprites) {
+	for(@{$_[0]->sprites}) {
 		return $Games::Neverhood::Klaymen if $_ == $Games::Neverhood::Klaymen;
 	}
 }

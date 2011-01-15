@@ -19,7 +19,6 @@ our $Fullscreen;
 our $Cheat;
 our $Remainder;
 our $FastForward;
-our %MoveTo;
 BEGIN {
 	$Folder //= File::ShareDir::dist_dir('Games-Neverhood');
 	$Fullscreen = !$ARGV[0];
@@ -268,31 +267,31 @@ sub move_klaymen {
 			$Klaymen->blink_in(undef);
 			$Klaymen->random_in(undef);
 		}
-		# if(my $move = $M{move_to}) {
-			# my ($to, @type);
-			# {
-				# no warnings 'uninitialized';
-				# my $min = 1e100;
-				# for(qw/left right to/) {
-					# my $v;
-					# if($_ eq 'to') {
-						# $v = $move->{to};
-					# }
-					# else {
-						# (undef, $v) = each @{$move->{$_}[0]};
-					# }
-					# next unless defined $v;
-					# my $new = abs($v - $Klaymen->pos->[0]);
-					# if($new < $min) {
-						# ($min, $to) = ($new, $v);
-						# @type = $_;
-					# }
-					# elsif($new == $min and $to == $v) {
-						# push @type, $_;
-					# }
-					# redo unless $_ eq 'to';
-				# }
-			# }
+		if(my $move = $Klaymen->moving_to) {
+			my ($to, @type);
+			{
+				no warnings 'uninitialized';
+				my $min = 1e100;
+				for(qw/left right to/) {
+					my $v;
+					if($_ eq 'to') {
+						$v = $move->{to};
+					}
+					else {
+						(undef, $v) = each @{$move->{$_}[0]};
+					}
+					next unless defined $v;
+					my $new = abs($v - $Klaymen->pos->[0]);
+					if($new < $min) {
+						($min, $to) = ($new, $v);
+						@type = $_;
+					}
+					elsif($new == $min and $to == $v) {
+						push @type, $_;
+					}
+					redo unless $_ eq 'to';
+				}
+			}
 			;#( $maximum, $minimum )
 			# my $adjust = (5,  );
 			# my @shuffle = (20, $adjust);
@@ -365,7 +364,7 @@ sub move_klaymen {
 			# elsif($to < $Klaymen->pos->[0]) {
 				# $Klaymen->flip(1);
 			# }
-		# }
+		}
 	}
 }
 
@@ -373,7 +372,7 @@ sub move_klaymen {
 
 sub show_sprites {
 	for(@{$Scene->sprites}, $Cursor) {
-		$_->show unless $ARGV[1] and $_ != $Klaymen;
+		$_->show unless $ARGV[1] and $_ != $Klaymen and $_ != $Cursor;
 	}
 }
 

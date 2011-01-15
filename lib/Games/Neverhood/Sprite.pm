@@ -3,7 +3,9 @@ use 5.01;
 use strict;
 use warnings;
 
-use SDLx::Surface;
+use SDL::Image;
+use SDL::Video;
+use SDL::Rect;
 use SDL::GFX::Rotozoom;
 use Data::Dumper;
 use File::Spec;
@@ -99,11 +101,12 @@ sub show {
 	return if $self->hide;
 	my $surface = $self->this_surface;
 	die 'no surface', $self->flip ? '_flip' : '', ' for: ', $self->folder, '/', $self->name unless ref $surface;
-	my $h = $surface->h / $self->frames;die $self->name if !ref $self->offset or !ref $self->pos;
-	$surface->blit(
+	my $h = $surface->h / $self->frames;
+	SDL::Video::blit_surface(
+		$surface,
+		SDL::Rect->new(0, $h * $self->this_sequence_frame, $surface->w, $h),
 		$Games::Neverhood::App,
-		[0, $h * $self->this_sequence_frame, $surface->w, $h],
-		[
+		SDL::Rect->new(
 			$self->pos->[0] + (
 				$self->flip
 				? -$surface->w - $self->offset->[0] + 1
@@ -113,8 +116,8 @@ sub show {
 				$self->on_ground
 				? 480 - $self->pos->[1] + $self->offset->[1] - $h
 				: $self->pos->[1] + $self->offset->[1]
-			)
-		]
+			), 0, 0
+		)
 	);
 }
 
@@ -125,9 +128,9 @@ sub load {
 		my $folder;
 		die "No folder for $name" unless defined($folder = $s_s->{folder} // $self->all_folder);
 		my $path = File::Spec->catfile($Games::Neverhood::Folder, @$folder, "$name.png");
-		$s_s->{surface} = SDLx::Surface->load($path);
+		$s_s->{surface} = SDL::Image::load($path) or die SDL::get_error;
 		if($s_s->{flipable}) {
-			$s_s->{surface_flip} = SDLx::Surface->new(surface => SDL::GFX::Rotozoom::zoom_surface($s_s->{surface}, -1, 1, 0));
+			$s_s->{surface_flip} = SDL::GFX::Rotozoom::zoom_surface($s_s->{surface}, -1, 1, 0);
 		}
 	}
 	$self;
@@ -157,10 +160,10 @@ sub move_to {
 			$_ = [[$_]];
 		}
 	}
-	%Games::Neverhood::MoveTo = (
+	$Games::Neverhood::Klaymen->moving_to({
 		%arg,
 		sprite => $sprite,
-	);
+	});
 	# sprite => $sprite,
 	# left => 1 || [1, 2, 3] || [[1, 2, 3], 4],
 	# right => 1 || [1, 2, 3] || [[1, 2, 3], 4],
@@ -174,9 +177,8 @@ sub rect {
 	(my $sprite, @rect[0..3], my $name, my $callback) = @_;
 	if(my $click = $Games::Neverhood::Cursor->clicked and $rect[2] and $rect[3]) {
 		if($ARGV[1]) {
-			my $rect = SDLx::Surface->new(w => $rect[2], h => $rect[3], d => 32, color => 0xFF000000);
-			SDL::Video::set_alpha($rect, 0, 128) and die SDL::get_error;
-			$rect->blit($Games::Neverhood::App, [0, 0, $rect[2], $rect[3]], [$rect[0], $rect[1]]);
+			# my $rect = SDLx::Surface->new(w => $rect[2], h => $rect[3], d => 32, color => 0xFF000000);
+			SDL::Video::fill_rect($Games::Neverhood::App, SDL::Rect->new(@rect), SDL::Video::map_RGB($Games::Neverhood::App->format, 255, 0, 0));
 		}
 		$name = '^idle' if !defined $name and $Games::Neverhood::Scene->klaymen;
 		if(
