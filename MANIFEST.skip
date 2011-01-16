@@ -9,3 +9,4 @@
 ^MYMETA\.yml$
 ^img/
 ^(base|crop|dup|tile|zero)$
+^UNDATA
