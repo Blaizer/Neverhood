@@ -1,3 +1,86 @@
-#!/usr/bin/env perl
-use Games::Neverhood;
+#!/usr/bin/perl
+# bin/nhc
+# Script that should be run to play Neverhood. Starts it up with all the
+# necessary command-line options, and their default values.
+
+use 5.01;
+use strict;
+use warnings;
+
+use Getopt::Long ();
+
+BEGIN {
+	Getopt::Long::GetOptions(
+		'debug'         => \$Games::Neverhood::Debug,
+		'fast-forward'  => \$Games::Neverhood::Scene::FastForward,
+		'fps-limit=i'   => \$Games::Neverhood::FPSLimit,
+		'fullscreen'    => \$Games::Neverhood::Fullscreen,
+		'help|?'        => sub { require Pod::Usage; Pod::Usage::pod2usage(1) },
+		'normal-window' => sub { $Games::Neverhood::Fullscreen = 0; $Games::Neverhood::NoFrame = 0 },
+		'share-dir=s'   => \$Games::Neverhood::ShareDir,
+		'start-set=s'   => sub { @Games::Nevhood::StartSet = split /,/, $_[0], 2 },
+		'window'        => sub { $Games::Neverhood::Fullscreen = 0; $Games::Neverhood::NoFrame = 1 },
+	) or require Pod::Usage, Pod::Usage::pod2usage(2);
+
+#	$Games::Neverhood::Debug
+#	$Games::Neverhood::Scene::FastForward
+	$Games::Neverhood::FPSLimit           //= 60;
+	$Games::Neverhood::Fullscreen         //= 1;
+	$Games::Neverhood::NoFrame            //= 1;
+	$Games::Neverhood::ShareDir           //= do { require File::ShareDir; File::ShareDir::dist_dir('Games-Neverhood') };
+	$Games::Neverhood::StartSet[0]        //= 'Nursery::One';
+	$Games::Neverhood::StartSet[1]        //= $Games::Neverhood::StartSet[0];
+}
+
+use Games::Neverhood ();
 Games::Neverhood::init;
+$Games::Neverhood::App->run;
+
+1;
+
+__END__
+
+=head1 SYNOPSIS
+
+nhc [options]
+
+=head2 Options
+
+ --debug            Enable all debugging features
+ --fast-forward     Enable the FASTFORWARD cheat
+ --fps-limit=FPS    Limit the framerate to FPS, 0 for no limit (default=60)
+ --fullscreen       Run the game fullscreen (default)
+ --help             Show this help
+ --normal-window    Run the game in a normal window
+ --share-dir=DIR    Set the directory for all game assets to DIR
+ --start-set=SET[,UNSET]
+                    Start the game in SET (default=Scene::Nursery::One)
+                    Optional UNSET of what the game was in before SET
+ --window           Run the game in a frame-less window
+
+=head2 In-game keys
+
+ Alt-F4    Quit the game
+ Alt       Toggle freeze-frame
+
+Other than that, the keys are different for the 3 game modes:
+
+=head3 Scene mode
+
+ A to Z    Add the letter to the cheat text
+ escape    Enter menu mode
+ return    Submit the cheat text and clear it. See Cheats
+
+=head3 Video mode
+
+ space     Skip walking cutscenes and previously seen cutscenes
+ escape    Enter menu mode
+
+=head3 Menu mode
+
+ escape    Return to previous mode
+
+=head2 Cheats
+
+ HAPPYBIRTHDAYKLAYMEN    Skip from the first room to the second
+ FASTFORWARD             Toggle fast sprite animation

@@ -10,3 +10,4 @@
 ^img/
 ^(base|crop|dup|tile|zero)$
 ^UNDATA
+\.txt$

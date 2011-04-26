@@ -22,4 +22,4 @@ for(0..$#file) {
 
 $_ = $ARGV[0];
 s/\/[^\/]+$//;
-SDL::Video::save_BMP($strip, "$_/Tiled.bmp") and die "Could not save bmp: " . SDL::get_error;
+SDL::Video::save_BMP($strip, "img/$_/Tiled.bmp") and die "Could not save bmp: " . SDL::get_error;

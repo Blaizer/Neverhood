@@ -1,35 +1,31 @@
 Thanks to:
 
-#sdl:
 Contributors to SDL Perl, for making it what it is today
-As well as specifically, kthakore, FROGGS and Alias for their help or praise
+As well as specifically FROGGS, kthakore and Alias for their help and/or praise
 
-Programs:
+Onkel Hotte for writing a Python script that extracted and decompressed all of The Neverhood's images with Blast.
+
+Programs/libraries:
 The Neverhood
 Perl
-libsdl
-Notepad++           text editing
-FRAPS               losslessly capturing the video of the game, and being my fps indicator
-Sony Vegas          losslessly saving the video as separate images
-GIMP                image editing and crunching with scripts
-pngout              reducing the size of every PNG by ~10%
-Game Audio Player   extracting all the files from the Neverhood BLBs
-oggenc              converting the uncompressed audio to Vorbis format
-SMPlayer            playing the Smacker video
-FFmpeg              having the Smacker codec
-
-Perl modules:
-Alien::SDL
 SDL
-Module::Build
-Test::More
-File::ShareDir   distdir
-Data::Dumper     debugging with Dumper
-File::Spec       catfile
-Scalar::Util     dualvar
-Storable         saving game data
-B::Deparse       deparsing compiled perl to save coderefs
+LibSDL
+Notepad++
+FRAPS                 losslessly capturing the video of the game, and being my fps indicator
+Sony Vegas            losslessly saving the video as separate images
+GIMP                  image editing and crunching with scripts
+pngout                reducing the size of every PNG by ~10%
+Game Audio Player     extracting all the files from the Neverhood BLBs
+oggenc                converting the uncompressed audio to OGG Vorbis format
+SMPlayer              playing the Smacker video
+FFmpeg                having the Smacker codec
+zlib/contrib/Blast    decompressing PKWARE-compressed files
 
-Other:
-XeNTaX Forum     help with Game Audio Player
-MultimediaWiki   very helpful pages on the BLB and Smacker formats
+Websites:
+XeNTaX Forum      help with Game Audio Player
+MultimediaWiki    very helpful pages on the BLB and Smacker formats
+
+Anyone else I can think of who provided support or even just interest:
+Callum Gare                     being awesome, and having a Mac
+Michael Snoswell
+Too many Russians to name...

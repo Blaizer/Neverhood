@@ -2,396 +2,218 @@ package Games::Neverhood;
 use 5.01;
 use strict;
 use warnings;
-our $VERSION = 0.001;
+our $VERSION = 0.003;
 
-use SDL;
 use SDLx::App;
+use SDLx::Mixer;
 use SDL::Events;
-use SDL::Video;
-use SDL::Mouse;
-use File::ShareDir;
+
+use parent 'Exporter';
+our @EXPORT_OK = qw/$Game $App %GG $Debug $FPSLimit $Fullscreen $NoFrame $ShareDir $StartUnset $StartSet/;
+
 use Data::Dumper;
-use File::Spec;
 
-our $Scene;
-our $Folder;
-our $Fullscreen;
-our $Cheat;
-our $Remainder;
-our $FastForward;
-BEGIN {
-	$Folder //= File::ShareDir::dist_dir('Games-Neverhood');
-	$Fullscreen = !$ARGV[0];
-	$Cheat = '';
-	$Remainder = 0;
-	$FastForward = 0;
-}
-
-use Games::Neverhood::Cursor;
-our $Cursor;
-use Games::Neverhood::Klaymen;
-our $Klaymen;
-
+our $Game;
 our $App;
-sub init {
-	$ENV{SDL_VIDEO_CENTERED} = 1;
-	$App = SDLx::App->new(
-		w => 640,
-		h => 480,
-		d => 32,
-		title => 'The Neverhood',
-		# $Fullscreen ? () : (min_t => 0),
-		fullscreen => $Fullscreen,
-		flags =>
-#			SDL_ASYNCBLIT |
-#			SDL_SWSURFACE |
-			SDL_HWSURFACE |
+our %GG;
 
-#			SDL_ANYFORMAT  |
-			SDL_HWPALETTE  |
-			SDL_HWACCEL    |
-			SDL_DOUBLEBUF  |
-			SDL_NOFRAME    |
-#			SDL_PREALLOC   |
-			0,
+# Globals from bin/nhc
+our ($Debug, $FPSLimit, $Fullscreen, $NoFrame, $ShareDir, $StartUnset, $StartSet);
+
+use Games::Neverhood::Sprite::Cursor;
+use Games::Neverhood::Sprite::Klaymen;
+
+do {
+	# quick way of giving the set method an unset object it can use
+	no strict 'refs';
+	my $unset = "Games::Neverhood::$StartUnset";
+	@{"$unset::ISA"} = 'Games::Neverhood::Game';
+
+$unset->new}->set($StartSet);
+
+sub init {
+	$App = SDLx::App->new(
+		title      => 'The Neverhood',
+		width      => 640,
+		height     => 480,
+		depth      => 32,
+		min_t      => $Vsync && 1 / $Vsync,
+		init       => ['video', 'audio'],
+		no_cursor  => 1,
+		centered   => 1,
+		flags      => 0,
+		fullscreen => $Fullscreen,
+		no_frame   => $NoFrame,
+		hw_surface => 1, double_buf => 1,
+#		sw_surface => 1,
+#		any_format => 1,
+#		async_blit => 1,
+#		hw_palette => 1,
+
+
 		event_handlers => [
-			\&window,
-			\&mouse,
-			\&keyboard,
-			\&pause,
+			\&event_quit,
+			\&event_window,
+			\&event_pause,
+			sub{$Game->event(@_)},
 		],
 		move_handlers => [
-			\&move_sprites,
-			\&move_scene,
-			\&move_klaymen,
+			sub{$Game->move(@_)}
 		],
 		show_handlers => [
-			\&show_sprites,
+			sub{$Game->show(@_)},
 			sub{$App->flip},
+			sub{$Game->set},
 		],
 	);
-	SDL::Mouse::show_cursor(SDL_DISABLE);
-	SDL::Video::wm_set_icon(SDLx::Surface->load( File::Spec->catfile($Folder, 'misc', 'icon.png') ));
 	
-	use Games::Neverhood::Scene::Nursery::One '';
-	$Scene = $Games::Neverhood::Scene::Nursery::One;
-	$Scene->call($Scene->setup, $Scene, {
-		klaymen => $Klaymen,
-	});
-	$App->dt(1 / $Scene->fps);
-
-	$App->run;
+	SDLx::Mixer::init(
+		frequency => 22050,
+		channels => 1,
+		chunk_size => 1024,
+		support => ['ogg'],
+		streams => 8,
+	);
 }
 
-#####################################EVENT###################################
+###############################################################################
 
-sub window {
+%GG = ( # Game Globals
+	# $nursery_1_window_open -- until jump down in nursery_2
+	# $flytrap_place         -- only while in mail room, also remember if it has grabbed ring
+	# %mail_done             -- from when the flytrap grabs the ring until willie dies
+		# flytrap     -- when the flytrap grabs the ring
+		# music_box   -- when the musicbox c starts
+		# boom_sticks -- when the boom sticks are solved
+		# weasel      -- when the weasel dying c starts
+		# h           -- when the H is solved
+		# beaker      -- when the beaker is picked up
+		# foghorn_1   -- when the foghorn button thru the spikes is pressed
+		# drink       -- when you drink from the foutain
+		# notes       -- when the pipes are solved and the button is pressed
+		# foghorn_2   -- when the foghorn button next to frenchie is pressed
+		# foghorn_3   -- when the foghorn button in circles is pressed
+		# locks       -- when the 3 locks are unlocked
+		# drain_lake  -- when the cannon is shot to drain the lake
+		# into_lake   -- when you go down the stairs
+		# radio_on    -- when you go into the radio room with it on
+		# radio_song  -- when you enter the lab
+		# fast_door   -- when you get past the fast door
+		# bear_lure   -- when you swing the bear around
+		# cannon_1    -- when cannon code 1 is entered
+		# bil_boom    -- when bil is shot
+		# bil_sense   -- when willie dies
+
+	# $spam_number -- as soon as spam is seen, undef when back to first and when willie dies
+	# %disk        -- as soon as a disk is picked up
+		# shack
+		# h_house_1
+		# h_house_2
+		# thru_spikes
+		# hall_end
+		# note_house_1
+		# note_house_2
+		# note_house_3
+		# radio_place
+		# lab_middle_floor
+		# lab_top_floor
+		# whale_house_1
+		# whale_house_2
+		# trap_room
+		# fun_house_left_1
+		# fun_house_left_2
+		# fun_house_right
+		# willies_house
+		# castle_key_room
+		# castle_top_floor
+
+	# @dummy_places -- init with (0, 1, 0, 2, 1, 1) when enter shack, undef when solved
+		  # 1     2636
+		# 2 3 4   5124
+		 # 5 6    1345
+	# $match            -- 1 when match is picked up, 2 when dummy is lit
+	# $water_on         -- when the water in t2 is turned on, undef when turned off
+	# @foghorn          -- when each foghorn button is pressed, undef when pressed again
+	# @h                -- when the h house is entered, undef when solved h
+	# $h_blank_top      -- when solved h, 1 for blank piece in h at top, 0 for bottom
+	# $spikes_open      -- when spikes are open, undef when closed
+	# $said_knock_knock -- when the dude in the box says knock knock, undef when foghorn pressed or disk taken
+	# @cannon_code_1    -- when the first cannon code is changed, undef when back to original, empty list when solved
+	# @cannon_code_2    -- ditto
+	# @bridge_puzzle    -- when a bridge puzzle piece is moved, undef when none are on stack and when gone into lake
+	# $bridge_down      -- when the bridge is moved down, undef when down the bridge and when moved up, redef when back up bridge
+	# $raido_song       -- when either radio is seen
+	# @safety_beakers   -- when either the safety beakers are seen or the safety lab is used
+	# @beakers          -- when either the lake wall beakers are seen or the lab is used
+	# @crystals         -- when the shrinking machine is used, roygbp, empty list when solved
+);
+
+###############################################################################
+
+sub event_quit {
 	my ($e) = @_;
-	if($e->type == SDL_QUIT) {
+	my $mod;
+	if(
+		$e->type == SDL_QUIT
+		or
+		$e->type == SDL_KEYUP and $e->key_sym == SDLK_F4 and $mod = SDL::Events::get_mod_state,
+		$mod & KMOD_ALT and not $mod & (KMOD_CTRL | KMOD_SHIFT)
+	) {
 		$App->stop;
+		return 1;
 	}
-	elsif($e->type == SDL_ACTIVEEVENT) {
+	return;
+}
+
+sub event_window {
+	my ($e) = @_;
+	if($e->type == SDL_ACTIVEEVENT) {
 		if($e->active_state & SDL_APPMOUSEFOCUS) {
-			$Cursor->hide(!$e->active_gain); #cursor in window
+			$Games::Neverhood::Sprite::Cursor->hide(!$e->active_gain);
 		}
 		if($e->active_state & SDL_APPINPUTFOCUS) {
 			return 1 if $e->active_gain;
-			$App->pause(\&window);
+			pause(\&event_window);
 		}
 	}
 	$Fullscreen;
 }
 
-sub mouse {
+sub event_pause {
 	my ($e) = @_;
-	if($e->type == SDL_MOUSEBUTTONDOWN and $e->button_button & (SDL_BUTTON_LEFT | SDL_BUTTON_MIDDLE | SDL_BUTTON_RIGHT) and !$Cursor->hide) {
-		my @pos = ($e->button_x, $e->button_y);
-		my (undef, $event) = $Scene->cursors->(@pos);
-		$event = 'click' unless defined $event;
-		$Cursor->clicked([@pos, $event]);
-	}
-	elsif($e->type == SDL_MOUSEMOTION) {
-		my @pos = ($e->motion_x, $e->motion_y);
-		my ($sprite) = $Scene->cursors->(@pos);
-		$sprite = 'click' unless defined $sprite;
-		$Cursor->sprite($sprite);
-		$Cursor->pos(\@pos);
-	}
-}
-
-sub keyboard {
-	my ($e) = @_;
+	state $alt;
+	my $alt_sym = SDLK_LALT | SDLK_RALT;
+	my $mod;
 	if($e->type == SDL_KEYDOWN) {
-		my $name = SDL::Events::get_key_name($e->key_sym);
-		given($name) {
-			when('escape') {
-				$App->stop;
-			}
-			when('space') {
-
-			}
-			when('return') {
-				if($Cheat eq 'fastforward') {
-					$FastForward = !$FastForward;
-					$App->dt($App->dt / 100);
-				}
-				elsif($Cheat eq 'happybirthdayklaymen') {
-					if(
-						$Scene == $Games::Neverhood::Scene::Nursery1 or
-						$Scene == $Games::Neverhood::Scene::Nursery1OutWindow
-					) {
-
-					}
-				}
-				$Cheat = '';
-			}
-			when(/^[a-z]$/) {
-				$Cheat .= $name;
-				$Cheat = '-' if length $Cheat > 19;
-			}
-			when(/ctrl$/) {
-				$ARGV[1] = !$ARGV[1];
-				$App->draw_rect([], 0) if $ARGV[1];
-			}
+		if($e->key_sym & $alt_sym) {
+			$alt = 1;
+		}
+		elsif(not $e->keysym & (SDLK_LCTRL | SDLK_RCTRL | SDLK_LSHIFT | SDLK_RSHIFT)) {
+			undef $alt;
 		}
 	}
+	elsif(
+		$e->type == SDL_KEYUP and $e->key_sym & $alt_sym and $alt
+		and $mod = SDL::Events::get_mod_state, not $mod & (KMOD_CTRL | KMOD_SHIFT)
+	) {
+		return 1 if $App->paused;
+		pause(\&event_pause);
+
+	}
+	return;
 }
 
 sub pause {
-	my ($e) = @_;
-	if($e->type == SDL_KEYDOWN and $e->key_sym == SDLK_LALT or $e->key_sym == SDLK_RALT) {
-		$App->pause(sub{1});
-	}
-}
+	my ($callback) = @_;
+	SDL::Mixer::Music::pause_music;
+	SDL::Mixer::Channels::pause(-1);
 
-#####################################MOVE####################################
+	$App->pause(sub {
+		return 1 if &$callback or &event_quit;
+	});
 
-sub move_sprites {
-	my ($step) = @_;
-	return unless $step;
-	$Remainder += $step;
-	$Remainder -= int $Remainder;
-	for my $sprite (@{$Scene->sprites}, $Cursor) {
-		next unless $sprite;
-		my $frame = $sprite->frame + $step;
-		if(int $frame eq $sprite->to_frame or $sprite->to_frame eq 'end') {
-			$sprite->to_frame(-1, int $frame);
-		}
-		else {
-			$sprite->to_frame((int $frame) x 2);
-		}
-		if($frame >= @{$sprite->this_sequence}) {
-			$frame = $Remainder;
-			$sprite->to_frame(0, 'end');
-		}
-		$sprite->frame = $frame;
-		my $arg = {
-			step    => $step,
-			klaymen => $Klaymen,
-			scene   => $Scene,
-		};
-		for(my $i = 0; $i < @{$sprite->events_sequence}; $i++) {
-			my $condition = $sprite->events_sequence->[$i++];
-			if(
-				ref $condition and ref $condition eq 'CODE' and $Scene->call($condition, $sprite, $arg)
-				or !ref $condition and (
-				$condition eq 'true'
-				or $sprite->get(undef, 'end') )
-			) {
-				$Scene->call($sprite->events_sequence->[$i], $sprite, $arg);
-			}
-		}
-	}
-}
-
-sub move_scene {
-	return unless my $click = $Cursor->clicked;
-	my $event = $click->[2];
-	die "click fail\n", Dumper $click unless defined $event;
-	my $arg = {
-		click   => $click,
-		klaymen => $Klaymen,
-		scene   => $Scene,
-	};
-	for my $sprite (grep ref $_->$event, @{$Scene->sprites}) {
-		for(my $i = 0; $i < @{$sprite->$event}; $i++) {
-			my $condition = $sprite->$event->[$i++];
-			if(
-				ref $condition and ( ref $condition eq 'ARRAY' and $sprite->rect(@$condition)
-				or ref $condition eq 'CODE' and $Scene->call($condition, $sprite, $arg) )
-				or !ref $condition and ( $condition eq 'true'
-				or $Klaymen->sprite =~ /$condition/ )
-			) {
-				my $return = $Scene->call($sprite->$event->[$i], $sprite, $arg);
-				$return = '' unless defined $return;
-				unless($return eq 'no') {
-					$Scene->delete_clicked unless $return eq 'not_yet';
-					return;
-				}
-			}
-		}
-	}
-	if($Scene->klaymen and $Klaymen->sprite =~ /^idle/) {
-		my $bound;
-		if(
-			$bound = $Scene->bounds and
-			$bound->[0] <= $click->[0] and $bound->[1] <= $click->[1]
-			and $bound->[2] >= $click->[0] and $bound->[3] >= $click->[1]
-
-			and !$Klaymen->sprite eq 'idle' || ($click->[0] < $Klaymen->pos->[0] - 38 || $click->[0] > $Klaymen->pos->[0] + 38)
-		) {
-			$Klaymen->move_to(to => $click->[0]);
-		}
-		$Scene->delete_clicked;
-		return;
-	}
-}
-
-sub move_klaymen {
-	return unless $Scene->klaymen;
-	if($Klaymen->sprite eq 'idle') {
-		if(defined $Klaymen->blink_in) {
-			$Klaymen->blink_in($Klaymen->blink_in - $_[0]);
-			$Klaymen->random_in($Klaymen->random_in - $_[0]);
-			if($Klaymen->blink_in <= 0) {
-				$Klaymen->sequence(1);
-				$Klaymen->blink_in(undef);
-			}
-			if($Klaymen->random_in <= 0) {
-				$Klaymen->sprite('idle_random_' . int rand 5);
-				$Klaymen->random_in(undef);
-			}
-		}
-		$Klaymen->blink_in(int rand(40) + 30) unless defined $Klaymen->blink_in;
-		$Klaymen->random_in(int rand(40) + 600) unless defined $Klaymen->random_in;
-	}
-	else {
-		$Klaymen->blink_in(undef);
-		$Klaymen->random_in(undef);
-	}
-	if(my $move = $Klaymen->moving_to) {
-		my ($to, @type);
-		{
-			no warnings 'uninitialized';
-			my $min = 1e100;
-			for(qw/left right to/) {
-				my $v;
-				if($_ eq 'to') {
-					$v = $move->{to};
-				}
-				else {
-					(undef, $v) = each @{$move->{$_}[0]};
-				}
-				next unless defined $v;
-				my $new = abs($v - $Klaymen->pos->[0]);
-				if($new < $min) {
-					($min, $to) = ($new, $v);
-					@type = $_;
-				}
-				elsif($new == $min and $to == $v) {
-					push @type, $_;
-				}
-				redo unless $_ eq 'to';
-			}
-		}
-		;#( $maximum, $minimum )
-		my $adjust = (5,  );
-		my @shuffle = (20, $adjust);
-		my @slide = (100, $shuffle[0]);
-		my @walk_stop = (40, $shuffle[0]);
-		my $further = abs($to - $Klaymen->pos->[0]);
-		my $dir = $to <=> $Klaymen->pos->[0];
-		my $left = $dir - 1;
-		
-		if($further) {
-			if($Klaymen->sprite eq 'idle') {
-				if($further <= $adjust) {
-					$Klaymen->flip($left);
-					my $speed = 2 * $_[0];
-					$Klaymen->pos->[0] += $speed;
-					$Klaymen->pos->[0] = $to if $further <= $speed;
-				}
-				elsif($further <= $shuffle[0]) {
-					$Klaymen->set('idle_shuffle');
-				}
-			}
-		}
-		else {
-			#set or do
-		}
-		# if($Klaymen->pos->[0] == $to) {
-			# if($Klaymen->get('idle')) {
-				# if(defined $move->{do}) {
-					# $M{scene}->call(
-						# $move->{do}, $move->{sprite},
-						# {
-							# klaymen => $Klaymen,
-							# scene => $M{scene},
-							# click => $M{click}
-						# }
-					# );
-				# }
-				# if(defined $move->{set}) {
-					# $Klaymen->set(@{$move->{set}});
-				# }
-				# elsif(!defined $move->{do}) {
-					# $Klaymen->set('idle');
-				# }
-				# delete $M{move_to};
-			# }
-		# }
-		# elsif($Klaymen->flip == ($Klaymen->pos->[0] > $to ? 1 : 0)) {
-			# if($Klaymen->get('idle_walk')) {
-				# if($further >= $walk_stop[0]) {
-					# if($Klaymen->to_frame > 0 and not $Klaymen->to_frame % 2) {
-						# $Klaymen->pos->[0] += 10 * $dir;
-					# }
-					# elsif($Klaymen->to_frame eq 'end') {
-						# $Klaymen->pos->[0] += 20 * $dir;
-					# }
-				# }
-				# elsif(1) { }
-			# }
-			# elsif($Klaymen->get('idle_walk_start')) {
-			
-			# }
-			# elsif($Klaymen->get('idle_walk_end')) {
-			
-			# }
-			# elsif($Klaymen->get('idle_shuffle')) {
-			
-			# }
-			# elsif($Klaymen->get('idle_shuffle_end')) {
-			
-			# }
-			# elsif($Klaymen->get('idle_slide')) {
-			
-			# }
-			# elsif($Klaymen->get('idle_slide_end')) {
-			
-			# }
-		# }
-		# elsif($further <= $adjust) {
-			# my $speed = 5;
-			# $Klaymen->flip($left);
-			# $Klaymen->pos->[0] += $speed * $dir * $_[0];
-			# $Klaymen->pos->[0] = $to if $further <= $speed * $_[0];
-		# }
-		# if($to > $Klaymen->pos->[0]) {
-			# $Klaymen->flip(0);
-		# }
-		# elsif($to < $Klaymen->pos->[0]) {
-			# $Klaymen->flip(1);
-		# }
-	}
-}
-
-#####################################SHOW####################################
-
-sub show_sprites {
-	for(@{$Scene->sprites}, $Cursor) {
-		$_->show unless $ARGV[1] and $_ != $Klaymen and $_ != $Cursor;
-	}
+	SDL::Mixer::Music::resume_music;
+	SDL::Mixer::Channels::resume(-1);
 }
 
 1;

@@ -1,0 +1,28 @@
+Although my aim was to make you feel like you're playing the orginal when playing Neverhood, I took the liberty of making changes when I felt it would improve the game/experience.
+
+If you are unhappy with any of the changes, deciding that any ruin the game's old feel, you should definitely contact me. I'd be very happy to share thoughts with you. Conversely, if you think I should have changed anything I didn't, you should also contact me. I'll also be starting some polls in the future about the change decisions that I can't rightfully change without plenty of discussion.
+
+The following is a list of ``improvements" that were made.
+* changes I deem possible for someone to complain about
+- changes that I don't
+
+- The frame rate isn't fixed, and will go as fast (or slow) as your computer can handle. Sprites still animate on a frame basis, so the only difference going fast makes is that the cursor will move more smoothly. If, on the other hand, your computer can't keep up with the frame rate (which is usually only 24 or 15 frames per second), frames will be skipped to compensate.
+
+- Many of the third-person animations in the original left behind artefacts for a frame due to bad updating. All of this is fixed.
+
+* Klaymen's movement isn't an exact replica of the original, but it probably works a bit better.
+
+* Many of Klaymen's animations can be prematurely ended by getting Klaymen to walk somewhere. The ones that look better uninterruptable have been made that way, but the ones that affect gameplay (pressing wall and floor buttons) have been left that way.
+
+- Possibly just a incompatability error, but the graphics no longer glitch for a frame at the start of a new screen.
+
+- When the cursor changes from one type to another (say from pointing forwards to pointing left) it no longer gets misplaced for a frame.
+
+* The click queue feature was removed. This will only be noticable at times, but generally if you click something twice before Klaymen starts the action he would do there, he will perform the action once instead of twice. The click queue might be implemented, but for now it's an unnecesary complexity and the game works great (perhaps better) without it.
+
+- The ``cheat" HAPPYBIRTHDAYKLAYMEN now also works in the first room while looking out the window.
+
+* Saves now save the exact positions and states of everything. Even the position of the music is now saved.
+
+
+Of course, there are many other slight differences but these are less `changes' and more `imperfections'. The idea is to lower the amount of this kind of change to zero.

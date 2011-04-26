@@ -1,0 +1,27 @@
+=pod
+
+=head1 NAME
+
+Games::Neverhood::OrderedHash - Pure Perl dual tied interface to ordered hashes
+
+=head1 DESCRPTION
+
+
+
+=head1 METHODS
+
+=head2 new
+
+ my $ordered = Games::Neverhood::OrderedHash->new(\@order, %hash);
+
+
+
+=head1 AUTHOR
+
+Blaise Roth <blaizer@cpan.org>
+
+=head1 SEE ALSO
+
+TODO
+
+=cut

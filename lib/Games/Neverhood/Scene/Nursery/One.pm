@@ -1,28 +1,30 @@
 package Games::Neverhood::Scene::Nursery::One;
 use 5.01;
-use strict;
-no strict 'refs';
+use strict 'subs';
 use warnings;
 
 use Games::Neverhood::Scene;
+our @ISA = 'Games::Neverhood::Scene';
+
 use Data::Dumper;
 
 sub import {
-	if($_[1] eq '') {
-		our @ISA = 'Games::Neverhood::Scene';
-		${+__PACKAGE__} = __PACKAGE__->SUPER::new(
+	${+__PACKAGE__} = __PACKAGE__->SUPER::new(
 		all_folder => ['nursery', 'one'],
 		bounds => [ 151, 60, 500, 479 ],
-		setup => sub {
-			$_[1]->{klaymen}->pos([200, 43])
-			->sprite('snore');
+		on_set => sub {
+			$Klaymen
+				->pos([200, 43])
+				->set('snore')
+			;
 		},
 		sprites => [
-			{ background => {
-				click => [ '^snore$' => sub { $_[1]->{klaymen}->set('wake') } ]
-			} },
+			background => {
+				click => [ '^snore$' => sub { $Klaymen->set('wake') } ]
+			},
 
-			{ lever => {
+			lever => {
+				pos => [65, 313],
 				frames => 7,
 				sequences => [
 					[ 0 ],
@@ -33,14 +35,15 @@ sub import {
 				],
 				events => {
 					0 => [
-						sub { $_[1]->{klaymen}->get('pull_lever', 26) } =>
+						sub { $Klaymen->get('pull_lever', 26) } =>
 						sub { $_[0]->sequence(1) }
 					],
 					1 => [ end => sub { $_[0]->sequence(0) } ],
 				},
-			}, pos => [ 65, 313 ]},
+			},
 
-			{ window => {
+			window => {
+				pos => [ 317, 211 ],
 				frames => 4,
 				sequences => [
 					[ 0 ],
@@ -48,37 +51,40 @@ sub import {
 				],
 				events => {
 					0 => [
-						sub { $_[0]->sequence == 0 and $_[1]->{klaymen}->get('push_button_back', 53) } =>
+						sub { $_[0]->sequence == 0 and $Klaymen->get('push_button_back', 53) } =>
 						sub { $_[0]->sequence(1) }
 					],
 					1 => [
 						end => sub { $_[0]->hide(1) },
-						sub { $_[0]->hide == 1 and $_[1]->{klaymen}->get('push_button_back', 'end', 1) } =>
-						sub { __PACKAGE__->set('Nursery::One', 'OutWindow'); }
+						sub { $_[0]->hide == 1 and $Klaymen->get('push_button_back', 'end', 1) } =>
+						sub { $Game->set('Scene::Nursery::One::OutWindow'); }
 					],
 				},
 				click => [
 					[315, 200, 70, 140, undef, sub{ $_[0]->hide }] =>
 					sub { $_[0]->move_to(left => 300, right => [391, 370], set => ['push_button_back', 0, 1]) }
-				]
-			}, pos => [ 317, 211 ]},
+				],
+			},
 
-			{ button => {
+			button => {
+				pos => [ 466, 339 ],
+				hide => 1,
 				click => [
 					[455, 325, 40, 40] => sub { $_[0]->move_to(left => 370, set => ['push_button_back']) }
 				],
 				events => {
 					0 => [
-						sub { $_[1]->{klaymen}->get('push_button_back', 51) } =>
+						sub { $Klaymen->get('push_button_back', 51) } =>
 						sub { $_[0]->hide(0) },
 
-						sub { $_[1]->{klaymen}->get('push_button_back', 58) } =>
-						sub { $_[0]->hide(1); }
+						sub { $Klaymen->get('push_button_back', 58) } =>
+						sub { $_[0]->hide(1) }
 					],
-				}
-			}, pos => [ 466, 339 ], hide => 1 },
+				},
+			},
 
-			{ door => {
+			door => {
+				pos => [ 493, 212 ],
 				frames => 7,
 				sequences => [
 					[ 0 ],
@@ -89,12 +95,9 @@ sub import {
 					[ 5, 5, 6, 6 ],
 				],
 				click => [
-					[520, 200, 90, 250, '^idle'] => sub {
+					[520, 200, 90, 250, '^idle(?!_think$)'] => sub {
 						if($_[0]->hide) {
 							$_[0]->move_to(to => 700);
-						}
-						elsif($_[1]->{klaymen}->sprite eq 'idle_think') {
-							return 'not_yet';
 						}
 						else {
 							$_[0]->move_to(left => 500, set => ['idle_think']);
@@ -103,26 +106,27 @@ sub import {
 				],
 				events => {
 					0 => [
-						sub { $_[1]->{klaymen}->get('pull_lever', 47) } =>
+						sub { $Klaymen->get('pull_lever', 47) } =>
 						sub { $_[0]->sequence(1) }
 					],
 					1 => [ end => sub { $_[0]->sequence(2) } ],
 					2 => [
-						sub { $_[1]->{klaymen}->get('pull_lever', 47) } =>
+						sub { $Klaymen->get('pull_lever', 47) } =>
 						sub { $_[0]->sequence(3) }
 					],
 					3 => [ end => sub { $_[0]->sequence(4) } ],
 					4 => [
-						sub { $_[1]->{klaymen}->get('pull_lever', 47) } =>
+						sub { $Klaymen->get('pull_lever', 47) } =>
 						sub { $_[0]->sequence(5) }
 					],
 					5 => [ end => sub { $_[0]->hide(1) } ],
-				}
-			}, pos => [ 493, 212 ]},
+				},
+			},
 
-			$Games::Neverhood::Klaymen,
+			$Klaymen,
 
-			{ hammer => {
+			hammer => {
+				pos => [ 375, 30 ],
 				frames => 14,
 				sequences => [
 					[ 0 ],
@@ -130,38 +134,16 @@ sub import {
 				],
 				events => {
 					0 => [
-						sub { $_[1]->{klaymen}->get('pull_lever', 42) } =>
+						sub { $Klaymen->get('pull_lever', 42) } =>
 						sub { $_[0]->sequence(1) }
 					],
 					1 => [ end => sub { $_[0]->sequence(0) } ],
-				}
-			}, pos => [ 375, 30 ]},
+				},
+			},
 
-			{ foreground => {}, pos => [ 574, 246 ] },
+			foreground => { pos => [ 574, 246 ] },
 		],
-		);
-	}
-	elsif($_[1] eq 'OutWindow') {
-		package Games::Neverhood::Scene::Nursery::OneOutWindow;
-		our @ISA = 'Games::Neverhood::Scene';
-		${+__PACKAGE__} = __PACKAGE__->SUPER::new(
-		all_folder => ['nursery', 'one'],
-		cursors => \&Games::Neverhood::Scene::cursors_out,
-		sprites => [
-			{ out_window => {
-				out => sub { __PACKAGE__->set('Nursery::One') }
-			} },
-			$Games::Neverhood::Klaymen,
-		],
-		setup => sub {
-			$_[1]->{klaymen}->hide(1);
-		},
-		setdown => sub {
-			$_[1]->{klaymen}->set(undef, 0, 2)
-			->hide(0);
-		},
-		);
-	}
+	);
 }
 
 1;

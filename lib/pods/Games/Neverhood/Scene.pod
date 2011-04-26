@@ -105,4 +105,12 @@ Returns true if the scene has Klaymen in it, false otherwise.
 
 =head2 wertyui
 
+=head1 AUTHOR
+
+Blaise Roth <blaizer@cpan.org>
+
+=head1 SEE ALSO
+
+L<Games::Neverhood::Sprite>
+
 =cut

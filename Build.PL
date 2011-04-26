@@ -1,17 +1,16 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 use strict;
 use warnings;
-use Module::Build;
+use lib 'inc';
+use My::Module::Build;
 
-my $build = Module::Build->new(
+my $build = My::Module::Build->new(
 	module_name   => 'Games::Neverhood',
 	license       => 'perl',
-	share_dir     => 'DATA',
+	share_dir     => 'share',
 	requires => {
 		'perl'           => 5.01,
-		'Alien::SDL'     => 1.421,
 		'SDL'            => 2.526,
-		'Test::More'     => 0,
 		'File::ShareDir' => 0,
 	},
 	recommends => {

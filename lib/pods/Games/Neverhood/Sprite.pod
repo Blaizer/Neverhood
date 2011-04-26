@@ -13,5 +13,12 @@ Games::Neverhood::Sprite - Holds all the data for an animated image
 =head3 folder
 
 
+=head1 AUTHOR
+
+Blaise Roth <blaizer@cpan.org>
+
+=head1 SEE ALSO
+
+L<Games::Neverhood::Scene>
 
 =cut
