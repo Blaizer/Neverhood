@@ -108,7 +108,7 @@ $Games::Neverhood::Klaymen = Games::Neverhood::Klaymen->SUPER::new(
 		events => [ end => sub { $_[0]->set('idle') } ],
 	},
 
-	push_button_back => {
+	idle_push_button_back => {
 		frames => 54,
 		offset => [-59, 0],
 		flipable => 1,
@@ -153,20 +153,11 @@ $Games::Neverhood::Klaymen = Games::Neverhood::Klaymen->SUPER::new(
 	},
 
 	idle_shuffle => {
-		frames => 8,
+		frames => 11,
 		offset => [-50, -1],
 		flipable => 1,
 		sequences => [
-			0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7
-		],
-	},
-
-	idle_shuffle_end => {
-		frames => 3,
-		offset => [-48, -1],
-		flipable => 1,
-		sequences => [
-			0, 0, 1, 1, 2, 2
+			0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10
 		],
 	},
 

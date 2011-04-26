@@ -1,19 +1,24 @@
 Thanks to:
 
 #sdl:
-Contributors to SDL, for making SDL_Perl what it is today
+Contributors to SDL Perl, for making it what it is today
 As well as specifically, kthakore, FROGGS and Alias for their help or praise
 
-Programs used:
-The Neverhood    :-)
+Programs:
+The Neverhood
 Perl
-Notepad++        text editing
-FRAPS            losslessly capturing the video of the game, and being my fps indicator
-Sony Vegas Pro   losslessly saving the video as separate images
-GIMP             image editing and crunching with scripts
-pngout           reducing the size of every png image by ~10%
+libsdl
+Notepad++           text editing
+FRAPS               losslessly capturing the video of the game, and being my fps indicator
+Sony Vegas          losslessly saving the video as separate images
+GIMP                image editing and crunching with scripts
+pngout              reducing the size of every PNG by ~10%
+Game Audio Player   extracting all the files from the Neverhood BLBs
+oggenc              converting the uncompressed audio to Vorbis format
+SMPlayer            playing the Smacker video
+FFmpeg              having the Smacker codec
 
-Perl modules used:
+Perl modules:
 Alien::SDL
 SDL
 Module::Build
@@ -25,4 +30,6 @@ Scalar::Util     dualvar
 Storable         saving game data
 B::Deparse       deparsing compiled perl to save coderefs
 
-And of course, libsdl, even though you're ugly
+Other:
+XeNTaX Forum     help with Game Audio Player
+MultimediaWiki   very helpful pages on the BLB and Smacker formats
