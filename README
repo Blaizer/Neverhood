@@ -21,7 +21,7 @@ Press Escape to quit at any time.
 You play Neverhood you do more good.  And look out for bad.
 Willie knows, bad is always where you forget to look."
 
-The Open Neverhood is a fully open-source remake of the 1996 "The Neverhood".  It aims to make you feel like you're playing the original.
+Neverhood is a fully open-source remake of the 1996 "The Neverhood".  It aims to make you feel like you're playing the original.
 
 The game is being recreated entirely from screenshots and recordings, and programmed in SDL_Perl from the ground up.  The only things changed are the few things deemed to be a "bug", which are being fixed.  It's also portable, and will run on most Windows, Linux and Mac systems.
 
