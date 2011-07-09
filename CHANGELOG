@@ -1,11 +1,22 @@
 Revision history for Games::Neverhood
 
-0.003 - xx Xxx 2011
-#	Added storable hooks, they don't save many newly readonly params
-#	Moved set method to game mode parent class, added music to it
+TODO
+	The game loads frames, mirrors them, and stores them only as it needs them
+	Graphics for entire game obtained
+	Added storable hooks, they don't save read-only params
+	Implemented music with SDLx::Music in Scene and set method
+	Implemented sound with SDLx::Sound
+	Video decoder working
+
+0.004 - xx Xxx 2011
+
+0.003 - 10 Jun 2011
+	Design for Scene and Sprite finalised back to the basics
+	Scene's sprites are now stored in an OrderedHash
+	bin/nhc is more final and nhc.pl is better
 	Primary modules now use Exporter
+	Moved set method to game mode parent class
 	Cleaned up module naming
-	Implemented sound playing
 	Added proper command line options and usage information
 	event, move and show handlers now belong to $Game
 
@@ -20,6 +31,6 @@ Revision history for Games::Neverhood
 	Removed need for Holder class by turning it inside-out
 	Classes Scene, Holder and Sprite started
 	Image assets for first room obtained
-	
+
 0.000 - 27 Sep 2010
 	Project start

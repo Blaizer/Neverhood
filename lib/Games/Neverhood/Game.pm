@@ -10,6 +10,8 @@ use File::Spec ();
 
 use Data::Dumper;
 
+use Games::Neverhood qw/$Game $App/;
+
 use overload
 	'""'   => sub { ref($_[0]) =~ /^Games::Neverhood::(.*)/ and return $1; $_[0] },
 	'0+'   => sub { $_[0] },
@@ -36,11 +38,12 @@ sub set {
 	$unset->setdown->($unset, $set);
 	$set->setup->($set, $unset);
 
-	$Games::Neverhood::Scene = $set;
+	$Game = $set;
 	undef ${ref $unset};
 	undef $unset;
 
-	$Games::Neverhood::App->dt(1 / $set->fps);
+	$App->dt(1 / $set->fps);
+	$Cursor->sprite($set->cursor_sprite);
 	$set;
 }
 

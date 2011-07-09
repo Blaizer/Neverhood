@@ -24,5 +24,7 @@ The following is a list of ``improvements" that were made.
 
 * Saves now save the exact positions and states of everything. Even the position of the music is now saved.
 
+- Keys now respect key modifiers (e.g. Alt and Ctrl)
+
 
 Of course, there are many other slight differences but these are less `changes' and more `imperfections'. The idea is to lower the amount of this kind of change to zero.

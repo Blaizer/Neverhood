@@ -7,8 +7,8 @@ use Games::Neverhood::OrderedHash;
 
 ok(my $ref = Games::Neverhood::OrderedHash->new, 'new');
 isa_ok($ref, 'Games::Neverhood::OrderedHash');
-isa_ok(tied %{;do{no overloading; $ref->[0]}}, 'Games::Neverhood::OrderedHash::TiedHash');
-isa_ok(tied @{;do{no overloading; $ref->[1]}}, 'Games::Neverhood::OrderedHash::TiedArray');
+isa_ok(tied %{;no overloading; $ref->[0]}, 'Games::Neverhood::OrderedHash::TiedHash');
+isa_ok(tied @{;no overloading; $ref->[1]}, 'Games::Neverhood::OrderedHash::TiedArray');
 
 ok(!eval { untie %$ref }, '!untie %');
 ok(!eval { untie @$ref }, '!untie @');
@@ -65,11 +65,13 @@ ok(!eval { $ref->[-4] = 0 }, "!index past start of array");
 
 ok(scalar %$ref, '%scalar before clear gives true');
 is(scalar @$ref, 3, '@scalar before clear gives 3');
+is($#$ref, 2, '$# before clear gives 2');
 undef %$ref;
 is_deeply([%$ref], [],                    '%hash cleared');
 is_deeply(\@$ref,  [undef, undef, undef], '@hash cleared');
 ok(!scalar %$ref, '%scalar after clear gives false');
 is(scalar @$ref, 3, '@scalar after clear gives 3');
+is($#$ref, 2, '$# after clear gives 2');
 
 $ref = Games::Neverhood::OrderedHash->new([qw/foo bar baz/], cake => 4, bar => 1, foobar => 5);
 is_deeply([%$ref], [bar => 1, cake => 4, foobar => 5], '%bar cake foobar initial elements');
@@ -112,22 +114,25 @@ ok(!eval {splice @$ref, 0, 0, 'asd'}, '!replacement list on splice');
 
 ok(scalar %$ref, '%scalar before clear gives true');
 is(scalar @$ref, 2, '@scalar before clear gives 2');
+is($#$ref, 1, '$# before clear gives 1');
 undef @$ref;
 is_deeply([%$ref], [],             '%hash cleared');
 is_deeply(\@$ref,  [undef, undef], '@hash cleared');
 ok(!scalar %$ref, '%scalar after clear gives false');
 is(scalar @$ref, 2, '@scalar after clear still gives 2');
+is($#$ref, 1, '$# after clear still gives 1');
 splice @$ref;
 is_deeply([%$ref], [], '%hash still cleared');
 is_deeply(\@$ref,  [], '@hash fully cleared');
 ok(!scalar %$ref, '%scalar after clear gives false');
-is(scalar @$ref, 0, '@scalar after clear still gives 0');
+is(scalar @$ref, 0, '@scalar after clear gives 0');
+is($#$ref, -1, '$# after clear gives -1');
 
 ok(!eval {push @$ref, 'asd'}, 'push is illegal');
 ok(!eval {unshift @$ref, 'sdf'}, 'unshift is illegal');
 
-weaken(my $hash = tied(%{;do{no overloading; $ref->[0]}})->[0]);
-weaken(my $array = tied(@{;do{no overloading; $ref->[1]}})->[0]);
+weaken(my $hash = tied(%{;no overloading; $ref->[0]})->[0]);
+weaken(my $array = tied(@{;no overloading; $ref->[1]})->[0]);
 ok(ref $hash, 'tiedhash referece made');
 ok(ref $array, 'tiedarray reference made');
 undef $ref;

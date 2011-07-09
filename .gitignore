@@ -6,6 +6,7 @@ _build*
 MANIFEST
 META.yml
 MYMETA.yml
-img
+img*
+blb*
 UNDATA*
 *.txt

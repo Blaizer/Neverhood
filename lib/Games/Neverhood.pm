@@ -2,42 +2,65 @@ package Games::Neverhood;
 use 5.01;
 use strict;
 use warnings;
-our $VERSION = 0.003;
+our $VERSION = 0.004;
 
+use SDL;
+use SDL::Video;
 use SDLx::App;
+use SDL::Color;
 use SDLx::Mixer;
 use SDL::Events;
+use File::Spec;
 
 use parent 'Exporter';
-our @EXPORT_OK = qw/$Game $App %GG $Debug $FPSLimit $Fullscreen $NoFrame $ShareDir $StartUnset $StartSet/;
+our @EXPORT_OK;
+BEGIN { @EXPORT_OK = qw/$Game $App %GG $Debug $FPSLimit $Fullscreen $NoFrame $ShareDir $StartUnset $StartSet/ }
 
 use Data::Dumper;
 
+# the information for the current screen
 our $Game;
+
+# the screen
 our $App;
+
+# the information more global than the current screen that needs to be stored
 our %GG;
 
-# Globals from bin/nhc
+# globals from bin/nhc
 our ($Debug, $FPSLimit, $Fullscreen, $NoFrame, $ShareDir, $StartUnset, $StartSet);
+BEGIN {
+#	$Debug;
+	$FPSLimit   //= 60;
+	$Fullscreen //= 1;
+#	$NoFrame;
+	$ShareDir   //= do { require File::ShareDir; File::ShareDir::dist_dir('Games-Neverhood') };
+	$StartSet   //= 'Scene::Nursery::One';
+	$StartUnset //= $Games::Neverhood::StartSet;
+}
 
-use Games::Neverhood::Sprite::Cursor;
-use Games::Neverhood::Sprite::Klaymen;
+# these make global sprites that persist throughout a game session
+# using them now so that every module that uses them doesn't have to
+# use Games::Neverhood::Sprite::Cursor;
+# use Games::Neverhood::Sprite::Klaymen;
 
-do {
+# use Games::Neverhood::Game;
+# do {
 	# quick way of giving the set method an unset object it can use
-	no strict 'refs';
-	my $unset = "Games::Neverhood::$StartUnset";
-	@{"$unset::ISA"} = 'Games::Neverhood::Game';
+	# no strict 'refs';
+	# my $unset = "Games::Neverhood::$StartUnset";
+	# @{"$unset::ISA"} = 'Games::Neverhood::Game';
 
-$unset->new}->set($StartSet);
+# $unset->new}->set($StartSet);
+# $Game->set;
 
 sub init {
 	$App = SDLx::App->new(
 		title      => 'The Neverhood',
 		width      => 640,
 		height     => 480,
-		depth      => 32,
-		min_t      => $Vsync && 1 / $Vsync,
+		depth      => 8,
+		min_t      => $FPSLimit && 1 / $FPSLimit,
 		init       => ['video', 'audio'],
 		no_cursor  => 1,
 		centered   => 1,
@@ -50,23 +73,30 @@ sub init {
 #		async_blit => 1,
 #		hw_palette => 1,
 
+		icon => do {
+			my $icon;
+			if($icon = SDL::Video::load_BMP(File::Spec->catfile($ShareDir, 'misc', 'nhc.bmp'))) {
+				SDL::Video::set_color_key($icon, SDL_SRCCOLORKEY, SDL::Color->new(255, 255, 255));
+			}
+			$icon;
+		},
 
 		event_handlers => [
 			\&event_quit,
 			\&event_window,
 			\&event_pause,
-			sub{$Game->event(@_)},
+			# sub{$Game->event(@_)},
 		],
 		move_handlers => [
-			sub{$Game->move(@_)}
+			# sub{$Game->move(@_)}
 		],
 		show_handlers => [
-			sub{$Game->show(@_)},
+			# sub{$Game->show(@_)},
 			sub{$App->flip},
-			sub{$Game->set},
+			# sub{$Game->set},
 		],
 	);
-	
+
 	SDLx::Mixer::init(
 		frequency => 22050,
 		channels => 1,
@@ -78,7 +108,9 @@ sub init {
 
 ###############################################################################
 
-%GG = ( # Game Globals
+# Game Globals
+%GG = (
+	# 2, 1, 4, 5, 3, 11, 8, 6, 7, 9, 10, 17, 16, 18, 19, 20, 15, 14, 13, 12
 	# $nursery_1_window_open -- until jump down in nursery_2
 	# $flytrap_place         -- only while in mail room, also remember if it has grabbed ring
 	# %mail_done             -- from when the flytrap grabs the ring until willie dies
@@ -150,14 +182,14 @@ sub init {
 
 ###############################################################################
 
+# stop on quit event or alt-f4
 sub event_quit {
 	my ($e) = @_;
-	my $mod;
 	if(
 		$e->type == SDL_QUIT
 		or
-		$e->type == SDL_KEYUP and $e->key_sym == SDLK_F4 and $mod = SDL::Events::get_mod_state,
-		$mod & KMOD_ALT and not $mod & (KMOD_CTRL | KMOD_SHIFT)
+		$e->type == SDL_KEYDOWN and $e->key_sym == SDLK_F4
+		and $e->key_mod & KMOD_ALT and not $e->key_mod & (KMOD_CTRL | KMOD_SHIFT | KMOD_META)
 	) {
 		$App->stop;
 		return 1;
@@ -165,12 +197,10 @@ sub event_quit {
 	return;
 }
 
+# pause when the app loses focus
 sub event_window {
 	my ($e) = @_;
 	if($e->type == SDL_ACTIVEEVENT) {
-		if($e->active_state & SDL_APPMOUSEFOCUS) {
-			$Games::Neverhood::Sprite::Cursor->hide(!$e->active_gain);
-		}
 		if($e->active_state & SDL_APPINPUTFOCUS) {
 			return 1 if $e->active_gain;
 			pause(\&event_window);
@@ -179,41 +209,45 @@ sub event_window {
 	$Fullscreen;
 }
 
+# toggle pause when either alt is pressed
 sub event_pause {
 	my ($e) = @_;
-	state $alt;
-	my $alt_sym = SDLK_LALT | SDLK_RALT;
-	my $mod;
+	state $lalt;
+	state $ralt;
 	if($e->type == SDL_KEYDOWN) {
-		if($e->key_sym & $alt_sym) {
-			$alt = 1;
+		if($e->key_sym == SDLK_LALT) {
+			$lalt = 1;
 		}
-		elsif(not $e->keysym & (SDLK_LCTRL | SDLK_RCTRL | SDLK_LSHIFT | SDLK_RSHIFT)) {
-			undef $alt;
+		elsif($e->key_sym == SDLK_RALT) {
+			$ralt = 1;
+		}
+		else {
+			undef $lalt;
+			undef $ralt;
 		}
 	}
-	elsif(
-		$e->type == SDL_KEYUP and $e->key_sym & $alt_sym and $alt
-		and $mod = SDL::Events::get_mod_state, not $mod & (KMOD_CTRL | KMOD_SHIFT)
-	) {
+	elsif($e->type == SDL_KEYUP and $e->key_sym == SDLK_LALT && $lalt || $e->key_sym == SDLK_RALT && $ralt) {
+		undef $lalt;
+		undef $ralt;
 		return 1 if $App->paused;
 		pause(\&event_pause);
-
 	}
 	return;
 }
 
+# extra sub for pause to go through
+# for pre and post-pause and quitting while paused
 sub pause {
 	my ($callback) = @_;
-	SDL::Mixer::Music::pause_music;
-	SDL::Mixer::Channels::pause(-1);
+	# SDL::Mixer::Music::pause_music;
+	# SDL::Mixer::Channels::pause(-1);
 
 	$App->pause(sub {
-		return 1 if &$callback or &event_quit;
+		&$callback or &event_quit;
 	});
 
-	SDL::Mixer::Music::resume_music;
-	SDL::Mixer::Channels::resume(-1);
+	# SDL::Mixer::Music::resume_music;
+	# SDL::Mixer::Channels::resume(-1);
 }
 
 1;

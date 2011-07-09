@@ -11,7 +11,7 @@ sub FETCH {
 }
 sub STORE {
 		push @{$_[0][0]}, $_[1]
-	unless exists $_[0][1]{$_[1]} or exists ${{ map {$_ => undef} @{$_[0][0]} }}{$_[1]};
+	unless exists $_[0][1]{$_[1]} or exists { map {$_ => undef} @{$_[0][0]} }->{$_[1]};
 	$_[0][1]{$_[1]} = $_[2];
 }
 sub DELETE {

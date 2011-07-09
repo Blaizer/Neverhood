@@ -9,11 +9,9 @@ my $build = My::Module::Build->new(
 	license       => 'perl',
 	share_dir     => 'share',
 	requires => {
-		'perl'           => 5.01,
-		'SDL'            => 2.526,
+		'perl'           => 5.010,
+		'SDL'            => 2.560,
 		'File::ShareDir' => 0,
-	},
-	recommends => {
 	},
 	meta_merge => {
 		resources => {
@@ -21,8 +19,8 @@ my $build = My::Module::Build->new(
 			repository => 'http://github.com/Blaizer/Neverhood',
 		},
 	},
-	add_to_cleanup => [
-	],
+	# add_to_cleanup => [
+	# ],
 );
 
 $build->create_build_script;

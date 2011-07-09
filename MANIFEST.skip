@@ -8,6 +8,7 @@
 ^MANIFEST\.skip$
 ^MYMETA\.yml$
 ^img/
+^blb/
 ^(base|crop|dup|tile|zero)$
 ^UNDATA
 \.txt$

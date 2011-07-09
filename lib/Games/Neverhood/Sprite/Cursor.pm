@@ -1,35 +1,30 @@
 package Games::Neverhood::Sprite::Cursor;
 use 5.01;
 use strict;
-no strict 'refs';
 use warnings;
 
-use Games::Neverhood::Sprite;
-our @ISA = 'Games::Neverhood::Sprite';
+use parent 'Games::Neverhood::Sprite';
 
-${+__PACKAGE__} = __PACKAGE__->SUPER::new(
+${;no strict;__PACKAGE__} = __PACKAGE__->SUPER::new(
 	all_folder => 'cursor',
 	click => {
-		frames => 3,
-		sequences => [0, 0, 2, 2],
+		sequences => [[0, 0, 1, 1]],
 	},
-	left => {
-		frames => 3,
-		sequences => [0, 0, 2, 2],
-	},
-	right => {
-		frames => 3,
-		sequences => [0, 0, 2, 2],
-	},
-	forward => {
-		frames => 3,
-		sequences => [0, 0, 2, 2],
-	},
-)->load;
-
-sub clicked {
-	if(@_ > 1) { $_[0]->{clicked} = $_[1]; return $_[0]; }
-	$_[0]->{clicked};
-}
+	# left => {
+		# sequences => [[0, 0, 1, 1]],
+	# },
+	# right => {
+		# sequences => [[0, 0, 1, 1]],
+	# },
+	# forward => {
+		# sequences => [[0, 0, 1, 1]],
+	# },
+	# up => {
+		# sequences => [[0, 0, 1, 1]],
+	# },
+	# down => {
+		# sequences => [[0, 0, 1, 1]],
+	# },
+);
 
 1;

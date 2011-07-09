@@ -1,16 +1,18 @@
 Games::Neverhood
 Blaise Roth
 
-The game works perfectly without installing as long as you have all the prereqs. These are simply:
+The game works without installing as long as you have the prerequisites. These are:
 
  Perl 5.10.0
- SDL  2.5xx
+ SDL 2.540
+ File::ShareDir
 
 Then just run:
  perl nhc.pl
 
-To install, run the following commands:
+To get the prerequisites and install:
  perl Build.PL
+ ./Build installdeps
  ./Build
  ./Build test
  ./Build install

@@ -27,18 +27,16 @@ our @EXPORT      = qw/$Game $Klaymen $Cursor/;
 our @EXPORT_OK   = qw/$Klaymen $Cursor $Remainder @All/;
 
 #ALL
-#to_frame
-#sprites sprite frame sequence pos hide flip all_on_ground all_folder all_name
-#sprites_sprite
+# to_frame
+# sprites sprite frame sequence pos hide flip all_on_ground all_folder all_name
+# sprites_sprite
 
 #SPRITE
-#frames sequences offset flipable on_ground events surface surface_flip click left right out up down folder name
-#this_sequence this_sequence_frame events_sequence
+# sequences offset flipable on_ground events surface surface_flip click left right out up down folder
+# this_sequence this_sequence_frame events_sequence
 
-our @All = qw/sprite frame sequence pos hide mirror all_on_ground all_folder all_name/;
-
-our @ReadOnly = qw/sprites all_on_ground all_folder all_name /;
-sub read_only { \@ReadOnly }
+use constant all      => qw/sprite frame sequence pos hide mirror all_on_ground all_folder all_name/;
+use constant no_store => qw/sprites all_on_ground all_folder all_name /;
 
 sub new {
 	my ($class, %arg) = @_;
@@ -46,7 +44,7 @@ sub new {
 
 	my $sprite;
 	$self->{sprites} = {};
-	
+
 	while(my ($key, $val) = keys %arg) {
 		if($key eq 'sprite') {
 			$sprite = $val;
@@ -64,7 +62,7 @@ sub new {
 			$self->{this_sprite}{offset}[1] //= 0;
 			#flipable
 			#on_ground
-			
+
 			if(ref $self->events) {
 				if(ref $self->events eq 'CODE') {
 					$self->events({ 0 => [ true => $self->events ] });
@@ -94,7 +92,7 @@ sub new {
 			$self->name($_) unless defined $self->name;
 		}
 	}
-	
+
 	$self->{to_frame} = Games::Neverhood::DualVar->new;
 	$self->frame($self->frame // 0);
 	$self->sequence(0) unless defined $self->sequence;
@@ -275,7 +273,7 @@ sub flip {
 }
 sub all_on_ground { $_[0]->{all_on_ground} }
 sub all_folder    { $_[0]->{all_folder} }
-# sub all_name      { $_[0]->{all_name} }
+sub name          { $_[0]->{name} }
 sub to_frame {
 	my $self = shift;
 	if(@_ > 1) { $self->{to_frame}->set(@_); return $self; }
@@ -284,25 +282,20 @@ sub to_frame {
 
 ###############################################################################
 
-sub frames       { $_[0]->{this_sprite}{frames} }
 sub sequences    { $_[0]->{this_sprite}{sequences} }
 sub offset       { $_[0]->{this_sprite}{offset} }
 sub on_ground    { $_[0]->{this_sprite}{on_ground} // $_[0]->all_on_ground }
 sub events       { $_[0]->{this_sprite}{events} }
-sub surface      { $_[0]->{this_sprite}{surface} }
-sub surface_flip { $_[0]->{this_sprite}{surface_flip} }
-sub click        { $_[0]->{this_sprite}{click} }
-sub left         { $_[0]->{this_sprite}{left} }
-sub right        { $_[0]->{this_sprite}{right} }
-sub out          { $_[0]->{this_sprite}{out} }
-sub up           { $_[0]->{this_sprite}{up} }
-sub down         { $_[0]->{this_sprite}{down} }
+sub on_click     {
+		$_[0]->{this_sprite}{on_click}[0]->($_[0]) and
+		$_[0]->{this_sprite}{on_click}[1]->($_[0])
+	if $_[0]->{this_sprite}{on_click};
+}
 sub folder       { $_[0]->{this_sprite}{folder} // $_[0]->all_folder }
-sub name         { $_[0]->{this_sprite}{name} }
 
 sub this_sequence       { $_[0]->sequences($_[0]->sequence) }
 sub this_sequence_frame { $_[0]->this_sequence($_[0]->frame) }
 sub events_sequence     { $_[0]->events($_[0]->sequence) }
-sub this_surface        { $_[0]->flip ? $_[0]->surface_flip : $_[0]->surface }
 
 1;
+ 
