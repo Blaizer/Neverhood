@@ -75,7 +75,7 @@ sub init {
 
 		icon => do {
 			my $icon;
-			if($icon = SDL::Video::load_BMP(File::Spec->catfile($ShareDir, 'misc', 'nhc.bmp'))) {
+			if($icon = SDL::Video::load_BMP(File::Spec->catfile($ShareDir, 'icon.bmp'))) {
 				SDL::Video::set_color_key($icon, SDL_SRCCOLORKEY, SDL::Color->new(255, 255, 255));
 			}
 			$icon;
@@ -206,6 +206,7 @@ sub event_window {
 			pause(\&event_window);
 		}
 	}
+	# if we're fullscreen we should unpause no matter what event we get
 	$Fullscreen;
 }
 
@@ -227,8 +228,7 @@ sub event_pause {
 		}
 	}
 	elsif($e->type == SDL_KEYUP and $e->key_sym == SDLK_LALT && $lalt || $e->key_sym == SDLK_RALT && $ralt) {
-		undef $lalt;
-		undef $ralt;
+		undef($e->key_sym == SDLK_LALT ? $lalt : $ralt);
 		return 1 if $App->paused;
 		pause(\&event_pause);
 	}

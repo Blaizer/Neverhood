@@ -6,7 +6,7 @@ use warnings;
 use SDL::Events;
 
 use parent
-	'Games::Neverhood::Game',
+	'Games::Neverhood::GameMode',
 	'Exporter',
 ;
 

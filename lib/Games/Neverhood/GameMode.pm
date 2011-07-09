@@ -1,6 +1,4 @@
-package Games::Neverhood::Game;
-
-# The class for Scene, Video and Menu to inherit from
+package Games::Neverhood::GameMode;
 
 use 5.01;
 use strict;
@@ -14,7 +12,7 @@ use Games::Neverhood qw/$Game $App/;
 
 use overload
 	'""'   => sub { ref($_[0]) =~ /^Games::Neverhood::(.*)/ and return $1; $_[0] },
-	'0+'   => sub { $_[0] },
+	'0+'   => sub { no overloading; $_[0] },
 	'fallback' => 1,
 ;
 
