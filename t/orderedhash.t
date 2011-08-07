@@ -2,13 +2,13 @@ use strict;
 use warnings;
 use Test::More;
 use Scalar::Util qw/weaken/;
-use Storable qw/freeze thaw/;
-use Games::Neverhood::OrderedHash;
+use Storable qw/freeze thaw dclone/;
+use Games::Neverhood::OrderedHash qw/TIEDHASH TIEDARRAY/;
 
 ok(my $ref = Games::Neverhood::OrderedHash->new, 'new');
 isa_ok($ref, 'Games::Neverhood::OrderedHash');
-isa_ok(tied %{;no overloading; $ref->[0]}, 'Games::Neverhood::OrderedHash::TiedHash');
-isa_ok(tied @{;no overloading; $ref->[1]}, 'Games::Neverhood::OrderedHash::TiedArray');
+isa_ok(tied %{;no overloading; $ref->[TIEDHASH]}, 'Games::Neverhood::OrderedHash::TiedHash');
+isa_ok(tied @{;no overloading; $ref->[TIEDARRAY]}, 'Games::Neverhood::OrderedHash::TiedArray');
 
 ok(!eval { untie %$ref }, '!untie %');
 ok(!eval { untie @$ref }, '!untie @');
@@ -86,6 +86,9 @@ is_deeply(\@$ref,  [1, 2, 3, 4, undef, 6],                                   '@f
 $ref = thaw(freeze($ref));
 isa_ok($ref, 'Games::Neverhood::OrderedHash');
 
+my $cloned_ref = dclone($ref);
+is_deeply($cloned_ref, $ref, 'clone worked');
+
 my $complex = thaw(freeze([$ref, $ref]));
 ok($complex->[0] == $complex->[1], 'Complex freeze worked');
 
@@ -131,8 +134,8 @@ is($#$ref, -1, '$# after clear gives -1');
 ok(!eval {push @$ref, 'asd'}, 'push is illegal');
 ok(!eval {unshift @$ref, 'sdf'}, 'unshift is illegal');
 
-weaken(my $hash = tied(%{;no overloading; $ref->[0]})->[0]);
-weaken(my $array = tied(@{;no overloading; $ref->[1]})->[0]);
+weaken(my $hash  = tied(%{;no overloading; $ref->[TIEDHASH] })->[0]);
+weaken(my $array = tied(@{;no overloading; $ref->[TIEDARRAY]})->[0]);
 ok(ref $hash, 'tiedhash referece made');
 ok(ref $array, 'tiedarray reference made');
 undef $ref;

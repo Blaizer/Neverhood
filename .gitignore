@@ -8,5 +8,6 @@ META.yml
 MYMETA.yml
 img*
 blb*
+blbconv*
 UNDATA*
 *.txt

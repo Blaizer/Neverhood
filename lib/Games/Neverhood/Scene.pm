@@ -18,20 +18,21 @@ our $Cheat = '';
 # Globals from bin/nhc
 our ($FastForward);
 
+our @EXPORT_OK = qw/$Cheat $FastForward/;
+
 our ($Debug, $Klaymen, $Cursor, $Remainder);
 use Games::Neverhood         qw/$Debug/;
 use Games::Neverhood::Sprite qw/$Klaymen $Cursor $Remainder/;
-our @EXPORT_OK = qw/$Cheat $FastForward/;
 
 use Games::Neverhood::OrderedHash;
 
-# sprites     OrderedHash of sprites in scene
-# all_dir     directory to be applied as a default to sprites
+# sprites        OrderedHash of sprites in scene
+# all_archive    archive to be applied as a default to sprites
 # fps
-# cursor      'click' by default, or 'out'
+# cursor         'click' by default, or 'out'
 # music
 # on_set
-# on_unset    run before on_set, when a scene is set
+# on_unset        run before on_set, when a scene is set
 # on_out
 # on_space
 

@@ -9,6 +9,7 @@
 ^MYMETA\.yml$
 ^img/
 ^blb/
+^blbconv/
 ^(base|crop|dup|tile|zero)$
 ^UNDATA
 \.txt$

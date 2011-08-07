@@ -1,40 +1,58 @@
 package Games::Neverhood::OrderedHash::TiedHash;
+use Games::Neverhood::OrderedHash qw/ORDER HASH/;
+
 use 5.01;
 use warnings;
 use strict;
+use Carp;
 
 sub TIEHASH {
 	bless $_[1], $_[0];
 }
+
 sub FETCH {
-	$_[0][1]{$_[1]};
+	my ($self, $key) = @_;
+	$self->[HASH]{$key};
 }
 sub STORE {
-		push @{$_[0][0]}, $_[1]
-	unless exists $_[0][1]{$_[1]} or exists { map {$_ => undef} @{$_[0][0]} }->{$_[1]};
-	$_[0][1]{$_[1]} = $_[2];
+	my ($self, $key, $value) = @_;
+	# if key is not in Order, push it in
+	unless(
+		exists $self->[HASH]{$key}
+		or exists { map {$_ => undef} @{$self->[ORDER]} }->{$key}
+	) {
+		push @{$self->[ORDER]}, $key
+	}
+	$self->[HASH]{$key} = $value;
 }
 sub DELETE {
-	delete $_[0][1]{$_[1]};
+	my ($self, $key) = @_;
+	delete $self->[HASH]{$key};
 }
 sub CLEAR {
-	%{$_[0][1]} = ();
+	my ($self) = @_;
+	%{$self->[HASH]} = ();
 }
 sub EXISTS {
-	exists $_[0][1]{$_[1]};
+	my ($self, $key) = @_;
+	exists $self->[HASH]{$key};
 }
 sub FIRSTKEY {
-	keys %{$_[0][1]};
+	my ($self) = @_;
+	keys %{$self->[HASH]};
 	&NEXTKEY;
 }
 sub NEXTKEY {
+	my ($self) = @_;
 	my $key;
-		exists $_[0][1]{$key} and return $key
-	while (undef, $key) = each @{$_[0][0]};
+	while((undef, $key) = each @{$self->[ORDER]}) {
+		exists $self->[HASH]{$key} and return $key
+	}
 	return;
 }
 sub SCALAR {
-	scalar %{$_[0][1]};
+	my ($self) = @_;
+	scalar %{$self->[HASH]};
 }
 sub UNTIE {
 	Carp::confess('Can not untie ordered hash ties');

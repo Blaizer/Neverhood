@@ -1,61 +1,63 @@
 package Games::Neverhood::OrderedHash::TiedArray;
-use Games::Neverhood::OrderedHash::TiedHash;
+use Games::Neverhood::OrderedHash qw/ORDER HASH/;
+
 use 5.01;
 use warnings;
 use strict;
+use Carp;
 
-sub TIEARRAY {
-	bless $_[1], $_[0];
-}
+*TIEARRAY = \&Games::Neverhood::OrderedHash::TiedHash::TIEHASH;
+
 sub FETCH {
-		return $_[0][1]{$_[0][0][$_[1]]}
-	if $_[1] < @{$_[0][0]};
+	my ($self, $index) = @_;
+		return $self->[HASH]{$self->[ORDER][$index]}
+	if $index < @{$self->[ORDER]};
 	return;
 }
 sub STORE {
-		return $_[0][1]{$_[0][0][$_[1]]} = $_[2]
-	if $_[1] < @{$_[0][0]};
-	Carp::confess("Modification of ordered hash index $_[1] with no corresponding key");
+	my ($self, $index, $value) = @_;
+		return $self->[HASH]{$self->[ORDER][$index]} = $value
+	if $index < @{$self->[ORDER]};
+	Carp::confess("Modification of ordered hash index $index with no corresponding key");
 }
 sub FETCHSIZE {
-	scalar @{$_[0][0]};
+	my ($self) = @_;
+	scalar @{$self->[ORDER]};
 }
 sub STORESIZE {}
 sub EXTEND {}
 sub EXISTS {
-		return exists $_[0][1]{$_[0][0][$_[1]]}
-	if $_[1] < @{$_[0][0]};
+	my ($self, $index) = @_;
+		return exists $self->[HASH]{$self->[ORDER][$index]}
+	if $index < @{$self->[ORDER]};
 	return;
 }
 sub DELETE {
-		return delete $_[0][1]{$_[0][0][$_[1]]}
-	if $_[1] < @{$_[0][0]};
+	my ($self, $index) = @_;
+		return delete $self->[HASH]{$self->[ORDER][$index]}
+	if $index < @{$self->[ORDER]};
 	return;
 }
 *CLEAR = \&Games::Neverhood::OrderedHash::TiedHash::CLEAR;
 sub POP {
-	my $pop;
-		$pop = $_[0][1]{$_[0][0][-1]},
-		delete $_[0][1]{pop @{$_[0][0]}},
-		return $pop
-	if @{$_[0][0]};
+	my ($self) = @_;
+		return delete $self->[HASH]{pop @{$self->[ORDER]}}
+	if @{$self->[ORDER]};
 	return;
 }
 sub SHIFT {
-	my $shift;
-		$shift = $_[0][1]{$_[0][0][0]},
-		delete $_[0][1]{shift @{$_[0][0]}},
-		return $shift
-	if @{$_[0][0]};
+	my ($self) = @_;
+		return delete $self->[HASH]{shift @{$self->[ORDER]}}
+	if @{$self->[ORDER]};
 	return;
 }
 sub SPLICE {
-	my $self = shift;
-	Carp::confess("Supplying a replacement list in splice is illegal") if @_ > 2;
+	my ($self) = shift;
+	@_ > 2 and Carp::confess("Supplying a replacement list in splice is illegal");
+
 	my @deleted;
-	for(splice @{$self->[0]}, @_) {
-		push @deleted, $self->[1]{$_};
-		delete $self->[1]{$_};
+	for(splice @{$self->[ORDER]}, @_) {
+		push @deleted, delete $self->[HASH]{$_};
 	}
 	return wantarray ? @deleted : pop @deleted;
 }

@@ -1,16 +1,27 @@
 package Games::Neverhood::OrderedHash;
-use Games::Neverhood::OrderedHash::TiedHash;
-use Games::Neverhood::OrderedHash::TiedArray;
 
 use 5.01;
 use warnings;
 use strict;
 use Carp;
-use Scalar::Util;
 use Storable;
+
+use constant {
+	TIEDHASH  => 0,
+	TIEDARRAY => 1,
+	ORDER     => 0,
+	HASH      => 1,
+};
+use parent "Exporter";
+BEGIN {
+	our @EXPORT_OK = (qw/TIEDHASH TIEDARRAY ORDER HASH/);
+}
+use Games::Neverhood::OrderedHash::TiedHash;
+use Games::Neverhood::OrderedHash::TiedArray;
+
 use overload
-	'%{}' => sub { no overloading; $_[0][0] },
-	'@{}' => sub { no overloading; $_[0][1] },
+	'%{}' => sub { no overloading; $_[0][TIEDHASH] },
+	'@{}' => sub { no overloading; $_[0][TIEDARRAY] },
 
 	fallback => 1,
 ;
@@ -29,8 +40,9 @@ sub new {
 	}
 	my $hash = {};
 	$class = ref $class || $class;
-	tie my %tie, $class . '::TiedHash',  [$order, $hash];
-	tie my @tie, $class . '::TiedArray', [$order, $hash];
+	# The two ties must share the same order and hash, but must use unique arrayrefs for destruction to work correctly
+	tie my %tie, 'Games::Neverhood::OrderedHash::TiedHash',  [$order, $hash];
+	tie my @tie, 'Games::Neverhood::OrderedHash::TiedArray', [$order, $hash];
 
 	Carp::cluck('Odd number of elements in ordered hash'), push @_, undef
 		if @_ % 2;
@@ -40,20 +52,20 @@ sub new {
 
 	bless [\%tie, \@tie], $class;
 }
-
 sub DESTROY {
+	my ($self) = @_;
 	no overloading;
-	delete $_[0][0];
+	# delete the tiedhash to break reference loop
+	delete $self->[TIEDHASH];
 }
 
 sub STORABLE_freeze {
 	my ($self, $cloning) = @_;
 	return if $cloning;
 	no overloading;
-	my $ref = tied(%{$self->[0]});
-	Storable::freeze([ $ref->[0], %{$ref->[1]} ]);
+	my $ref = tied(%{$self->[TIEDHASH]});
+	Storable::freeze([ $ref->[ORDER], %{$ref->[HASH]} ]);
 }
-
 sub STORABLE_thaw {
 	my ($self, $cloning, $serial) = @_;
 	return if $cloning;
