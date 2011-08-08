@@ -16,8 +16,6 @@ use parent 'Exporter';
 our @EXPORT_OK;
 BEGIN { @EXPORT_OK = qw/$Game $App %GG $Debug $FPSLimit $Fullscreen $NoFrame $ShareDir $StartUnset $StartSet/ }
 
-use Data::Dumper;
-
 # the information for the current screen
 our $Game;
 

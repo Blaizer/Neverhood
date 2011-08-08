@@ -15,8 +15,6 @@ use parent
 ;
 use File::Spec ();
 
-use Data::Dumper;
-
 use Games::Neverhood::DualVar;
 
 our $Remainder = 0;

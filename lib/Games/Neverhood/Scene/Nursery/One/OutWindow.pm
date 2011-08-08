@@ -5,7 +5,6 @@ no strict 'refs';
 use warnings;
 
 use parent Games::Neverhood::Scene;
-use Data::Dumper;
 
 sub import {
 	${+__PACKAGE__} = __PACKAGE__->SUPER::new(

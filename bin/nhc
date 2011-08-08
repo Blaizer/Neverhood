@@ -74,5 +74,8 @@ Other than that, the keys are different for the 3 game modes:
 
 =head2 Cheats
 
- HAPPYBIRTHDAYKLAYMEN    Skip from the first room to the second
  FASTFORWARD             Toggle fast sprite animation
+ SCREENSNAPSHOT          Save a screenshot to C:\NevShot.bmp
+ HAPPYBIRTHDAYKLAYMEN    Skip the Nursery (the first room)
+ LETMEOUTOFHERE          Skip the Nursery Lobby (the second room)
+ PLEASE                  Solve the puzzle in the Dynamite Shack

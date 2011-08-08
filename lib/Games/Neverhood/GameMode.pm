@@ -6,8 +6,6 @@ use warnings;
 
 use File::Spec ();
 
-use Data::Dumper;
-
 use Games::Neverhood qw/$Game $App/;
 
 use overload

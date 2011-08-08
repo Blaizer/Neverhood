@@ -8,8 +8,6 @@ use Games::Neverhood '$Game', '%GG';
 our ($Klaymen, $Game, %GG);
 our @ISA = 'Games::Neverhood::Scene';
 
-use Data::Dumper;
-
 sub import {
 	$Game = __PACKAGE__->SUPER::new(
 		all_folder => ['nursery', 'one'],
