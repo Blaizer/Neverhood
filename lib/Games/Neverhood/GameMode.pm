@@ -1,5 +1,4 @@
 package Games::Neverhood::GameMode;
-
 use 5.01;
 use strict;
 use warnings;

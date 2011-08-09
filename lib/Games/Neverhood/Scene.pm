@@ -29,14 +29,14 @@ use Games::Neverhood::OrderedHash;
 # sprites        OrderedHash of sprites in scene
 # all_archive    archive to be applied as a default to sprites
 # fps
-# cursor         'click' by default, or 'out'
+# cursor_out     boolean for click or out cursor
 # music
 # on_set
-# on_unset        run before on_set, when a scene is set
+# on_unset       run before on_set, when a scene is set
 # on_out
 # on_space
 
-use constant no_store => qw/all_dir fps cursor music on_set on_unset on_out on_space/;
+use constant store => qw/sprites/;
 
 sub new {
 	my ($class, %arg) = @_;

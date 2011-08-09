@@ -19,7 +19,7 @@ BEGIN { @EXPORT_OK = qw/$Game $App %GG $Debug $FPSLimit $Fullscreen $NoFrame $Sh
 # the information for the current screen
 our $Game;
 
-# the screen
+# the SDLx::App
 our $App;
 
 # the information more global than the current screen that needs to be stored
