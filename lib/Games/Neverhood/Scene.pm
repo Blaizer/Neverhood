@@ -27,7 +27,6 @@ use Games::Neverhood::Sprite qw/$Klaymen $Cursor $Remainder/;
 use Games::Neverhood::OrderedHash;
 
 # sprites        OrderedHash of sprites in scene
-# all_archive    archive to be applied as a default to sprites
 # fps
 # cursor_out     boolean for click or out cursor
 # music
@@ -42,16 +41,12 @@ sub new {
 	my ($class, %arg) = @_;
 	my $self = bless \%arg, ref $class || $class;
 
-	# all_dir
 	my $sprites = Games::Neverhood::OrderedHash->new;
 	for(my $i = 0; $i < @{$self->sprites}; $i++) {
 		my $sprite = $self->sprites->[$i];
 		if(ref $sprite) {
 			unless(eval { $sprite->isa('Games::Neverhood::Sprite') }) {
-				$sprite = Games::Neverhood::Sprite->new(
-					defined $self->all_dir ? (all_dir => $self->all_dir) : (),
-					%$sprite,
-				);
+				$sprite = Games::Neverhood::Sprite->new(%$sprite);
 			}
 		}
 		else {
