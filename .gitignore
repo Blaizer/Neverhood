@@ -1,5 +1,6 @@
 blib*
-Build*
+Build
+Build.bat
 _build*
 *.tar.gz
 *.bak
