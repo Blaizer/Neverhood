@@ -34,17 +34,15 @@ BEGIN {
 	$StartUnset //= $Games::Neverhood::StartSet;
 }
 
-# these make global sprites that persist throughout a game session
-# using them now so that every module that uses them doesn't have to
-# use Games::Neverhood::Sprite::Cursor;
-# use Games::Neverhood::Sprite::Klaymen;
+our ($Cursor, $Klaymen);
+use Games::Neverhood::Sprite qw/$Cursor $Klaymen/;
 
-# use Games::Neverhood::Game;
+# use Games::Neverhood::GameMode;
 # do {
 	# quick way of giving the set method an unset object it can use
 	# no strict 'refs';
 	# my $unset = "Games::Neverhood::$StartUnset";
-	# @{"$unset::ISA"} = 'Games::Neverhood::Game';
+	# @{"$unset::ISA"} = 'Games::Neverhood::GameMode';
 
 # $unset->new}->set($StartSet);
 # $Game->set;

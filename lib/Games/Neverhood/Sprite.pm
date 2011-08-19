@@ -19,6 +19,10 @@ use Games::Neverhood::DualVar;
 
 our $Remainder = 0;
 
+# global sprites that persist throughout a game session
+use Games::Neverhood::Sprite::Cursor;
+use Games::Neverhood::Sprite::Klaymen;
+
 our ($Game, $Klaymen, $Cursor);
 use Games::Neverhood qw/$Game/;
 our @EXPORT      = qw/$Game $Klaymen $Cursor/;
