@@ -14,13 +14,10 @@ use File::Spec;
 
 use parent 'Exporter';
 our @EXPORT_OK;
-BEGIN { @EXPORT_OK = qw/$Game $App %GG $Debug $FPSLimit $Fullscreen $NoFrame $ShareDir $StartUnset $StartSet/ }
+BEGIN { @EXPORT_OK = qw/$Game %GG $Debug $FPSLimit $Fullscreen $NoFrame $ShareDir $StartUnset $StartSet/ }
 
 # the information for the current screen
 our $Game;
-
-# the SDLx::App
-our $App;
 
 # the information more global than the current screen that needs to be stored
 our %GG;
@@ -52,8 +49,16 @@ BEGIN {
 # $unset->new}->set($StartSet);
 # $Game->set;
 
+SDLx::Mixer::init(
+	frequency => 22050,
+	channels => 1,
+	chunk_size => 1024,
+	support => ['ogg'],
+	streams => 8,
+);
+
 sub init {
-	$App = SDLx::App->new(
+	SDLx::App->new(
 		title      => 'The Neverhood',
 		width      => 640,
 		height     => 480,
@@ -93,14 +98,6 @@ sub init {
 			sub{$App->flip},
 			# sub{$Game->set},
 		],
-	);
-
-	SDLx::Mixer::init(
-		frequency => 22050,
-		channels => 1,
-		chunk_size => 1024,
-		support => ['ogg'],
-		streams => 8,
 	);
 }
 

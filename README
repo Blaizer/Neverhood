@@ -1,11 +1,10 @@
 Games::Neverhood
 Blaise Roth
 
-The game works without installing as long as you have the prerequisites. These are:
+The game works without installing as long as you have:
 
  Perl 5.10.0
  SDL 2.540
- File::ShareDir
 
 Then just run:
  perl nhc.pl

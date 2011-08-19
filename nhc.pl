@@ -2,7 +2,7 @@
 # nhc.pl
 # Script that calls bin/nhc and sets it up with the local share dir and lib
 # no matter where nhc.pl is called from. Also runs it in a frame-less window.
-# You need not install Neverhood to run the game with this script.
+# This should work without installing as long as you have what the README says
 
 use strict;
 use warnings;
