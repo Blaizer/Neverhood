@@ -24,9 +24,8 @@ BEGIN {
 	) or require Pod::Usage, Pod::Usage::pod2usage(2);
 }
 
-use Games::Neverhood ();
-Games::Neverhood::init;
-$Games::Neverhood::App->run;
+use Games::Neverhood;
+Games::Neverhood->new()->run;
 
 1;
 

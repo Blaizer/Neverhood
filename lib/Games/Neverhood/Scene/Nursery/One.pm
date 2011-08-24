@@ -3,25 +3,29 @@ use 5.01;
 use strict;
 use warnings;
 
-use Games::Neverhood::Scene '$Klaymen';
-use Games::Neverhood '$Game', '%GG';
-our ($Klaymen, $Game, %GG);
-our @ISA = 'Games::Neverhood::Scene';
+use parent 'Games::Neverhood::Scene';
+our ($Klaymen);
+use Games::Neverhood::Sprite qw/$Klaymen/;
 
-sub import {
-	$Game = __PACKAGE__->SUPER::new(
-		all_folder => ['nursery', 'one'],
-		move_bounds => [151, 60, 500, 479],
-		on_set => sub {
-			if($GG{nursery_1_window_open} == 1) { $Game->sprites->{window}->hide }
-			$Klaymen
-				->pos([200, 43])
-				->set('snore')
-			;
-		},
-		on_unset => sub {
-			$GG{nursery_1_window_open} = 1 if $Game->sprites->{window}->hide;
-		}
+use constant {
+	all_folder => ['nursery', 'one'],
+	move_bounds => [151, 60, 500, 479],
+};
+sub on_set {
+	my ($self) = @_;
+	if($self->GG->{nursery_1_window_open}) { $self->sprites->{window}->hide }
+	$Klaymen
+		->pos([200, 43])
+		->set('snore')
+	;
+}
+sub on_unset {
+	my ($self) = @_;
+	$self->GG->{nursery_1_window_open} = 1 if $self->sprites->{window}->hide;
+}
+
+sub new {
+	$_[0]->SUPER::new(
 		sprites => [
 			background => {
 				on_click => sub {
@@ -60,7 +64,7 @@ sub import {
 					1 => [
 						end => sub { $_[0]->hide(1) },
 						sub { $_[0]->hide == 1 and $Klaymen->get('push_button_back', 'end', 1) } =>
-						sub { $Game->set('Scene::Nursery::One::OutWindow'); }
+						sub { Games::Neverhood->set('Scene::Nursery::One::OutWindow'); }
 					],
 				},
 				on_click => sub {
@@ -89,14 +93,15 @@ sub import {
 
 			door => {
 				pos => [493, 212],
-				sequences => [
-					[ 0 ],
-					[ 1,1,2,2,3,3 ],
-					[ 4 ],
-					[ 1,1,2,2,3,3 ],
-					[ 1 ],
-					[ 5,5,6,6 ],
-				],
+				sequence => 'idle_1';
+				sequences => {
+					idle_1 => [ 0 ],
+					bash_1 => [ 1,1,2,2,3,3 ],
+					idle_2 => [ 4 ],
+					bash_2 => [ 1,1,2,2,3,3 ],
+					idle_3 => [ 1 ],
+					bash_3 => [ 5,5,6,6 ],
+				},
 				on_click => sub {
 					if($_[0]->rect(520, 200, 90, 250) and $Klaymen->sprite ne 'think') {
 						if($_[0]->hide) {
@@ -106,7 +111,7 @@ sub import {
 							$_[0]->move_to(left => 500, set => ['idle_think']);
 						}
 					}
-				],
+				},
 				actions => {
 					0 => [
 						sub { $Klaymen->get('pull_lever', 47) } =>

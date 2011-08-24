@@ -1,12 +1,14 @@
+# the game object -- inside-out subclass of SDLx::App
 package Games::Neverhood;
 use 5.01;
 use strict;
 use warnings;
 our $VERSION = 0.004;
 
+use parent 'SDLx::App';
+
 use SDL;
 use SDL::Video;
-use SDLx::App;
 use SDL::Color;
 use SDLx::Mixer;
 use SDL::Events;
@@ -14,13 +16,13 @@ use File::Spec;
 
 use parent 'Exporter';
 our @EXPORT_OK;
-BEGIN { @EXPORT_OK = qw/$Game %GG $Debug $FPSLimit $Fullscreen $NoFrame $ShareDir $StartUnset $StartSet/ }
+BEGIN { @EXPORT_OK = qw/$Debug $FPSLimit $Fullscreen $NoFrame $ShareDir $StartUnset $StartSet/ }
 
 # the information for the current screen
-our $Game;
+my $Game;
 
 # the information more global than the current screen that needs to be stored
-our %GG;
+my %GG;
 
 # globals from bin/nhc
 our ($Debug, $FPSLimit, $Fullscreen, $NoFrame, $ShareDir, $StartUnset, $StartSet);
@@ -55,8 +57,8 @@ SDLx::Mixer::init(
 	streams => 8,
 );
 
-sub init {
-	SDLx::App->new(
+sub new {
+	my $self = $_[0]->SUPER::new(
 		title      => 'The Neverhood',
 		width      => 640,
 		height     => 480,
@@ -100,6 +102,8 @@ sub init {
 }
 
 ###############################################################################
+
+sub GG { \%GG };
 
 # Game Globals
 %GG = (

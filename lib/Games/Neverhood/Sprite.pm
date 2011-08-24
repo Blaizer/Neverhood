@@ -23,8 +23,7 @@ our $Remainder = 0;
 use Games::Neverhood::Sprite::Cursor;
 use Games::Neverhood::Sprite::Klaymen;
 
-our ($Game, $Klaymen, $Cursor);
-use Games::Neverhood qw/$Game/;
+our ($Klaymen, $Cursor);
 our @EXPORT      = qw/$Game $Klaymen $Cursor/;
 our @EXPORT_OK   = qw/$Klaymen $Cursor $Remainder @All/;
 
