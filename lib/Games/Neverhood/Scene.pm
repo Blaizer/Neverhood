@@ -171,7 +171,7 @@ sub _move_click {
 	my $click =
 	if($self->cursor->clicked) {
 		if($self->cursor->sequence eq 'click') {
-			for my $object ($self, reverse @{$self->sprites}) {
+			for my $object ($self, @{$self->sprites}) {
 				my $return = $object->on_click // '';
 				if($return eq 'yes') {
 					$self->cursor->clicked(undef);
@@ -364,7 +364,7 @@ sub _move_klaymen {
 
 sub show {
 	my ($self, $time) = @_;
-	for(@{$self->sprites}, $Cursor) {
+	for(reverse @{$self->sprites}, $Cursor) {
 		$_->show;
 	}
 }

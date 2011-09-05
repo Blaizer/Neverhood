@@ -6,16 +6,16 @@ use warnings;
 use parent 'Games::Neverhood::Scene';
 
 use constant {
-	all_folder => ['nursery', 'one'],
+	all_dir => ['nursery', 'one'],
 	sprites_list => [
-		'background',
-		'lever',
-		'window',
-		'button'
-		'door',
-		'hammer',
-		$_[0]->klaymen,
 		'foreground',
+		$_[0]->klaymen,
+		'hammer',
+		'door',
+		'button'
+		'window',
+		'lever',
+		'background',
 	],
 	move_bounds => [151, 60, 500, 479],
 };
