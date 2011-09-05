@@ -1,7 +1,7 @@
-package Games::Neverhood::Sprite::Cursor;
 use 5.01;
 use strict;
 use warnings;
+package Games::Neverhood::Sprite::Cursor;
 
 use parent 'Games::Neverhood::Sprite';
 

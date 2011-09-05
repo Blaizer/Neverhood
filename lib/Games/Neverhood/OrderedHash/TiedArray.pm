@@ -1,10 +1,10 @@
-package Games::Neverhood::OrderedHash::TiedArray;
-use Games::Neverhood::OrderedHash qw/ORDER HASH/;
-
 use 5.01;
 use warnings;
 use strict;
 use Carp;
+package Games::Neverhood::OrderedHash::TiedArray;
+
+use Games::Neverhood::OrderedHash qw/ORDER HASH/;
 
 *TIEARRAY = \&Games::Neverhood::OrderedHash::TiedHash::TIEHASH;
 

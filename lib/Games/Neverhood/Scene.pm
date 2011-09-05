@@ -1,7 +1,7 @@
-package Games::Neverhood::Scene;
 use 5.01;
 use strict;
 use warnings;
+package Games::Neverhood::Scene;
 
 use SDL;
 use SDL::Video;

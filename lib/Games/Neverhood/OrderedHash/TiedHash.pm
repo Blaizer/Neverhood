@@ -1,9 +1,9 @@
-package Games::Neverhood::OrderedHash::TiedHash;
-use Games::Neverhood::OrderedHash qw/ORDER HASH/;
-
 use 5.01;
 use warnings;
 use strict;
+package Games::Neverhood::OrderedHash::TiedHash;
+
+use Games::Neverhood::OrderedHash qw/ORDER HASH/;
 use Carp;
 
 sub TIEHASH {

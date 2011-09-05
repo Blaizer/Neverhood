@@ -1,7 +1,7 @@
-package Games::Neverhood::Sprite::Klaymen;
 use 5.01;
 use strict;
 use warnings;
+package Games::Neverhood::Sprite::Klaymen;
 
 use parent 'Games::Neverhood::Sprite';
 

@@ -1,7 +1,7 @@
-package Games::Neverhood::Scene::Nursery::One;
 use 5.01;
 use strict;
 use warnings;
+package Games::Neverhood::Scene::Nursery::One;
 
 use parent 'Games::Neverhood::Scene';
 

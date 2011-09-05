@@ -1,8 +1,8 @@
-package Games::Neverhood::OrderedHash;
-
 use 5.01;
 use warnings;
 use strict;
+package Games::Neverhood::OrderedHash;
+
 use Carp;
 use Storable;
 

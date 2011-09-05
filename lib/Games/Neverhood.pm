@@ -1,8 +1,8 @@
 # the game object -- subclass of SDLx::App with inside-out game class
-package Games::Neverhood;
 use 5.01;
 use strict;
 use warnings;
+package Games::Neverhood;
 our $VERSION = 0.004;
 
 use parent qw/SDLx::App/;

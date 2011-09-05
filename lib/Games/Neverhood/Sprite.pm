@@ -1,7 +1,7 @@
-package Games::Neverhood::Sprite;
 use 5.01;
 use strict;
 use warnings;
+package Games::Neverhood::Sprite;
 
 use SDL::Image;
 use SDL::Video;
@@ -18,14 +18,6 @@ use File::Spec ();
 use Games::Neverhood::DualVar;
 
 our $Remainder = 0;
-
-# global sprites that persist throughout a game session
-use Games::Neverhood::Sprite::Cursor;
-use Games::Neverhood::Sprite::Klaymen;
-
-our ($Klaymen, $Cursor);
-our @EXPORT      = qw/$Game $Klaymen $Cursor/;
-our @EXPORT_OK   = qw/$Klaymen $Cursor $Remainder @All/;
 
 #ALL
 # to_frame

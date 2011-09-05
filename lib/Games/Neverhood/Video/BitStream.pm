@@ -1,7 +1,7 @@
-package Games::Neverhood::Video::BitStream;
 use 5.01;
 use strict;
 use warnings;
+package Games::Neverhood::Video::BitStream;
 
 use constant CHUNK_SIZE => 512;
 

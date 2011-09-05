@@ -1,7 +1,7 @@
-package Games::Neverhood::Video::Huffman::Tree;
 use 5.01;
 use strict;
 use warnings;
+package Games::Neverhood::Video::Huffman::Tree;
 
 use Games::Neverhood::Video::BitStream;
 

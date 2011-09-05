@@ -1,8 +1,9 @@
-package Games::Neverhood::Video;
 use strict;
 use warnings;
 use 5.01;
 use autodie;
+package Games::Neverhood::Video;
+
 use File::Spec ();
 
 use Games::Neverhood::Video::BitStream;
