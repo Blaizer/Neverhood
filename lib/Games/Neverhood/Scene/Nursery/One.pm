@@ -7,6 +7,16 @@ use parent 'Games::Neverhood::Scene';
 
 use constant {
 	all_folder => ['nursery', 'one'],
+	sprites_list => [
+		'background',
+		'lever',
+		'window',
+		'button'
+		'door',
+		'hammer',
+		$_[0]->klaymen,
+		'foreground',
+	],
 	move_bounds => [151, 60, 500, 479],
 };
 sub on_set {
@@ -20,21 +30,6 @@ sub on_set {
 sub on_unset {
 	my ($self) = @_;
 	$self->GG->{nursery_1_window_open} = 1 if $self->sprites->{window}->hide;
-}
-
-sub new {
-	$_[0]->SUPER::new(
-		sprites => [
-			'background',
-			'lever',
-			'window',
-			'button'
-			'door',
-			$Klaymen,
-			'hammer',
-			'foreground',
-		],
-	);
 }
 
 package Games::Neverhood::Scene::Nursery::One::background;

@@ -24,7 +24,7 @@ BEGIN {
 	# quick way of giving the set method an unset object it can use
 	no strict 'refs';
 	my $unset = "Games::Neverhood::$StartUnset";
-	@{"$unset::ISA"} = 'Games::Neverhood';
+	push @{"$unset::ISA"}, 'Games::Neverhood';
 
 	$unset->new->set($StartSet);
 	$Game->set;
@@ -94,7 +94,7 @@ sub set {
 
 	$set->dt(1 / $set->fps);
 	
-	# $set->cursor->sprite($set->cursor_sprite);
+	$set->cursor->sequence($set->cursor_sequence);
 	$set;
 }
 
@@ -141,6 +141,11 @@ sub new {
 		],
 	);
 }
+
+###############################################################################
+# methods to be overloaded by Games::Neverhood::Scene and such
+
+
 
 ###############################################################################
 

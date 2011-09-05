@@ -6,11 +6,9 @@ use warnings;
 use SDL::Events;
 
 use parent
-	'Games::Neverhood::GameMode',
+	'Games::Neverhood',
 	'Exporter',
 ;
-
-use Data::Dumper;
 
 # The user entered text for the "cheat" system
 our $Cheat = '';
@@ -20,91 +18,114 @@ our ($FastForward);
 
 our @EXPORT_OK = qw/$Cheat $FastForward/;
 
-our ($Debug, $Klaymen, $Cursor, $Remainder);
+our ($Debug, $Remainder);
 use Games::Neverhood         qw/$Debug/;
-use Games::Neverhood::Sprite qw/$Klaymen $Cursor $Remainder/;
+use Games::Neverhood::Sprite qw/$Remainder/;
 
 use Games::Neverhood::OrderedHash;
 
-# sprites        OrderedHash of sprites in scene
-# fps
-# cursor_out     boolean for click or out cursor
-# music
-# on_set
-# on_unset       run before on_set, when a scene is set
-# on_out
-# on_space
+# sub new
+	# sprites
+	# video
 
-use constant store => qw/sprites/;
+# constant|sub sprites_list
+# constant|sub all_dir
+# constant|sub fps
+# constant|sub cursor_sequence
+# constant|sub move_klaymen_bounds
+# constant|sub music
+# constant|sub name
+
+# sub event
+# sub move
+# sub show
+
+# sub on_move
+# sub on_show
+# sub on_space
+# sub on_click
+# sub on_out
+# sub on_left
+# sub on_right
+# sub on_up
+# sub on_down
 
 sub new {
 	my ($class, %arg) = @_;
-	my $self = bless \%arg, ref $class || $class;
+	my $class = ref $class || $class;
+	my $self = bless \%arg, $class;
 
 	my $sprites = Games::Neverhood::OrderedHash->new;
-	for(my $i = 0; $i < @{$self->sprites}; $i++) {
-		my $sprite = $self->sprites->[$i];
-		if(ref $sprite) {
-			unless(eval { $sprite->isa('Games::Neverhood::Sprite') }) {
-				$sprite = Games::Neverhood::Sprite->new(%$sprite);
-			}
+	for my $name (@{$self->{sprites}}) {
+		my $sprite;
+		if(ref $name) {
+			$sprite = $name;
+			$name = $sprite->name;
 		}
 		else {
-			my $hash = $self->sprites->[++$i];
-			$sprite = Games::Neverhood::Sprite->new(
-				$sprite => $hash,
-				defined $self->all_dir ? (all_dir => $self->all_dir) : (),
-				map {
-					defined $hash->{$_}
-						? ($_, delete $hash->{$_})
-						: ()
-				} Games::Neverhood::Sprite->all,
-			);
+			no strict 'refs';
+			my $sprite_class = "$class::$name";
+			push @{"$sprite_class::ISA"}, 'Games::Neverhood::Sprite';
+			$sprite = $sprite_class->new;
+
+			# yucky all_dir setting from scene to sprite for the time being
+			*{"$sprite_class::all_dir"} = \&{"$class::all_dir"} unless eval { $sprite->dir };
 		}
 	} continue {
-		$sprites->{$sprite->name} = $sprite;
+		$sprites->{$name} = $sprite;
 	}
 	$self->{sprites} = $sprites;
-	$self->{fps}    //= 24;
-	$self->{cursor} //= 'click';
-	# music
-	# on_set
-	# on_unset
-	# on_out
-	# on_space
+
+	# video
 
 	$self;
 }
 
 ###############################################################################
-### Accessors
+# accessors
 
 sub sprites { $_[0]->{sprites} }
-sub all_dir { $_[0]->{all_dir} }
-sub fps     { $_[0]->{fps} }
-sub cursor  { $_[0]->{cursor} }
-sub music   { $_[0]->{music} }
-sub on_set   { $_[0]->{on_set}->  ($_[0]) if $_[0]->{on_set} }
-sub on_unset { $_[0]->{on_unset}->($_[0]) if $_[0]->{on_unset} }
-sub on_out   { $_[0]->{on_out}->  ($_[0]) if $_[0]->{on_out} }
-sub on_space { $_[0]->{on_space}->($_[0]) if $_[0]->{on_space} }
+sub video   { $_[0]->{video}   }
 
 ###############################################################################
-### Handlers
+# constant/subs
+
+use constant {
+	sprites_list        => [],
+	all_dir             => 'i',
+	fps                 => 24,
+	cursor_sequence     => 'click',
+	move_klaymen_bounds => undef,
+	music               => undef,
+	name                => undef,
+}
+
+###############################################################################
+# handler subs
+
+sub on_move  {}
+sub on_show  {}
+sub on_space {}
+sub on_click {}
+sub on_out   {}
+sub on_left  {}
+sub on_right {}
+sub on_up    {}
+sub on_down  {}
 
 sub event {
 	my ($self, $e) = @_;
 	if($e->type == SDL_MOUSEMOTION) {
-		$Cursor->pos([$e->motion_x, $e->motion_y]);
-		$Cursor->sprite($self->cursor_sprite);
+		$self->cursor->pos([$e->motion_x, $e->motion_y]);
+		$self->cursor->sequence($self->cursor_sequence);
 	}
 	elsif(
 		$e->type == SDL_MOUSEBUTTONDOWN and $e->button_button & (SDL_BUTTON_LEFT | SDL_BUTTON_MIDDLE | SDL_BUTTON_RIGHT)
-		and !$Cursor->hide
+		and !$self->cursor->hide
 	) {
 		my @pos = ($e->button_x, $e->button_y);
-		$Cursor->pos(\@pos);
-		$Cursor->clicked([@pos, $self->cursor_sprite eq 'click' ? 'click' : 'out');
+		$self->cursor->pos(\@pos);
+		$self->cursor->clicked(\@pos);
 	}
 	elsif($e->type == SDL_KEYDOWN) {
 		return if $e->key_mod & (KMOD_ALT | KMOD_CTRL | KMOD_SHIFT | KMOD_META);
@@ -115,12 +136,12 @@ sub event {
 			}
 			when(/^[a-z]$/) {
 				$Cheat .= $name;
-				$Cheat = '-' if length $Cheat > length 'happybirthdayklaymen';
+				$Cheat = '!' if length $Cheat > length 'happybirthdayklaymen';
 			}
 			when('return') {
 				if($Cheat eq 'fastforward') {
 					$FastForward = !$FastForward;
-					# $App->dt( );
+					$self->dt(1 / ($self->fps * 3));
 				}
 				elsif($Cheat eq 'happybirthdayklaymen' and $self eq 'Scene::Nursery::One') {
 					$self->set('Scene::Nursery::Two');
@@ -136,62 +157,51 @@ sub event {
 	}
 }
 
-sub cursor_sprite {
-	my ($self) = @_;
-	if($self->cursor eq 'click') {
-		'click';
-	}
-	elsif($self->cursor eq 'out') {
-		$pos[0] <        10 ? 'left'  :
-		$pos[0] >= 640 - 10 ? 'right' :
-		'click';
-	}
-	else {
-		die 'DEBUG: Unknown cursor: ', $self->cursor;
-		'';
-	}
-}
-
 sub move {
-	my (undef, $step) = @_;
+	my ($self, $step) = @_;
 	return unless $step;
-	&move_click;
-	&move_sprites;
-	&move_klaymen;
+
+	&_move_click;
+	&_move_sprites;
+	&_move_klaymen;
 }
 
-sub move_click {
-	my ($self) = @_;
-	my ($
-	if($cursor_sprite eq 'click') {
-		for my $sprite (reverse @{$self->sprites}) {
-			my $return = $sprite->on_click // '';
-			unless($return eq 'no') {
-				$Cursor->clicked(undef) unless $return eq 'not_yet';
+sub _move_click {
+	my ($self, $step) = @_;
+	my $click =
+	if($self->cursor->clicked) {
+		if($self->cursor->sequence eq 'click') {
+			for my $object ($self, reverse @{$self->sprites}) {
+				my $return = $object->on_click // '';
+				if($return eq 'yes') {
+					$self->cursor->clicked(undef);
+					return;
+				}
+				elsif($return eq 'yes_but_keep') {
+					return;
+				}
+			}
+			if($self->sprites->{klaymen} and !$self->klaymen->no_interrupt) {
+				my $bound;
+				if(
+					$bound = $self->move_klaymen_bounds and
+					$bound->[0] <= $click->[0] and $bound->[1] <= $click->[1] and
+					$bound->[2] >= $click->[0] and $bound->[3] >= $click->[1] and
+
+					!$self->klaymen->sprite eq 'idle' || ($click->[0] < $Klaymen->pos->[0] - 38 || $click->[0] > $Klaymen->pos->[0] + 38)
+				) {
+					$self->klaymen->move_to(to => $click->[0]);
+				}
+				$Cursor->clicked(undef);
 				return;
 			}
 		}
-		if($self->sprites->{klaymen} and !$Klaymen->no_interrupt) {
-			my $bound;
-			if(
-				$bound = $self->bounds and
-				$bound->[0] <= $click->[0] and $bound->[1] <= $click->[1] and
-				$bound->[2] >= $click->[0] and $bound->[3] >= $click->[1] and
-
-				!$Klaymen->sprite eq 'idle' || ($click->[0] < $Klaymen->pos->[0] - 38 || $click->[0] > $Klaymen->pos->[0] + 38)
-			) {
-				$Klaymen->move_to(to => $click->[0]);
-			}
-			$Cursor->clicked(undef);
-			return;
+		elsif($self->cursor->sequence eq 'something else...') {
 		}
-	}
-	elsif($cursor_sprite eq 'left' or $cursor_sprite eq 'right') {
-		$self->on_out;
 	}
 }
 
-sub move_sprites {
+sub _move_sprites {
 	my ($self, $step) = @_;
 	$Remainder += $step;
 	if($Remainder >= 1) {
@@ -225,7 +235,7 @@ sub move_sprites {
 	}
 }
 
-sub move_klaymen {
+sub _move_klaymen {
 	my ($self, $step, $app) = @_;
 	return unless $self->klaymen;
 	if($Klaymen->sprite eq 'idle') {
