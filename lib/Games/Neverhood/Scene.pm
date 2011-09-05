@@ -3,6 +3,8 @@ use 5.01;
 use strict;
 use warnings;
 
+use SDL;
+use SDL::Video;
 use SDL::Events;
 
 use parent
@@ -28,6 +30,8 @@ use Games::Neverhood::OrderedHash;
 	# sprites
 	# video
 	# frame
+
+# sub DESTROY
 
 # constant|sub sprites_list
 # constant|sub all_dir
@@ -57,7 +61,7 @@ sub new {
 	my $self = bless \%arg, $class;
 
 	my $sprites = Games::Neverhood::OrderedHash->new;
-	for my $name (@{$self->{sprites}}) {
+	for my $name (@{$self->sprites_list}) {
 		my $sprite;
 		if(ref $name) {
 			$sprite = $name;
@@ -78,10 +82,14 @@ sub new {
 	$self->{sprites} = $sprites;
 
 	# video
-	
+
 	$self->frame(0);
 
 	$self;
+}
+
+sub DESTROY {
+
 }
 
 ###############################################################################
@@ -150,8 +158,19 @@ sub event {
 					$FastForward = !$FastForward;
 					$self->dt(1 / ($self->fps * 3));
 				}
+				elsif($Cheat eq 'screensnapshot') {
+					my $file = File::Spec->catfile('', 'NevShot.bmp');
+					SDL::Video::save_BMP($self, $file) and warn "Error saving screenshot to $file: ", SDL::get_error;
+				}
 				elsif($Cheat eq 'happybirthdayklaymen' and $self eq 'Scene::Nursery::One') {
 					$self->set('Scene::Nursery::Two');
+				}
+				elsif($Cheat eq 'letmeoutofhere' and $self eq 'Scene::Nursery::Two') {
+					$self->set('Scene::Outsidesomewhere...');
+				}
+				elsif($Cheat eq 'please') {
+					$self->GG->{something} = 'something else';
+					$self->set('Scene::Shack');
 				}
 				$Cheat = '';
 			}
