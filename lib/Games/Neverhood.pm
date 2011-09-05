@@ -1,16 +1,16 @@
-# the game object -- inside-out subclass of SDLx::App
+# the game object -- subclass of SDLx::App with inside-out game class
 package Games::Neverhood;
 use 5.01;
 use strict;
 use warnings;
 our $VERSION = 0.004;
 
-use parent 'SDLx::App';
+use parent qw/SDLx::App/;
 
 use SDL;
 use SDL::Video;
 use SDL::Color;
-use SDLx::Mixer;
+# use SDLx::Mixer;
 use SDL::Events;
 use File::Spec;
 
@@ -18,11 +18,28 @@ use parent 'Exporter';
 our @EXPORT_OK;
 BEGIN { @EXPORT_OK = qw/$Debug $FPSLimit $Fullscreen $NoFrame $ShareDir $StartUnset $StartSet/ }
 
-# the information for the current screen
+# the current game object
 my $Game;
+BEGIN {
+	# quick way of giving the set method an unset object it can use
+	no strict 'refs';
+	my $unset = "Games::Neverhood::$StartUnset";
+	@{"$unset::ISA"} = 'Games::Neverhood';
 
-# the information more global than the current screen that needs to be stored
-my %GG;
+	$unset->new->set($StartSet);
+	$Game->set;
+}
+
+use overload
+	# hash overload to use the SDLx::App as if it was the $Game object
+	'%{}' => sub { $Game },
+
+	# string overload to return ref $self, but without Games::Neverhood:: prefix
+	'""'   => sub { ref($_[0]) =~ /^Games::Neverhood::(.*)/ and return $1; '' },
+	'0+'   => sub { no overloading; $_[0] },
+
+	'fallback' => 1,
+;
 
 # globals from bin/nhc
 our ($Debug, $FPSLimit, $Fullscreen, $NoFrame, $ShareDir, $StartUnset, $StartSet);
@@ -36,26 +53,50 @@ BEGIN {
 	$StartUnset //= $Games::Neverhood::StartSet;
 }
 
-our ($Cursor, $Klaymen);
-use Games::Neverhood::Sprite qw/$Cursor $Klaymen/;
+use Games::Neverhood::Sprite::Klaymen;
+use Games::Neverhood::Sprite::Cursor;
 
-# use Games::Neverhood::GameMode;
-# do {
-	# quick way of giving the set method an unset object it can use
-	# no strict 'refs';
-	# my $unset = "Games::Neverhood::$StartUnset";
-	# @{"$unset::ISA"} = 'Games::Neverhood::GameMode';
+my $Klaymen = Games::Neverhood::Sprite::Klaymen->new;
+my $Cursor  = Games::Neverhood::Sprite::Cursor->new;
 
-# $unset->new}->set($StartSet);
-# $Game->set;
+sub klaymen { $Klaymen }
+sub cursor { $Cursor }
 
-SDLx::Mixer::init(
-	frequency => 22050,
-	channels => 1,
-	chunk_size => 1024,
-	support => ['ogg'],
-	streams => 8,
-);
+# SDLx::Mixer::init(
+	# frequency => 22050,
+	# channels => 1,
+	# chunk_size => 1024,
+	# support => ['ogg'],
+	# streams => 8,
+# );
+
+sub set {
+	state $_set;
+	
+	my $self = shift;
+	if(@_) {
+		$_set = shift;
+		return $self;
+	}
+	return $self unless defined $_set;
+
+	my $set_name = join "::", "Games::Neverhood", $_set;
+	undef $_set;
+
+	# set -- call constructor
+	my $set = $set_name->new($self);
+	
+	# unset -- call destructor
+	undef $self;
+
+	# put set in $Game (destructor actually happens here ;)
+	$set->game($set);
+
+	$set->dt(1 / $set->fps);
+	
+	# $set->cursor->sprite($set->cursor_sprite);
+	$set;
+}
 
 sub new {
 	my $self = $_[0]->SUPER::new(
@@ -103,10 +144,10 @@ sub new {
 
 ###############################################################################
 
-sub GG { \%GG };
+sub GG { $GG };
 
 # Game Globals
-%GG = (
+my $GG = {
 	# 2, 1, 4, 5, 3, 11, 8, 6, 7, 9, 10, 17, 16, 18, 19, 20, 15, 14, 13, 12
 	# $nursery_1_window_open -- until jump down in nursery_2
 	# $flytrap_place         -- only while in mail room, also remember if it has grabbed ring
@@ -175,7 +216,7 @@ sub GG { \%GG };
 	# @safety_beakers   -- when either the safety beakers are seen or the safety lab is used
 	# @beakers          -- when either the lake wall beakers are seen or the lab is used
 	# @crystals         -- when the shrinking machine is used, roygbp, empty list when solved
-);
+};
 
 ###############################################################################
 

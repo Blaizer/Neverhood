@@ -4,8 +4,6 @@ use strict;
 use warnings;
 
 use parent 'Games::Neverhood::Scene';
-our ($Klaymen);
-use Games::Neverhood::Sprite qw/$Klaymen/;
 
 use constant {
 	all_folder => ['nursery', 'one'],
@@ -14,7 +12,7 @@ use constant {
 sub on_set {
 	my ($self) = @_;
 	if($self->GG->{nursery_1_window_open}) { $self->sprites->{window}->hide }
-	$Klaymen
+	$self->klaymen
 		->pos([200, 43])
 		->set('snore')
 	;
@@ -27,31 +25,50 @@ sub on_unset {
 sub new {
 	$_[0]->SUPER::new(
 		sprites => [
-			background => {
-				on_click => sub {
-					if($Klaymen->get('snore')) { $Klaymen->set('wake') }
-				},
-			},
+			'background',
+			'lever',
+			'window',
+			'button'
+			'door',
+			$Klaymen,
+			'hammer',
+			'foreground',
+		],
+	);
+}
 
-			lever => {
-				pos => [65, 313],
-				sequences => [
-					[ 0 ],
-					[ 1,1,2,2,3,3,4,4,5,5,6,6,4,4,3,3,2,2,1,1 ],
-				],
-				on_click => sub {
-					if($_[0]->rect(40, 300, 70, 100)) { $_[0]->move_to(right => 150, set => ['pull_lever']) }
-				},
-				actions => {
-					0 => [
-						sub { $Klaymen->get('pull_lever', 26) } => sub { $_[0]->set(undef, 0, 1) }
-					],
-					1 => [ end => sub { $_[0]->set(undef, 0, 0) } ],
-				},
-			},
+package Games::Neverhood::Scene::Nursery::One::background;
+	sub on_click {
+		if($Klaymen->get('snore')) { $Klaymen->set('wake') }
+	},
 
-			window => {
+package Games::Neverhood::Scene::Nursery::One::lever;
+	sub new {
+		$_[0]->SUPER::new(
+			pos => [65, 313],
+		);
+	}
+	use constant {
+		sequences => [
+			[ 0 ],
+			[ 1,1,2,2,3,3,4,4,5,5,6,6,4,4,3,3,2,2,1,1 ],
+		],
+	}
+	sub on_click {
+		if($_[0]->rect(40, 300, 70, 100)) { $_[0]->move_to(right => 150, set => ['pull_lever']) }
+	}
+	sub move {
+		0 => [
+			sub { $Klaymen->get('pull_lever', 26) } => sub { $_[0]->set(undef, 0, 1) }
+		],
+		1 => [ end => sub { $_[0]->set(undef, 0, 0) } ],
+	},
+
+package Games::Neverhood::Scene::Nursery::One::window;
+	sub new {
+		$_[0]
 				pos => [317, 211],
+	}
 				sequences => [
 					[ 0 ],
 					[ 1,2,3 ],
@@ -72,9 +89,9 @@ sub new {
 						$_[0]->move_to(left => 300, right => [391, 370], set => ['push_button_back', 0, 1])
 					}
 				},
-			},
 
-			button => {
+
+package Games::Neverhood::Scene::Nursery::One::button;
 				pos => [466, 339],
 				hide => 1,
 				on_click => sub {
@@ -89,9 +106,9 @@ sub new {
 						sub { $_[0]->hide(1) }
 					],
 				},
-			},
 
-			door => {
+
+package Games::Neverhood::Scene::Nursery::One::door;
 				pos => [493, 212],
 				sequence => 'idle_1';
 				sequences => {
@@ -129,11 +146,9 @@ sub new {
 					],
 					5 => [ end => sub { $_[0]->hide(1) } ],
 				},
-			},
 
-			$Klaymen,
 
-			hammer => {
+package Games::Neverhood::Scene::Nursery::One::hammer;
 				pos => [375, 30],
 				sequences => [
 					[ 0 ],
@@ -146,11 +161,9 @@ sub new {
 					],
 					1 => [ end => sub { $_[0]->sequence(0) } ],
 				},
-			},
 
-			foreground => { pos => [ 574, 246 ] },
-		],
-	);
-}
+
+package Games::Neverhood::Scene::Nursery::One::foreground;
+pos => [ 574, 246 ]
 
 1;
