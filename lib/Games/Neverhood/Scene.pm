@@ -27,6 +27,7 @@ use Games::Neverhood::OrderedHash;
 # sub new
 	# sprites
 	# video
+	# frame
 
 # constant|sub sprites_list
 # constant|sub all_dir
@@ -77,6 +78,8 @@ sub new {
 	$self->{sprites} = $sprites;
 
 	# video
+	
+	$self->frame(0);
 
 	$self;
 }
@@ -86,6 +89,10 @@ sub new {
 
 sub sprites { $_[0]->{sprites} }
 sub video   { $_[0]->{video}   }
+sub frame {
+	if(@_ > 1) { $_[0]->{frame} = $_[1]; return $_[0]; }
+	$_[0]->{frame};
+}
 
 ###############################################################################
 # constant/subs
@@ -163,16 +170,25 @@ sub move {
 
 	&_move_click;
 	&_move_sprites;
-	&_move_klaymen;
+	# &_move_klaymen;
 }
 
 sub _move_click {
 	my ($self, $step) = @_;
-	my $click =
-	if($self->cursor->clicked) {
+	my $click = $self->cursor->clicked;
+	if($click) {
+		my $return = $self->on_click // '';
+		if($return eq 'yes') {
+			$self->cursor->clicked(undef);
+			return;
+		}
+		elsif($return eq 'yes_but_keep') {
+			return;
+		}
+
 		if($self->cursor->sequence eq 'click') {
-			for my $object ($self, @{$self->sprites}) {
-				my $return = $object->on_click // '';
+			for my $sprite (@{$self->sprites}) {
+				my $return = $object->on_click($self) // '';
 				if($return eq 'yes') {
 					$self->cursor->clicked(undef);
 					return;
@@ -206,102 +222,89 @@ sub _move_sprites {
 	$Remainder += $step;
 	if($Remainder >= 1) {
 		$Remainder--;
+
+		$self->frame($self->frame + 1);
+		$self->on_move;
+
 		for my $sprite (@{$self->sprites}, $Cursor) {
 			next unless $sprite;
-			my $frame = $sprite->frame + $step;
-			if(int $frame eq $sprite->to_frame or $sprite->to_frame eq 'end') {
-				$sprite->to_frame(-1, int $frame);
-			}
-			else {
-				$sprite->to_frame((int $frame) x 2);
-			}
+			my $frame = $sprite->frame + 1;
 			if($frame >= @{$sprite->this_sequence}) {
-				$frame = $Remainder;
-				$sprite->to_frame(0, 'end');
+				$frame = 'end';
 			}
-			$sprite->frame = $frame;
-			for(my $i = 0; $i < @{$sprite->events_sequence}; $i++) {
-				my $condition = $sprite->events_sequence->[$i++];
-				if(
-					ref $condition eq 'CODE' and $self->call($condition, $sprite)
-					or !ref $condition and (
-					$condition eq 'true'
-					or $sprite->get(undef, $condition) )
-				) {
-					$self->call($sprite->events_sequence->[$i], $sprite, $step);
-				}
-			}
+			$sprite->frame($frame);
+			$sprite->on_move($self);
 		}
 	}
 }
 
-sub _move_klaymen {
-	my ($self, $step, $app) = @_;
-	return unless $self->klaymen;
-	if($Klaymen->sprite eq 'idle') {
-		if(defined $Klaymen->blink_in) {
-			$Klaymen->blink_in($Klaymen->blink_in - $_[0]);
-			$Klaymen->random_in($Klaymen->random_in - $_[0]);
-			if($Klaymen->blink_in <= 0) {
-				$Klaymen->sequence(1);
-				$Klaymen->blink_in(undef);
-			}
-			if($Klaymen->random_in <= 0) {
-				$Klaymen->sprite('idle_random_' . int rand 5);
-				$Klaymen->random_in(undef);
-			}
-		}
-		$Klaymen->blink_in(int rand(40) + 30) unless defined $Klaymen->blink_in;
-		$Klaymen->random_in(int rand(40) + 600) unless defined $Klaymen->random_in;
-	}
-	else {
-		$Klaymen->blink_in(undef);
-		$Klaymen->random_in(undef);
-	}
-	if(my $move = $Klaymen->moving_to) {
-		my ($to, @type);
-		{
-			no warnings 'uninitialized';
-			my $min = 1e100;
-			for(qw/left right to/) {
-				my $v;
-				if($_ eq 'to') {
-					$v = $move->{to};
-				}
-				else {
-					(undef, $v) = each @{$move->{$_}[0]};
-				}
-				next unless defined $v;
-				my $new = abs($v - $Klaymen->pos->[0]);
-				if($new < $min) {
-					($min, $to) = ($new, $v);
-					@type = $_;
-				}
-				elsif($new == $min and $to == $v) {
-					push @type, $_;
-				}
-				redo unless $_ eq 'to';
-			}
-		}
-		;#( $maximum, $minimum )
-		my $adjust = (5,  );
-		my @shuffle = (20, $adjust);
-		my @slide = (100, $shuffle[0]);
-		my @walk_stop = (40, $shuffle[0]);
-		my $further = abs($to - $Klaymen->pos->[0]);
-		my $dir = $to <=> $Klaymen->pos->[0];
-		my $left = $dir - 1;
+# sub _move_klaymen {
+	# my ($self, $step, $app) = @_;
+	# return unless $self->klaymen;
+	# if($Klaymen->sprite eq 'idle') {
+		# if(defined $Klaymen->blink_in) {
+			# $Klaymen->blink_in($Klaymen->blink_in - $_[0]);
+			# $Klaymen->random_in($Klaymen->random_in - $_[0]);
+			# if($Klaymen->blink_in <= 0) {
+				# $Klaymen->sequence(1);
+				# $Klaymen->blink_in(undef);
+			# }
+			# if($Klaymen->random_in <= 0) {
+				# $Klaymen->sprite('idle_random_' . int rand 5);
+				# $Klaymen->random_in(undef);
+			# }
+		# }
+		# $Klaymen->blink_in(int rand(40) + 30) unless defined $Klaymen->blink_in;
+		# $Klaymen->random_in(int rand(40) + 600) unless defined $Klaymen->random_in;
+	# }
+	# else {
+		# $Klaymen->blink_in(undef);
+		# $Klaymen->random_in(undef);
+	# }
+	# if(my $move = $Klaymen->moving_to) {
+		# my ($to, @type);
+		# {
+			# no warnings 'uninitialized';
+			# my $min = 1e100;
+			# for(qw/left right to/) {
+				# my $v;
+				# if($_ eq 'to') {
+					# $v = $move->{to};
+				# }
+				# else {
+					# (undef, $v) = each @{$move->{$_}[0]};
+				# }
+				# next unless defined $v;
+				# my $new = abs($v - $Klaymen->pos->[0]);
+				# if($new < $min) {
+					# ($min, $to) = ($new, $v);
+					# @type = $_;
+				# }
+				# elsif($new == $min and $to == $v) {
+					# push @type, $_;
+				# }
+				# redo unless $_ eq 'to';
+			# }
+		# }
+		# ;#( $maximum, $minimum )
+		# my $adjust = (5,  );
+		# my @shuffle = (20, $adjust);
+		# my @slide = (100, $shuffle[0]);
+		# my @walk_stop = (40, $shuffle[0]);
+		# my $further = abs($to - $Klaymen->pos->[0]);
+		# my $dir = $to <=> $Klaymen->pos->[0];
+		# my $left = $dir - 1;
 
-		if($further) {
-			if($Klaymen->sprite eq 'idle') {
-				if($further <= $adjust) {
-					$Klaymen->pos->[0] += 2 * $_[0];
-				}
-			}
-		}
-		else {
-			#set or do
-		}
+		# if($further) {
+			# if($Klaymen->sprite eq 'idle') {
+				# if($further <= $adjust) {
+					# $Klaymen->pos->[0] += 2 * $_[0];
+				# }
+			# }
+		# }
+		# else {
+			# set or do
+		# }
 		# if($Klaymen->pos->[0] == $to) {
 			# if($Klaymen->get('idle')) {
 				# if(defined $move->{do}) {
@@ -359,8 +362,8 @@ sub _move_klaymen {
 		# elsif($to < $Klaymen->pos->[0]) {
 			# $Klaymen->flip(1);
 		# }
-	}
-}
+	# }
+# }
 
 sub show {
 	my ($self, $time) = @_;
