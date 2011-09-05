@@ -17,7 +17,9 @@ use File::Spec ();
 
 use Games::Neverhood::DualVar;
 
-our $Remainder = 0;
+
+
+#
 
 #ALL
 # to_frame

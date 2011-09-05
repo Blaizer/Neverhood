@@ -16,7 +16,7 @@ use File::Spec;
 
 use parent 'Exporter';
 our @EXPORT_OK;
-BEGIN { @EXPORT_OK = qw/$Debug $FPSLimit $Fullscreen $NoFrame $ShareDir $StartUnset $StartSet/ }
+BEGIN { @EXPORT_OK = qw/$Remainder $Debug $FPSLimit $Fullscreen $NoFrame $ShareDir $StartUnset $StartSet/ }
 
 # the current game object
 my $Game;
@@ -40,6 +40,9 @@ use overload
 
 	'fallback' => 1,
 ;
+
+# keeping track of the frame remainder of stepping
+our $Remainder = 0;
 
 # globals from bin/nhc
 our ($Debug, $FPSLimit, $Fullscreen, $NoFrame, $ShareDir, $StartUnset, $StartSet);

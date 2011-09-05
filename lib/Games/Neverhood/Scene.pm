@@ -20,9 +20,9 @@ our ($FastForward);
 
 our @EXPORT_OK = qw/$Cheat $FastForward/;
 
-our ($Debug, $Remainder);
-use Games::Neverhood         qw/$Debug/;
-use Games::Neverhood::Sprite qw/$Remainder/;
+our ($Remainder, $Debug);
+use Games::Neverhood         qw/$Remainder $Debug/;
+use Games::Neverhood::Sprite;
 
 use Games::Neverhood::OrderedHash;
 
