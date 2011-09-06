@@ -15,15 +15,30 @@ use parent
 ;
 use File::Spec ();
 
-use Games::Neverhood::DualVar;
+# sub new
+	# name
+	# frame
+	# sequence
+	# pos
+	# hide
+	# mirror
 
+# use constant
+	# sequences
+	# dir
 
-
-#
+# sub on_move
+# sub on_show
+# sub on_space
+# sub on_click
+# sub on_out
+# sub on_left
+# sub on_right
+# sub on_up
+# sub on_down
 
 #ALL
-# to_frame
-# sprites sprite frame sequence pos hide flip all_on_ground all_folder all_name
+# frame sequence pos hide mirror 
 # sprites_sprite
 
 #SPRITE

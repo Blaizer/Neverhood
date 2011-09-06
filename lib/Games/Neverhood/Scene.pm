@@ -26,24 +26,21 @@ use Games::Neverhood::Sprite;
 
 use Games::Neverhood::OrderedHash;
 
+# Overloadable Methods:
+
 # sub new
 	# sprites
-	# video
 	# frame
 
-# sub DESTROY
+# sub on_destroy
 
-# constant|sub sprites_list
-# constant|sub all_dir
-# constant|sub fps
-# constant|sub cursor_sequence
-# constant|sub move_klaymen_bounds
-# constant|sub music
-# constant|sub name
-
-# sub event
-# sub move
-# sub show
+# use constant
+	# sprites_list
+	# all_dir
+	# fps
+	# cursor_type
+	# klaymen_move_bounds
+	# music
 
 # sub on_move
 # sub on_show
@@ -61,27 +58,21 @@ sub new {
 	my $self = bless \%arg, $class;
 
 	my $sprites = Games::Neverhood::OrderedHash->new;
-	for my $name (@{$self->sprites_list}) {
-		my $sprite;
-		if(ref $name) {
-			$sprite = $name;
-			$name = $sprite->name;
-		}
-		else {
+	for my $sprite (@{$self->sprites_list}) {
+		my $name;
+		unless(ref $name) {
 			no strict 'refs';
 			my $sprite_class = "$class::$name";
 			push @{"$sprite_class::ISA"}, 'Games::Neverhood::Sprite';
 			$sprite = $sprite_class->new;
 
-			# yucky all_dir setting from scene to sprite for the time being
-			*{"$sprite_class::all_dir"} = \&{"$class::all_dir"} unless eval { $sprite->dir };
+			# sub definition for all_dir from current class to sprite class
+			*{$sprite_class . "::all_dir"} = \&{$class . "::all_dir"} unless eval { $sprite->dir };
 		}
 	} continue {
 		$sprites->{$name} = $sprite;
 	}
 	$self->{sprites} = $sprites;
-
-	# video
 
 	$self->frame(0);
 
@@ -89,8 +80,10 @@ sub new {
 }
 
 sub DESTROY {
-
+	# just in case I ever need to put code here to happen on every destroy
+	&on_destroy
 }
+sub on_destroy {}
 
 ###############################################################################
 # accessors
@@ -109,7 +102,7 @@ use constant {
 	sprites_list        => [],
 	all_dir             => 'i',
 	fps                 => 24,
-	cursor_sequence     => 'click',
+	cursor_type         => 'click',
 	move_klaymen_bounds => undef,
 	music               => undef,
 	name                => undef,
@@ -131,16 +124,59 @@ sub on_down  {}
 sub event {
 	my ($self, $e) = @_;
 	if($e->type == SDL_MOUSEMOTION) {
-		$self->cursor->pos([$e->motion_x, $e->motion_y]);
-		$self->cursor->sequence($self->cursor_sequence);
+		my ($x, $y) = ($e->motion_x, $e->motion_y);
+		$self->cursor->pos([$x, $y]);
+		my $type = $self->cursor_type;
+		my $sequence = do {
+			if($type eq 'click') {
+				'click';
+			}
+			elsif($type eq 'out') {
+				my $out = 20;
+				$x <  $out       ? 'left'  :
+				$x >= 640 - $out ? 'right' : 'click';
+			}
+			else {
+				my $return;
+				my $middle;
+
+				my $up_down = 50;
+				if($type =~ /up/) {
+					$middle = 1;
+					$return = 'up';
+				}
+				if($type =~ /forward/) {
+					$middle = 1;
+					$return = 'forward' if !$middle or $y >= $up_down;
+				}
+				if($type =~ /down/) {
+					$middle = 1;
+					$return = 'down' if !$middle or $y >= 480 - $up_down;
+				}
+				if($type =~ /sides/) {
+					if($middle) {
+						my $sides = 70;
+						if   ($x <  $sides      ) { $return = 'left'  }
+						elsif($x >= 640 - $sides) { $return = 'right' }
+					}
+					else {
+						$return = $x < 640/2 ? 'left' : 'right';
+					}
+				}
+				$return;
+			}
+		}
+		$self->cursor->sequence($sequence) unless $self->cursor->sequence eq $sequence;
 	}
-	elsif(
-		$e->type == SDL_MOUSEBUTTONDOWN and $e->button_button & (SDL_BUTTON_LEFT | SDL_BUTTON_MIDDLE | SDL_BUTTON_RIGHT)
-		and !$self->cursor->hide
-	) {
-		my @pos = ($e->button_x, $e->button_y);
-		$self->cursor->pos(\@pos);
-		$self->cursor->clicked(\@pos);
+	elsif($e->type == SDL_MOUSEBUTTONDOWN and $e->button_button & (SDL_BUTTON_LEFT | SDL_BUTTON_MIDDLE | SDL_BUTTON_RIGHT)) {
+		if($self->cursor->sequence eq 'click') {
+			$self->cursor->clicked([$e->button_x, $e->button_y]);
+		}
+		else {
+			my $method = "on_" . $self->cursor->sequence;
+			$self->$method;
+			$self->cursor->clicked(undef);
+		}
 	}
 	elsif($e->type == SDL_KEYDOWN) {
 		return if $e->key_mod & (KMOD_ALT | KMOD_CTRL | KMOD_SHIFT | KMOD_META);
@@ -148,6 +184,9 @@ sub event {
 		given($name) {
 			when('escape') {
 				# $self->set('Menu');
+			}
+			when('space') {
+				$self->on_space;
 			}
 			when(/^[a-z]$/) {
 				$Cheat .= $name;
@@ -195,44 +234,39 @@ sub move {
 sub _move_click {
 	my ($self, $step) = @_;
 	my $click = $self->cursor->clicked;
-	if($click) {
+	
+	my $return = $self->on_click // '';
+	if($return eq 'no_but_keep') {
+		return;
+	}
+	elsif($return ne 'no') {
+		$self->cursor->clicked(undef);
+		return;
+	}
+
+	for my $sprite (@{$self->sprites}) {
 		my $return = $self->on_click // '';
-		if($return eq 'yes') {
+		if($return eq 'no_but_keep') {
+			return;
+		}
+		elsif($return ne 'no') {
 			$self->cursor->clicked(undef);
 			return;
 		}
-		elsif($return eq 'yes_but_keep') {
-			return;
-		}
+	}
+	if($self->sprites->{klaymen} and !$self->klaymen->no_interrupt) {
+		my $bound;
+		if(
+			$bound = $self->move_klaymen_bounds and
+			$bound->[0] <= $click->[0] and $bound->[1] <= $click->[1] and
+			$bound->[2] >= $click->[0] and $bound->[3] >= $click->[1] and
 
-		if($self->cursor->sequence eq 'click') {
-			for my $sprite (@{$self->sprites}) {
-				my $return = $object->on_click($self) // '';
-				if($return eq 'yes') {
-					$self->cursor->clicked(undef);
-					return;
-				}
-				elsif($return eq 'yes_but_keep') {
-					return;
-				}
-			}
-			if($self->sprites->{klaymen} and !$self->klaymen->no_interrupt) {
-				my $bound;
-				if(
-					$bound = $self->move_klaymen_bounds and
-					$bound->[0] <= $click->[0] and $bound->[1] <= $click->[1] and
-					$bound->[2] >= $click->[0] and $bound->[3] >= $click->[1] and
-
-					!$self->klaymen->sprite eq 'idle' || ($click->[0] < $Klaymen->pos->[0] - 38 || $click->[0] > $Klaymen->pos->[0] + 38)
-				) {
-					$self->klaymen->move_to(to => $click->[0]);
-				}
-				$Cursor->clicked(undef);
-				return;
-			}
+			!$self->klaymen->sprite eq 'idle' || ($click->[0] < $Klaymen->pos->[0] - 38 || $click->[0] > $Klaymen->pos->[0] + 38)
+		) {
+			$self->klaymen->move_to(to => $click->[0]);
 		}
-		elsif($self->cursor->sequence eq 'something else...') {
-		}
+		$Cursor->clicked(undef);
+		return;
 	}
 }
 
@@ -386,8 +420,11 @@ sub _move_sprites {
 
 sub show {
 	my ($self, $time) = @_;
-	for(reverse @{$self->sprites}, $Cursor) {
-		$_->show;
+
+	$self->on_show($time);
+	
+	for my $sprite (reverse @{$self->sprites}, $Cursor) {
+		$sprite->show;
 	}
 }
 
