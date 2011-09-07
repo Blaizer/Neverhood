@@ -11,5 +11,6 @@
 ^blb/
 ^blbconv/
 ^(base|crop|dup|tile|zero)$
-^UNDATA
+^UNDATA/
 \.txt$
+^unshare/
