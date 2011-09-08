@@ -1,8 +1,8 @@
 use strict;
 use warnings;
 use 5.01;
-use autodie;
 package Games::Neverhood::Video;
+use autodie;
 
 use File::Spec ();
 
@@ -24,7 +24,8 @@ sub new {
 	# on_set
 	# on_unset
 
-	open my $fh, File::Spec->catfile('share', 'video', @{$self->file});
+	open my $fh, File::Spec->catfile('..', 'blb', @{$self->file});
+	binmode $fh;
 	my $buf;
 
 	# Header
@@ -90,7 +91,6 @@ sub next_frame {
 	
 	if($frame_type & 1) { # palette
 		# // System.Console.WriteLine("Updating palette");
-		# var s = this.file.stream;
 		my $old_pal = $self->{pal};
 		$self->{pal} = [];
 		my $size = $bit->read_8;
@@ -98,7 +98,7 @@ sub next_frame {
 
 		$frame_size -= $size + 1;
 		my $sz = 0;
-		# var pos = s.position + size;
+		my $pos = $bit->tell + $size;
 		my $pal_index = 0;
 		while($sz < 256) {
 			my $t = $bit->read_8;
@@ -114,22 +114,22 @@ sub next_frame {
 				my $off = $bit->read_8;
 				my $j = ($t & 0x3F) + 1;
 				while($j-- != 0 && $sz < 256) {
-				$self->{pal}[$pal_index++] = oldPallette[off];
-				$sz++;
-				$off++;
+					$self->{pal}[$pal_index++] = $old_pal->[$off];
+					$sz++;
+					$off++;
 				}
 			}
 			else {
-			# /* new entries */
-			$self->{pal}[$pal_index++] = [palmap->[t], palmap->[$bit->read_8 & 0x3F], palmap->[$bit->read_8 & 0x3F]];
-			$sz++;
+				# /* new entries */
+				$self->{pal}[$pal_index++] = [palmap->[$t], palmap->[$bit->read_8 & 0x3F], palmap->[$bit->read_8 & 0x3F]];
+				$sz++;
 			}
 		}
-		# s.seek(pos, "begin");
+		$bit->seek($pos);
 	}
 	
 	if($frame_type & 2 ) { # audio
-	
+		
 	}
 	
 	# video
@@ -155,9 +155,9 @@ sub on_unset {
 	$self->{on_unset}->(@_) if $self->{on_unset};
 }
 
-for(<share/video/t>) {
-	for(<$_/ID_40494081-FF.smk>) {
-		s~share/video/~~;
+for("blb/c") {
+	for("$_/72.0A") {
+		s~blb/~~;
 		my $n = $_;
 		my $game = Games::Neverhood::Video->new(
 			file => [$_],

@@ -18,8 +18,7 @@ sub read_1 {
 	my ($self) = @_;
 	if($self->{bit_off} >= 8) {
 		$self->{bit_off} = 0;
-		$self->{byte_off}++;
-		if($self->{byte_off} >= CHUNK_SIZE) {
+		if(++$self->{byte_off} >= CHUNK_SIZE) {
 			read $self->{fh}, $self->{buf}, CHUNK_SIZE;
 			$self->{byte_off} = 0;
 		}
@@ -79,7 +78,31 @@ sub reset {
 	my ($self) = @_;
 	$self->{byte_off} = -1;
 	$self->{bit_off} = 8;
+}
+
+sub tell {
+	my ($self) = @_;
+	tell($self->{fh})*8 + $self->{bit_off};
+}
+
+sub seek {
+	my ($self, $pos) = @_;
 	
+	if($pos % 8) {
+		$self->{bit_off} = $pos % 8;
+		$self->{byte_off} = 0;
+		
+		seek $self->{fh}, int($pos / 8), 0;
+		read $self->{fh}, $self->{buf}, CHUNK_SIZE;
+		$self->{cur} = ord $self->{buf};
+	}
+	else {
+		$self->{byte_off} = -1;
+		$self->{bit_off} = 8;
+		
+		seek $self->{fh}, int($pos / 8), 0;
+		read $self->{fh}, $self->{buf}, CHUNK_SIZE;
+	}
 }
 
 1;

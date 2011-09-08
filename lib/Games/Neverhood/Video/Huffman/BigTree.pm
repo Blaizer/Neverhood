@@ -10,7 +10,6 @@ sub new {
 	my ($class, $bit) = @_;
 	my $self = bless {}, ref $class || $class;
 
-	# warn ('skipping bigtree'),
 	return $self unless $bit->read_1;
 
 	$self->{low_byte_tree}  = Games::Neverhood::Video::Huffman::Tree->new($bit);
