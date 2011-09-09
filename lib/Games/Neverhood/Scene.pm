@@ -286,8 +286,8 @@ sub _move_sprites {
 	if($Remainder >= 1) {
 		$Remainder--;
 
-		$self->frame($self->frame + 1);
-		$self->on_move;
+		# on_move is called inside the frame method
+		$self->frame($self->frame + 1) if $self->frames;
 
 		for my $sprite (@{$self->sprites}, $Cursor) {
 			next unless $sprite;

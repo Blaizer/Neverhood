@@ -27,6 +27,7 @@ use Carp ();
 	# file
 	# sequences
 	# dir
+	# frames
 
 # sub on_move
 # sub on_show
@@ -64,6 +65,53 @@ sub new {
 
 	$self->sprite($sprite) if defined $sprite;
 	$self;
+}
+
+sub DESTROY {}
+
+###############################################################################
+# accessors
+
+sub name {
+	$_[0]->{name};
+}
+sub frame {
+	my ($self, $frame) = @_;
+	if(@_ > 1) {
+		if($frame >= $self->this_sequence_frames) {
+			# loop back to frame 0
+			$_[0]->{frame} = 0;
+		}
+		else {
+			$_[0]->{frame} = $frame;
+		}
+		# the sprite is moved here. As long as you call this method every frame, everything will be fine
+		$_[0]->on_move;
+		return $_[0];
+	}
+	$_[0]->{frame};
+}
+sub sequence {
+	if(@_ > 1) {
+		$_[0]->{sequence} = $_[1];
+		# we set the frame to 0 for safety, we don't trust you to do it yourself
+		# save the value in frame and set it after this if you wanna retain it
+		$_[0]->frame(0);
+		return $_[0];
+	}
+	$_[0]->{sequence};
+}
+sub pos {
+	if(@_ > 1) { $_[0]->{pos} = $_[1]; return $_[0]; }
+	$_[0]->{pos};
+}
+sub hide {
+	if(@_ > 1) { $_[0]->{hide} = $_[1]; return $_[0]; }
+	$_[0]->{hide};
+}
+sub mirror {
+	if(@_ > 1) { $_[0]->{mirror} = $_[1]; return $_[0]; }
+	$_[0]->{mirror};
 }
 
 ###############################################################################
