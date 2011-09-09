@@ -136,6 +136,7 @@ use constant {
 sub on_move {}
 
 sub on_show {
+	# TODO: rewrite this
 	my ($self) = @_;
 	return if $self->hide;
 	my $surface = $self->this_surface;
@@ -169,54 +170,10 @@ sub on_up {}
 sub on_down {}
 
 ###############################################################################
-
-sub sprites { $_[0]->{sprites} }
-sub sprite {
-	if(@_ > 1) {
-		$_[0]->sprites and defined $_[0]->sprites->{$_[1]};
-		$_[0]->{sprite} = $_[1];
-		$_[0]->{this_sprite} = $_[0]->sprites->{$_[1]};
-		return $_[0];
-	}
-	$_[0]->{sprite};
-}
-sub frame :lvalue {
-	if(@_ > 1) {
-		$_[0]->{frame} = $_[1] + $Remainder;
-		$_[0]->to_frame($_[1], '');
-		return $_[0];
-	}
-	$_[0]->{frame};
-}
-sub sequence {
-	if(@_ > 1) { $_[0]->{sequence} = $_[1]; return $_[0]; }
-	$_[0]->{sequence};
-}
-sub pos {
-	if(@_ > 1) { $_[0]->{pos} = $_[1]; return $_[0]; }
-	$_[0]->{pos};
-}
-sub hide {
-	if(@_ > 1) { $_[0]->{hide} = $_[1]; return $_[0]; }
-	$_[0]->{hide};
-}
-sub flip {
-	if(@_ > 1) { $_[0]->{flip} = $_[1]; return $_[0]; }
-	$_[0]->{flip};
-}
-sub all_on_ground { $_[0]->{all_on_ground} }
-sub all_folder    { $_[0]->{all_folder} }
-sub name          { $_[0]->{name} }
-sub to_frame {
-	my $self = shift;
-	if(@_ > 1) { $self->{to_frame}->set(@_); return $self; }
-	$self->{to_frame};
-}
-
-###############################################################################
 # other
 
 sub move_klaymen_to {
+	# TODO: this needs to be finalised
 	my ($sprite, %arg) = @_;
 	for(grep defined, @arg{qw/left right/}) {
 		if(ref) {
@@ -240,23 +197,12 @@ sub move_klaymen_to {
 
 sub click_in_rect {
 	my ($sprite, @rect) = @_;
-	if(my $click = $Cursor->clicked and $rect[2] and $rect[3]) {
-		if($ARGV[1]) {
-			# my $rect = SDLx::Surface->new(w => $rect[2], h => $rect[3], d => 32, color => 0xFF000000);
-			SDL::Video::fill_rect($Games::Neverhood::App, SDL::Rect->new(@rect), SDL::Video::map_RGB($Games::Neverhood::App->format, 255, 0, 0));
-		}
-		$name = '^idle' if !defined $name and $Game->klaymen;
-		if(
-			$click->[0] >= $rect[0] and $click->[1] >= $rect[1]
-			and $click->[0] < $rect[0] + $rect[2] and $click->[1] < $rect[1] + $rect[3]
-			and !defined $name || $Klaymen->sprite =~ /$name/
-			and !defined $callback || $Game->call($callback, $sprite, $click)
-
-		) {
-			return 1;
-		}
-	}
-	return;
+	my $click = Games::Neverhood->cursor->clicked;
+	return
+		$click and $rect[2] and $rect[3]
+		and $click->[0] >= $rect[0] and $click->[1] >= $rect[1]
+		and $click->[0] < $rect[0] + $rect[2] and $click->[1] < $rect[1] + $rect[3]
+	;
 }
 
 sub this_sequence {
