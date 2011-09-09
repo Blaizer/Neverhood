@@ -7,6 +7,8 @@ use SDL;
 use SDL::Video;
 use SDL::Events;
 
+use Carp ();
+
 use parent
 	'Games::Neverhood',
 	'Exporter',
@@ -64,8 +66,12 @@ sub new {
 	my $sprites = Games::Neverhood::OrderedHash->new;
 	for my $sprite (@{$self->sprites_list}) {
 		my $name;
-		unless(ref $name) {
+		if(ref $sprite) {
+			$name = $sprite->name or Carp::confess("All sprites must have a (unique) name");
+		}
+		else {
 			no strict 'refs';
+			$name = $sprite;
 			my $sprite_class = "$class::$name";
 			push @{"$sprite_class::ISA"}, 'Games::Neverhood::Sprite';
 			$sprite = $sprite_class->new;

@@ -15,6 +15,8 @@ use parent
 ;
 use File::Spec ();
 
+# Overloadable Methods:
+
 # sub new
 	# name
 	# frame
@@ -37,16 +39,10 @@ use File::Spec ();
 # sub on_up
 # sub on_down
 
-#ALL
-# frame sequence pos hide mirror 
-# sprites_sprite
+# Other Methods:
 
-#SPRITE
-# sequences offset flipable on_ground events surface surface_flip click left right out up down folder
-# this_sequence this_sequence_frame events_sequence
-
-use constant all      => qw/sprite frame sequence pos hide mirror all_on_ground all_folder all_name/;
-use constant no_store => qw/sprites all_on_ground all_folder all_name /;
+# sub this_sequence
+# sub this_sequence_frame
 
 sub new {
 	my ($class, %arg) = @_;
