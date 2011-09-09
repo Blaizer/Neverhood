@@ -7,6 +7,8 @@ use SDL;
 use SDL::Video;
 use SDL::Events;
 
+use Carp ();
+
 use parent
 	'Games::Neverhood',
 	'Exporter',
@@ -42,6 +44,10 @@ use Games::Neverhood::OrderedHash;
 	# klaymen_move_bounds
 	# music
 
+# sub event
+# sub move
+# sub show
+
 # sub on_move
 # sub on_show
 # sub on_space
@@ -53,21 +59,22 @@ use Games::Neverhood::OrderedHash;
 # sub on_down
 
 sub new {
-	my ($class, %arg) = @_;
-	my $class = ref $class || $class;
-	my $self = bless \%arg, $class;
+	my $class = shift;
+	$class = ref $class || $class;
+	my $self = bless {@_}, $class;
 
 	my $sprites = Games::Neverhood::OrderedHash->new;
 	for my $sprite (@{$self->sprites_list}) {
 		my $name;
-		unless(ref $name) {
+		if(ref $sprite) {
+			$name = $sprite->name or Carp::confess("All sprites must have a (unique) name");
+		}
+		else {
 			no strict 'refs';
+			$name = $sprite;
 			my $sprite_class = "$class::$name";
 			push @{"$sprite_class::ISA"}, 'Games::Neverhood::Sprite';
 			$sprite = $sprite_class->new;
-
-			# sub definition for all_dir from current class to sprite class
-			*{$sprite_class . "::all_dir"} = \&{$class . "::all_dir"} unless eval { $sprite->dir };
 		}
 	} continue {
 		$sprites->{$name} = $sprite;
@@ -89,7 +96,6 @@ sub on_destroy {}
 # accessors
 
 sub sprites { $_[0]->{sprites} }
-sub video   { $_[0]->{video}   }
 sub frame {
 	if(@_ > 1) { $_[0]->{frame} = $_[1]; return $_[0]; }
 	$_[0]->{frame};
@@ -100,26 +106,24 @@ sub frame {
 
 use constant {
 	sprites_list        => [],
-	all_dir             => 'i',
 	fps                 => 24,
 	cursor_type         => 'click',
 	move_klaymen_bounds => undef,
 	music               => undef,
-	name                => undef,
 }
 
 ###############################################################################
 # handler subs
 
-sub on_move  {}
-sub on_show  {}
-sub on_space {}
-sub on_click {}
-sub on_out   {}
-sub on_left  {}
-sub on_right {}
-sub on_up    {}
-sub on_down  {}
+# sub on_move  {}
+# sub on_show  {}
+# sub on_space {}
+# sub on_click {}
+# sub on_out   {}
+# sub on_left  {}
+# sub on_right {}
+# sub on_up    {}
+# sub on_down  {}
 
 sub event {
 	my ($self, $e) = @_;
@@ -276,8 +280,8 @@ sub _move_sprites {
 	if($Remainder >= 1) {
 		$Remainder--;
 
-		$self->frame($self->frame + 1);
-		$self->on_move;
+		# on_move is called inside the frame method
+		$self->frame($self->frame + 1) if $self->frames;
 
 		for my $sprite (@{$self->sprites}, $Cursor) {
 			next unless $sprite;
@@ -424,7 +428,7 @@ sub show {
 	$self->on_show($time);
 	
 	for my $sprite (reverse @{$self->sprites}, $Cursor) {
-		$sprite->show;
+		$sprite->on_show;
 	}
 }
 
