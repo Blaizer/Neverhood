@@ -10,10 +10,8 @@ use SDL::GFX::Rotozoom;
 use SDL::Mixer::Channels;
 use SDL::Mixer::Samples;
 
-use parent
-	'Exporter',
-;
 use File::Spec ();
+use Carp ();
 
 # Overloadable Methods:
 
@@ -26,6 +24,7 @@ use File::Spec ();
 	# mirror
 
 # use constant
+	# file
 	# sequences
 	# dir
 
@@ -41,76 +40,27 @@ use File::Spec ();
 
 # Other Methods:
 
+# sub this_surface
 # sub this_sequence
 # sub this_sequence_frame
 
 sub new {
-	my ($class, %arg) = @_;
-	my $self = bless {}, ref $class || $class;
+	my $class = shift;
+	my $self = bless {@_}, ref $class || $class;
 
-	my $sprite;
-	$self->{sprites} = {};
-
-	while(my ($key, $val) = keys %arg) {
-		if($key eq 'sprite') {
-			$sprite = $val;
-		}
-		elsif($key ~~ @All) {
-			$self->{$key} = $val;
-		}
-		else {
-			my $self = $self->{sprites}{$key} = {};
-			$self->sprite($key);
-
-			$self->{this_sprite}{frames}    = $val->{frames} // 1;
-			$self->{this_sprite}{sequences} = $val->{sequences} || [[0]];
-			$self->{this_sprite}{offset}[0] //= 0;
-			$self->{this_sprite}{offset}[1] //= 0;
-			#flipable
-			#on_ground
-
-			if(ref $self->events) {
-				if(ref $self->events eq 'CODE') {
-					$self->events({ 0 => [ true => $self->events ] });
-				}
-				elsif(ref $self->events eq 'ARRAY') {
-					$self->events({ 0 => $self->events });
-				}
-				elsif(ref $self->events eq 'HASH') {
-					for my $k (keys %{$self->events}) {
-						my $v = $self->events->{$k};
-						$self->events->{$k} = [ true => $v ] if ref $v and ref $v eq 'CODE';
-					}
-				}
-			}
-			else {
-				$self->events({});
-			}
-			$self->events({ map { $_ => $self->events->{$_} // [] } 0..$#{$self->sequences} });
-			#surface
-			#surface_flip
-			for(qw/click left right out up down/) {
-				if($self->$_ and ref $self->$_ and ref $self->$_ eq 'CODE') {
-					$self->$_([ true => $self->$_ ]);
-				}
-			}
-			$self->folder([$self->folder]) if defined $self->folder and !ref $self->folder;
-			$self->name($_) unless defined $self->name;
-		}
-	}
-
-	$self->{to_frame} = Games::Neverhood::DualVar->new;
-	$self->frame($self->frame // 0);
-	$self->sequence(0) unless defined $self->sequence;
-	$self->pos([]) unless defined $self->pos;
+	$self->file or Carp::confess("Sprite: '", $self->name // __PACKAGE__, "' must specify a file");
+	
+	#name
+	# frame will get set to the default of 0 when we set the sequence
+	my $frame = $self->frame;
+	$self->sequence($self->sequence) if $self->sequence;
+	$self->frame($frame) if $frame;
+	
+	$self->pos([])     unless defined $self->pos;
 	$self->pos->[0] //= 0;
 	$self->pos->[1] //= 0;
 	#hide
-	#flip
-	#global
-	#all_on_ground
-	#all_folder
-	;#all_name
+	#mirror
 
 	$self->sprite($sprite) if defined $sprite;
 	$self;
@@ -118,7 +68,7 @@ sub new {
 
 ###############################################################################
 
-sub show {
+sub on_show {
 	my ($self) = @_;
 	return if $self->hide;
 	my $surface = $self->this_surface;

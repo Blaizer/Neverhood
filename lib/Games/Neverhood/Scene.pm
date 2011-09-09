@@ -59,9 +59,9 @@ use Games::Neverhood::OrderedHash;
 # sub on_down
 
 sub new {
-	my ($class, %arg) = @_;
-	my $class = ref $class || $class;
-	my $self = bless \%arg, $class;
+	my $class = shift;
+	$class = ref $class || $class;
+	my $self = bless {@_}, $class;
 
 	my $sprites = Games::Neverhood::OrderedHash->new;
 	for my $sprite (@{$self->sprites_list}) {
@@ -77,7 +77,9 @@ sub new {
 			$sprite = $sprite_class->new;
 
 			# sub definition for all_dir from current class to sprite class
-			*{$sprite_class . "::all_dir"} = \&{$class . "::all_dir"} unless eval { $sprite->dir };
+			if(defined $self->all_dir) {
+				*{$sprite_class . "::all_dir"} = \&{$class . "::all_dir"} unless eval { $sprite->dir };
+			}
 		}
 	} continue {
 		$sprites->{$name} = $sprite;
