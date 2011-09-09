@@ -426,7 +426,7 @@ sub show {
 	$self->on_show($time);
 	
 	for my $sprite (reverse @{$self->sprites}, $Cursor) {
-		$sprite->show;
+		$sprite->on_show;
 	}
 }
 
