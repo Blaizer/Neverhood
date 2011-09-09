@@ -42,6 +42,10 @@ use Games::Neverhood::OrderedHash;
 	# klaymen_move_bounds
 	# music
 
+# sub event
+# sub move
+# sub show
+
 # sub on_move
 # sub on_show
 # sub on_space
@@ -89,7 +93,6 @@ sub on_destroy {}
 # accessors
 
 sub sprites { $_[0]->{sprites} }
-sub video   { $_[0]->{video}   }
 sub frame {
 	if(@_ > 1) { $_[0]->{frame} = $_[1]; return $_[0]; }
 	$_[0]->{frame};
@@ -105,21 +108,20 @@ use constant {
 	cursor_type         => 'click',
 	move_klaymen_bounds => undef,
 	music               => undef,
-	name                => undef,
 }
 
 ###############################################################################
 # handler subs
 
-sub on_move  {}
-sub on_show  {}
-sub on_space {}
-sub on_click {}
-sub on_out   {}
-sub on_left  {}
-sub on_right {}
-sub on_up    {}
-sub on_down  {}
+# sub on_move  {}
+# sub on_show  {}
+# sub on_space {}
+# sub on_click {}
+# sub on_out   {}
+# sub on_left  {}
+# sub on_right {}
+# sub on_up    {}
+# sub on_down  {}
 
 sub event {
 	my ($self, $e) = @_;
