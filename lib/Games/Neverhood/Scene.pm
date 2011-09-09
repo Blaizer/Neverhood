@@ -75,11 +75,6 @@ sub new {
 			my $sprite_class = "$class::$name";
 			push @{"$sprite_class::ISA"}, 'Games::Neverhood::Sprite';
 			$sprite = $sprite_class->new;
-
-			# sub definition for all_dir from current class to sprite class
-			if(defined $self->all_dir) {
-				*{$sprite_class . "::all_dir"} = \&{$class . "::all_dir"} unless eval { $sprite->dir };
-			}
 		}
 	} continue {
 		$sprites->{$name} = $sprite;
@@ -111,7 +106,6 @@ sub frame {
 
 use constant {
 	sprites_list        => [],
-	all_dir             => 'i',
 	fps                 => 24,
 	cursor_type         => 'click',
 	move_klaymen_bounds => undef,

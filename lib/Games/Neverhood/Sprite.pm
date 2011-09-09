@@ -41,9 +41,15 @@ use Carp ();
 
 # Other Methods:
 
-# sub this_surface
+# sub move_klaymen_to
+# sub click_in_rect
+
 # sub this_sequence
+# sub this_sequence_surface
 # sub this_sequence_frame
+# sub this_sequence_frames
+# sub this_sequence_pos
+# sub this_sequence_offset
 
 sub new {
 	my $class = shift;
@@ -115,6 +121,19 @@ sub mirror {
 }
 
 ###############################################################################
+# constant/subs
+
+use constant {
+	file      => undef,
+	sequences => undef,
+	dir       => 'i',
+	frames    => 0,
+}
+
+###############################################################################
+# handler subs
+
+sub on_move {}
 
 sub on_show {
 	my ($self) = @_;
@@ -141,103 +160,13 @@ sub on_show {
 	);
 }
 
-sub load {
-	my ($self) = @_;
-	for my $name (keys %{$self->sprites}) {
-		my $s_s = $self->sprites->{$name};
-		my $folder;
-		die "No folder for $name" unless defined($folder = $s_s->{folder} // $self->all_folder);
-		my $path = File::Spec->catfile($Games::Neverhood::Folder, @$folder, "$name.png");
-		$s_s->{surface} = SDL::Image::load($path) or die SDL::get_error;
-		if($s_s->{flipable}) {
-			$s_s->{surface_flip} = SDL::GFX::Rotozoom::zoom_surface($s_s->{surface}, -1, 1, 0);
-		}
-	}
-	$self;
-}
-
-sub set {
-	my ($self, $name, $frame, $sequence) = @_;
-	$self->sprite($name) if defined $name;
-	$self->frame($frame || 0);
-	$self->sequence($sequence || 0);
-}
-
-sub get {
-	my ($self, $name, $frame, $sequence) = @_;
-		!defined $name     || $self->sprite eq $name
-	and !defined $frame    || ($frame eq 'end' ? $self->to_frame eq 'end' : $self->to_frame == $frame)
-	and !defined $sequence || $self->sequence == $sequence
-}
-
-sub move_to {
-	my ($sprite, %arg) = @_;
-	for(grep defined, @arg{qw/left right/}) {
-		if(ref) {
-			$_->[0] = [@$_] if !ref $_->[0];
-		}
-		else {
-			$_ = [[$_]];
-		}
-	}
-	$Klaymen->moving_to({
-		%arg,
-		sprite => $sprite,
-	});
-	# sprite => $sprite,
-	# left => 1 || [1, 2, 3] || [[1, 2, 3], 4],
-	# right => 1 || [1, 2, 3] || [[1, 2, 3], 4],
-	# do => sub { $_[0]->hide = 1 },
-	# set => ['idle', 0, 2, 1],
-	$sprite;
-}
-
-sub rect {
-	my ($sprite, @rect) = @_;
-	if(my $click = $Cursor->clicked and $rect[2] and $rect[3]) {
-		if($ARGV[1]) {
-			# my $rect = SDLx::Surface->new(w => $rect[2], h => $rect[3], d => 32, color => 0xFF000000);
-			SDL::Video::fill_rect($Games::Neverhood::App, SDL::Rect->new(@rect), SDL::Video::map_RGB($Games::Neverhood::App->format, 255, 0, 0));
-		}
-		$name = '^idle' if !defined $name and $Game->klaymen;
-		if(
-			$click->[0] >= $rect[0] and $click->[1] >= $rect[1]
-			and $click->[0] < $rect[0] + $rect[2] and $click->[1] < $rect[1] + $rect[3]
-			and !defined $name || $Klaymen->sprite =~ /$name/
-			and !defined $callback || $Game->call($callback, $sprite, $click)
-
-		) {
-			return 1;
-		}
-	}
-	return;
-}
-
-# our @Callback;
-# SDL::Mixer::Channels::channel_finished(sub {
-	# my ($channel) = @_;
-	# if(defined $Callback[$channel]) {
-		# &{$Callback[$channel]};
-		# delete $Callback[$channel];
-	# }
-# });
-
-sub play_sound {
-	shift;
-	my %arg;
-	if(@_ == 1) {
-		($arg{name}) = @_;
-	}
-	else {
-		%arg = @_;
-	}
-	my $name = File::Spec->catfile($Games::Neverhood::Folder, 'sound', (ref $arg{name} ? @{$arg{name}} : $arg{name}) . '.ogg');
-	my $chunk = SDL::Mixer::Samples::load_WAV($name) or die "Could not load $name ", SDL::get_error;
-	my $channel = SDL::Mixer::Channels::play_channel(-1, $chunk, $arg{loops} // 0);
-	SDL::Mixer::Channels::volume($channel, $arg{volume}) if defined $arg{volume};
-	# $Callback[$channel] = $arg{callback} if defined $arg{callback};
-	$channel;
-}
+sub on_space {}
+sub on_click {}
+sub on_out {}
+sub on_left {}
+sub on_right {}
+sub on_up {}
+sub on_down {}
 
 ###############################################################################
 
@@ -285,21 +214,69 @@ sub to_frame {
 }
 
 ###############################################################################
+# other
 
-sub sequences    { $_[0]->{this_sprite}{sequences} }
-sub offset       { $_[0]->{this_sprite}{offset} }
-sub on_ground    { $_[0]->{this_sprite}{on_ground} // $_[0]->all_on_ground }
-sub events       { $_[0]->{this_sprite}{events} }
-sub on_click     {
-		$_[0]->{this_sprite}{on_click}[0]->($_[0]) and
-		$_[0]->{this_sprite}{on_click}[1]->($_[0])
-	if $_[0]->{this_sprite}{on_click};
+sub move_klaymen_to {
+	my ($sprite, %arg) = @_;
+	for(grep defined, @arg{qw/left right/}) {
+		if(ref) {
+			$_->[0] = [@$_] if !ref $_->[0];
+		}
+		else {
+			$_ = [[$_]];
+		}
+	}
+	$Klaymen->moving_to({
+		%arg,
+		sprite => $sprite,
+	});
+	# sprite => $sprite,
+	# left => 1 || [1, 2, 3] || [[1, 2, 3], 4],
+	# right => 1 || [1, 2, 3] || [[1, 2, 3], 4],
+	# do => sub { $_[0]->hide = 1 },
+	# set => ['idle', 0, 2, 1],
+	$sprite;
 }
-sub folder       { $_[0]->{this_sprite}{folder} // $_[0]->all_folder }
 
-sub this_sequence       { $_[0]->sequences($_[0]->sequence) }
-sub this_sequence_frame { $_[0]->this_sequence($_[0]->frame) }
-sub events_sequence     { $_[0]->events($_[0]->sequence) }
+sub click_in_rect {
+	my ($sprite, @rect) = @_;
+	if(my $click = $Cursor->clicked and $rect[2] and $rect[3]) {
+		if($ARGV[1]) {
+			# my $rect = SDLx::Surface->new(w => $rect[2], h => $rect[3], d => 32, color => 0xFF000000);
+			SDL::Video::fill_rect($Games::Neverhood::App, SDL::Rect->new(@rect), SDL::Video::map_RGB($Games::Neverhood::App->format, 255, 0, 0));
+		}
+		$name = '^idle' if !defined $name and $Game->klaymen;
+		if(
+			$click->[0] >= $rect[0] and $click->[1] >= $rect[1]
+			and $click->[0] < $rect[0] + $rect[2] and $click->[1] < $rect[1] + $rect[3]
+			and !defined $name || $Klaymen->sprite =~ /$name/
+			and !defined $callback || $Game->call($callback, $sprite, $click)
+
+		) {
+			return 1;
+		}
+	}
+	return;
+}
+
+sub this_sequence {
+
+}
+sub this_sequence_surface {
+
+}
+sub this_sequence_frame {
+
+}
+sub this_sequence_frames {
+
+}
+sub this_sequence_pos {
+
+}
+sub this_sequence_offset {
+
+}
 
 1;
  
