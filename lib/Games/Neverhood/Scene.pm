@@ -93,7 +93,11 @@ sub new {
 
 sub sprites { $_[0]->{sprites} }
 sub frame {
-	if(@_ > 1) { $_[0]->{frame} = $_[1]; return $_[0]; }
+	if(@_ > 1) {
+		$_[0]->{frame} = $_[1];
+		$_[0]->on_move;
+		return $_[0];
+	}
 	$_[0]->{frame};
 }
 
@@ -234,7 +238,7 @@ sub move {
 sub _move_click {
 	my ($self, $step) = @_;
 	my $click = $self->cursor->clicked;
-	
+
 	my $return = $self->on_click // '';
 	if($return eq 'no_but_keep') {
 		return;
@@ -280,13 +284,8 @@ sub _move_sprites {
 		$self->frame($self->frame + 1) if $self->frames;
 
 		for my $sprite (@{$self->sprites}, $Cursor) {
-			next unless $sprite;
-			my $frame = $sprite->frame + 1;
-			if($frame >= @{$sprite->this_sequence}) {
-				$frame = 'end';
-			}
-			$sprite->frame($frame);
-			$sprite->on_move($self);
+			# on_move is called inside the frame method
+			$sprite->frame($sprite->frame + 1);
 		}
 	}
 }
@@ -422,7 +421,7 @@ sub show {
 	my ($self, $time) = @_;
 
 	$self->on_show($time);
-	
+
 	for my $sprite (reverse @{$self->sprites}, $Cursor) {
 		$sprite->on_show;
 	}

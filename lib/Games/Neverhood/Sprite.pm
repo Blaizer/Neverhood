@@ -82,17 +82,17 @@ sub DESTROY {}
 sub frame {
 	my ($self, $frame) = @_;
 	if(@_ > 1) {
-		if($frame >= $self->this_sequence_frames) {
-			# loop back to frame 0
-			$self->{frame} = 0;
+		if($frame ne 'end' and $frame >= $self->this_sequence_frames) {
+			# loop back to frame 0, and signify being at the 'end' instead of just frame 0
+			$frame = 'end';
 		}
-		else {
-			$self->{frame} = $frame;
-		}
+		$self->{frame} = $frame;
 		# the sprite is moved here. As long as you call this method every frame, everything will be fine
 		$self->on_move;
 		return $self;
 	}
+	# we return a dualvar that is both 0 and 'end' when we're signifying that the sprite just looped
+	return Scalar::Util::dualvar(0, 'end') if $self->{frame} eq 'end';
 	$self->{frame};
 }
 sub sequence {
