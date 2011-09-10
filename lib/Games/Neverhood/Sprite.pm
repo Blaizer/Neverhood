@@ -42,7 +42,7 @@ use Carp ();
 # Other Methods:
 
 # sub move_klaymen_to
-# sub click_in_rect
+# sub in_rect
 
 # sub this_sequence
 # sub this_sequence_surface
@@ -56,14 +56,14 @@ sub new {
 	my $self = bless {@_}, ref $class || $class;
 
 	$self->file or Carp::confess("Sprite: '", $self->name // __PACKAGE__, "' must specify a file");
-	
+
 	#name
 	# frame will get set to the default of 0 when we set the sequence
-	my $frame = $self->frame;
-	$self->sequence($self->sequence) if $self->sequence;
-	$self->frame($frame) if $frame;
-	
-	$self->pos([])     unless defined $self->pos;
+	if($self->sequence) {
+		$self->sequence($self->sequence, $self->frame // 0);
+	}
+
+	$self->pos([]) unless defined $self->pos;
 	$self->pos->[0] //= 0;
 	$self->pos->[1] //= 0;
 	#hide
@@ -162,7 +162,7 @@ sub on_show {
 }
 
 sub on_space {}
-sub on_click {}
+sub on_click { 'no' }
 sub on_out {}
 sub on_left {}
 sub on_right {}
@@ -195,7 +195,7 @@ sub move_klaymen_to {
 	$sprite;
 }
 
-sub click_in_rect {
+sub in_rect {
 	my ($sprite, @rect) = @_;
 	my $click = Games::Neverhood->cursor->clicked;
 	return
@@ -225,4 +225,3 @@ sub this_sequence_offset {
 }
 
 1;
- 

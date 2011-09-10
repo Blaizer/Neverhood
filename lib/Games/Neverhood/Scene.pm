@@ -86,11 +86,7 @@ sub new {
 	$self;
 }
 
-sub DESTROY {
-	# just in case I ever need to put code here to happen on every destroy
-	&on_destroy
-}
-sub on_destroy {}
+# sub DESTROY {}
 
 ###############################################################################
 # accessors
@@ -118,7 +114,7 @@ use constant {
 # sub on_move  {}
 # sub on_show  {}
 # sub on_space {}
-# sub on_click {}
+sub on_click { 'no' }
 # sub on_out   {}
 # sub on_left  {}
 # sub on_right {}
