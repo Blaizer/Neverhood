@@ -5,19 +5,6 @@ package Games::Neverhood::Scene::Nursery::One;
 
 use parent 'Games::Neverhood::Scene';
 
-use constant {
-	sprites_list => [
-		'foreground',
-		$_[0]->klaymen,
-		'hammer',
-		'door',
-		'button'
-		'window',
-		'lever',
-		'background',
-	],
-	move_klaymen_bounds => [151, 60, 500, 479],
-};
 sub new {
 	my $self = $_[0]->SUPER::new;
 	if($self->GG->{nursery_1_window_open}) { $self->sprites->{window}->hide }
@@ -32,11 +19,32 @@ sub DESTROY {
 	$self->GG->{nursery_1_window_open} = 1 if $self->sprites->{window}->hide;
 }
 
+sub sprites_list {
+	[
+		'foreground',
+		$_[0]->klaymen,
+		'hammer',
+		'door',
+		'button'
+		'window',
+		'lever',
+		'background',
+	];
+}
+
+use constant {
+	move_klaymen_bounds => [151, 60, 500, 479],
+};
+
+sub on_click {
+	if($_[0]->klaymen->sequence eq 'snore') { $_[0]->klaymen->sequence('wake') }
+	else { 'no' }
+}
+
 package Games::Neverhood::Scene::Nursery::One::background;
-	sub on_click {
-		if($_->klaymen->sequence eq 'snore') { $_->klaymen->sequence('wake') }
-		else { 'no' }
-	}
+	use constant {
+		file => 0,
+	};
 
 package Games::Neverhood::Scene::Nursery::One::lever;
 	sub new {
@@ -46,6 +54,8 @@ package Games::Neverhood::Scene::Nursery::One::lever;
 		);
 	}
 	use constant {
+		file => 0,
+		dir => 's',
 		sequences => {
 			idle => { frames => [0] },
 			pull => { frames => [1,1,2,2,3,3,4,4,5,5,6,6,4,4,3,3,2,2,1,1], next_sequence => 'idle' },
@@ -69,6 +79,8 @@ package Games::Neverhood::Scene::Nursery::One::window;
 		);
 	}
 	use constant {
+		file => 0,
+		dir => 's',
 		sequences => {
 			idle => { frames => [0] },
 			open => { frames => [1,2,3] },
@@ -97,6 +109,9 @@ package Games::Neverhood::Scene::Nursery::One::button;
 			hide => 1,
 		);
 	}
+	use constant {
+		file => 0,
+	};
 	sub on_click {
 		if($_[0]->in_rect(455, 325, 40, 40)) { $_[0]->move_klaymen_to(left => 370, set => ['push_button_back']) }
 		else { 'no' }
@@ -121,6 +136,8 @@ package Games::Neverhood::Scene::Nursery::One::door;
 		);
 	}
 	use constant {
+		file => 0,
+		dir => 's',
 		sequences => {
 			idle_1 => { frames => [0] }
 			bash_1 => { frames => [1,1,2,2,3,3], next_sequence => 'idle_2' },
@@ -160,6 +177,8 @@ package Games::Neverhood::Scene::Nursery::One::hammer;
 		);
 	}
 	use constant {
+		file => 0,
+		dir => 's',
 		sequences => {
 			idle => { frames => [0] }
 			swing => { frames => [1,1,2,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13], next_sequence => 'idle' }
@@ -172,6 +191,9 @@ package Games::Neverhood::Scene::Nursery::One::hammer;
 	}
 
 package Games::Neverhood::Scene::Nursery::One::foreground;
+	use constant {
+		file => 0,
+	};
 	sub new {
 		$_[0]->SUPER::new(
 			pos => [ 574, 246 ]

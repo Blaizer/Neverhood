@@ -16,7 +16,6 @@ use Carp ();
 # Overloadable Methods:
 
 # sub new
-	# name
 	# frame
 	# sequence
 	# pos
@@ -24,10 +23,10 @@ use Carp ();
 	# mirror
 
 # use constant
+	# name
 	# file
-	# sequences
 	# dir
-	# frames
+	# sequences
 
 # sub on_move
 # sub on_show
@@ -57,10 +56,12 @@ sub new {
 
 	$self->file or Carp::confess("Sprite: '", $self->name // __PACKAGE__, "' must specify a file");
 
-	#name
-	# frame will get set to the default of 0 when we set the sequence
 	if($self->sequence) {
 		$self->sequence($self->sequence, $self->frame // 0);
+	}
+	else {
+		# gotta still call that on_move from within frame
+		$self->frame(0);
 	}
 
 	$self->pos([]) unless defined $self->pos;
@@ -78,34 +79,38 @@ sub DESTROY {}
 ###############################################################################
 # accessors
 
-sub name {
-	$_[0]->{name};
-}
 sub frame {
 	my ($self, $frame) = @_;
 	if(@_ > 1) {
 		if($frame >= $self->this_sequence_frames) {
 			# loop back to frame 0
-			$_[0]->{frame} = 0;
+			$self->{frame} = 0;
 		}
 		else {
-			$_[0]->{frame} = $frame;
+			$self->{frame} = $frame;
 		}
 		# the sprite is moved here. As long as you call this method every frame, everything will be fine
-		$_[0]->on_move;
-		return $_[0];
+		$self->on_move;
+		return $self;
 	}
-	$_[0]->{frame};
+	$self->{frame};
 }
 sub sequence {
+	my ($self, $sequence, $frame) = @_;
 	if(@_ > 1) {
-		$_[0]->{sequence} = $_[1];
-		# we set the frame to 0 for safety, we don't trust you to do it yourself
-		# save the value in frame and set it after this if you wanna retain it
-		$_[0]->frame(0);
-		return $_[0];
+		# TODO: might wanna do error checking on $sequence here
+		$self->{sequence} = $sequence;
+		if(@_ > 2) {
+			$self->frame($frame);
+		}
+		else {
+			# we set the frame to 0 for safety, we don't trust you to do it yourself
+			# send the current frame in the second arg if you wanna retain it
+			$self->frame(0);
+		}
+		return $self;
 	}
-	$_[0]->{sequence};
+	$self->{sequence};
 }
 sub pos {
 	if(@_ > 1) { $_[0]->{pos} = $_[1]; return $_[0]; }
@@ -124,10 +129,10 @@ sub mirror {
 # constant/subs
 
 use constant {
+	name      => undef, # TODO: might wanna make this a sub with error checking and a state var
 	file      => undef,
-	sequences => undef,
+	sequences => undef, # TODO: might wanna put error checking here
 	dir       => 'i',
-	frames    => 0,
 }
 
 ###############################################################################
