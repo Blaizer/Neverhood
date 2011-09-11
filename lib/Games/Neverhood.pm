@@ -35,15 +35,15 @@ use overload
 our $Remainder = 0;
 
 # globals from bin/nhc
-our ($Debug, $FPSLimit, $Fullscreen, $NoFrame, $ShareDir, $StartUnset, $StartSet);
+our ($Debug, $FPSLimit, $Fullscreen, $NoFrame, $ShareDir, $StartNew, $StartDestroy);
 BEGIN {
 #	$Debug;
-	$FPSLimit   //= 60;
-	$Fullscreen //= 1;
+	$FPSLimit     //= 60;
+	$Fullscreen   //= 1;
 #	$NoFrame;
-	$ShareDir   //= do { require File::ShareDir; File::ShareDir::dist_dir('Games-Neverhood') };
-	$StartSet   //= 'Scene::Nursery::One';
-	$StartUnset //= $Games::Neverhood::StartSet;
+	$ShareDir     //= do { require File::ShareDir; File::ShareDir::dist_dir('Games-Neverhood') };
+	$StartNew     //= 'Scene::Nursery::One';
+	$StartDestroy //= $Games::Neverhood::StartNew;
 }
 
 use Games::Neverhood::Scene::Nursery::One;
@@ -52,7 +52,6 @@ use Games::Neverhood::Scene::Test;
 BEGIN {
 	# making an unset object for set to use
 	my $unset = "Games::Neverhood::$StartUnset";
-	
 	$unset->new->set($StartSet);
 	$Game->set;
 }
@@ -77,12 +76,12 @@ sub cursor { $Cursor }
 sub set {
 	state $_set;
 	
-	my $self = shift;
-	if(@_) {
-		$_set = shift;
+	my ($self, $set) = @_;
+	if(@_ > 1) {
+		$self->{set} = $set;
 		return $self;
 	}
-	return $self unless defined $_set;
+	return $self unless defined $self->{set};
 
 	my $set_name = join "::", "Games::Neverhood", $_set;
 	undef $_set;
@@ -140,7 +139,7 @@ sub new {
 		],
 		show_handlers => [
 			# sub{$_[1]->show(@_)},
-			sub{$App->flip},
+			sub{$_[1]->flip},
 			# sub{$_[1]->set},
 		],
 	);

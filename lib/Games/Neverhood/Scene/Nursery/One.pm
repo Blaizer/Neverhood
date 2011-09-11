@@ -96,7 +96,7 @@ package Games::Neverhood::Scene::Nursery::One::window;
 	}
 	sub on_click {
 		if($_[0]->in_rect(315, 200, 70, 140) and $_[0]->hide) {
-			$_[0]->move_klaymen_to(left => 300, right => [391, 370], set => ['push_button_back'])
+			$_[0]->move_klaymen_to(left => 300, right => [391, 370], set => ['turn_to_back'])
 		}
 		else { 'no' }
 	}

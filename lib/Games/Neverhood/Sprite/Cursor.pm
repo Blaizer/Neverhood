@@ -5,26 +5,39 @@ package Games::Neverhood::Sprite::Cursor;
 
 use parent 'Games::Neverhood::Sprite';
 
-${;no strict;__PACKAGE__} = __PACKAGE__->SUPER::new(
-	all_folder => 'cursor',
-	click => {
-		sequences => [[0, 0, 1, 1]],
+use constant {
+	sequences => {
+		click => {
+			frames => [0,0,1,1,2,2],
+			offsets => [],
+			clips => []
+		},
+		left => {
+			frames => [0,0,1,1,2,2],
+			offsets => [],
+			clips => []
+		},
+		right => {
+			frames => [0,0,1,1,2,2],
+			offsets => [],
+			clips => []
+		},
+		forward => {
+			frames => [0,0,1,1,2,2],
+			offsets => [],
+			clips => []
+		},
+		up => {
+			frames => [0,0,1,1,2,2],
+			offsets => [],
+			clips => []
+		},
+		down => {
+			frames => [0,0,1,1,2,2],
+			offsets => [],
+			clips => []
+		},
 	},
-	# left => {
-		# sequences => [[0, 0, 1, 1]],
-	# },
-	# right => {
-		# sequences => [[0, 0, 1, 1]],
-	# },
-	# forward => {
-		# sequences => [[0, 0, 1, 1]],
-	# },
-	# up => {
-		# sequences => [[0, 0, 1, 1]],
-	# },
-	# down => {
-		# sequences => [[0, 0, 1, 1]],
-	# },
-);
+};
 
 1;
