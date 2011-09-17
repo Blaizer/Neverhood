@@ -22,10 +22,10 @@ sub DESTROY {
 sub sprites_list {
 	[
 		'foreground',
-		$_[0]->klaymen,
+		$_[0]->klaymen(),
 		'hammer',
 		'door',
-		'button'
+		'button',
 		'window',
 		'lever',
 		'background',
@@ -132,14 +132,14 @@ package Games::Neverhood::Scene::Nursery::One::door;
 	sub new {
 		$_[0]->SUPER::new(
 			pos => [493, 212],
-			sequence => 'idle_1';
+			sequence => 'idle_1',
 		);
 	}
 	use constant {
 		file => 0,
 		dir => 's',
 		sequences => {
-			idle_1 => { frames => [0] }
+			idle_1 => { frames => [0] },
 			bash_1 => { frames => [1,1,2,2,3,3], next_sequence => 'idle_2' },
 			idle_2 => { frames => [4] },
 			bash_2 => { frames => [1,1,2,2,3,3], next_sequence => 'idle_3' },
@@ -180,8 +180,8 @@ package Games::Neverhood::Scene::Nursery::One::hammer;
 		file => 0,
 		dir => 's',
 		sequences => {
-			idle => { frames => [0] }
-			swing => { frames => [1,1,2,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13], next_sequence => 'idle' }
+			idle => { frames => [0] },
+			swing => { frames => [1,1,2,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13], next_sequence => 'idle' },
 		},
 	};
 	sub on_move {
@@ -196,7 +196,7 @@ package Games::Neverhood::Scene::Nursery::One::foreground;
 	};
 	sub new {
 		$_[0]->SUPER::new(
-			pos => [ 574, 246 ]
+			pos => [ 574, 246 ],
 		);
 	}
 

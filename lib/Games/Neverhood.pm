@@ -46,16 +46,6 @@ BEGIN {
 	$StartDestroy //= $Games::Neverhood::StartNew;
 }
 
-use Games::Neverhood::Scene::Nursery::One;
-use Games::Neverhood::Scene::Test;
-
-BEGIN {
-	# making an unset object for set to use
-	my $unset = "Games::Neverhood::$StartUnset";
-	$unset->new->set($StartSet);
-	$Game->set;
-}
-
 use Games::Neverhood::Sprite::Klaymen;
 use Games::Neverhood::Sprite::Cursor;
 
@@ -64,6 +54,16 @@ my $Cursor  = Games::Neverhood::Sprite::Cursor->new;
 
 sub klaymen { $Klaymen }
 sub cursor { $Cursor }
+
+use Games::Neverhood::Scene::Nursery::One;
+use Games::Neverhood::Scene::Test;
+
+BEGIN {
+	# making an unset object for set to use
+	my $unset = "Games::Neverhood::$StartDestroy";
+	$unset->new->set($StartNew);
+	$Game->set;
+}
 
 # SDLx::Mixer::init(
 	# frequency => 22050,
@@ -132,15 +132,15 @@ sub new {
 			\&event_quit,
 			\&event_window,
 			\&event_pause,
-			# sub{$_[1]->event(@_)},
+			sub{$_[1]->event(@_)},
 		],
 		move_handlers => [
-			# sub{$_[1]->move(@_)}
+			sub{$_[1]->move(@_)}
 		],
 		show_handlers => [
-			# sub{$_[1]->show(@_)},
+			sub{$_[1]->show(@_)},
 			sub{$_[1]->flip},
-			# sub{$_[1]->set},
+			sub{$_[1]->set},
 		],
 	);
 }
@@ -148,11 +148,8 @@ sub new {
 ###############################################################################
 # methods to be overloaded by Games::Neverhood::Scene and such
 
-sub new {}
 sub sprites {}
 sub frame {}
-
-sub on_destroy {}
 
 sub sprites_list {}
 sub all_dir {}

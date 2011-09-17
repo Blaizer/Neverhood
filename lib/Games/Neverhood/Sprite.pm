@@ -54,7 +54,7 @@ sub new {
 	my $class = shift;
 	my $self = bless {@_}, ref $class || $class;
 
-	$self->file or Carp::confess("Sprite: '", $self->name // __PACKAGE__, "' must specify a file");
+	defined $self->file or Carp::confess("Sprite: '", $self->name // scalar caller, "' must specify a file");
 
 	if($self->sequence) {
 		$self->sequence($self->sequence, $self->frame // 0);
@@ -70,7 +70,6 @@ sub new {
 	#hide
 	#mirror
 
-	$self->sprite($sprite) if defined $sprite;
 	$self;
 }
 
@@ -131,9 +130,9 @@ sub mirror {
 use constant {
 	name      => undef, # TODO: might wanna make this a sub with error checking and a state var
 	file      => undef,
-	sequences => undef, # TODO: might wanna put error checking here
+	sequences => undef,
 	dir       => 'i',
-}
+};
 
 ###############################################################################
 # handler subs
@@ -141,29 +140,20 @@ use constant {
 sub on_move {}
 
 sub on_show {
-	# TODO: rewrite this
 	my ($self) = @_;
 	return if $self->hide;
+	
 	my $surface = $self->this_surface;
-	die 'no surface', $self->flip ? '_flip' : '', ' for: ', File::Spec->catfile(@{$self->folder}, $self->name) unless ref $surface;
-	my $h = $surface->h / $self->frames;
-	SDL::Video::blit_surface(
-		$surface,
-		SDL::Rect->new(0, $h * $self->this_sequence_frame, $surface->w, $h),
-		$Games::Neverhood::App,
-		SDL::Rect->new(
-			$self->pos->[0] + (
-				$self->flip
-				? -$surface->w - $self->offset->[0] + 1
-				: $self->offset->[0]
-			),
-			(
-				$self->on_ground
-				? 480 - $self->pos->[1] + $self->offset->[1] - $h
-				: $self->pos->[1] + $self->offset->[1]
-			), 0, 0
-		)
-	);
+	my $pos     = $self->pos;
+	my $offset  = $self->this_offset;
+	
+	my $x = $pos->[0] + $self->mirror
+		? 1 - $surface->w - $offset->[0]
+		: $offset->[0]
+	;
+	my $y = $pos->[1] + $offset->[1];
+
+	$surface->draw_xy($x, $y);
 }
 
 sub on_space {}
@@ -188,7 +178,7 @@ sub move_klaymen_to {
 			$_ = [[$_]];
 		}
 	}
-	$Klaymen->moving_to({
+	$_->klaymen->moving_to({
 		%arg,
 		sprite => $sprite,
 	});

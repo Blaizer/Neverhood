@@ -64,16 +64,16 @@ sub new {
 	my $self = bless {@_}, $class;
 
 	my $sprites = Games::Neverhood::OrderedHash->new;
+	my $name;
 	for my $sprite (@{$self->sprites_list}) {
-		my $name;
 		if(ref $sprite) {
 			$name = $sprite->name or Carp::confess("All sprites must have a (unique) name");
 		}
 		else {
 			no strict 'refs';
 			$name = $sprite;
-			my $sprite_class = "$class::$name";
-			push @{"$sprite_class::ISA"}, 'Games::Neverhood::Sprite';
+			my $sprite_class = $class .'::'. $name;
+			push @{$sprite_class . '::ISA'}, 'Games::Neverhood::Sprite';
 			$sprite = $sprite_class->new;
 		}
 	} continue {
@@ -110,7 +110,7 @@ use constant {
 	cursor_type         => 'click',
 	move_klaymen_bounds => undef,
 	music               => undef,
-}
+};
 
 ###############################################################################
 # handler subs
@@ -169,7 +169,7 @@ sub event {
 				}
 				$return;
 			}
-		}
+		};
 		$self->cursor->sequence($sequence) unless $self->cursor->sequence eq $sequence;
 	}
 	elsif($e->type == SDL_MOUSEBUTTONDOWN and $e->button_button & (SDL_BUTTON_LEFT | SDL_BUTTON_MIDDLE | SDL_BUTTON_RIGHT)) {
@@ -221,7 +221,7 @@ sub event {
 	}
 	elsif($e->type == SDL_ACTIVEEVENT) {
 		if($e->active_state & SDL_APPMOUSEFOCUS) {
-			$Cursor->hide(!$e->active_gain);
+			$self->cursor->hide(!$e->active_gain);
 		}
 	}
 }
@@ -265,11 +265,12 @@ sub _move_click {
 			$bound->[0] <= $click->[0] and $bound->[1] <= $click->[1] and
 			$bound->[2] >= $click->[0] and $bound->[3] >= $click->[1] and
 
-			!$self->klaymen->sprite eq 'idle' || ($click->[0] < $Klaymen->pos->[0] - 38 || $click->[0] > $Klaymen->pos->[0] + 38)
+			!$self->klaymen->sprite eq 'idle' ||
+			($click->[0] < $self->klaymen->pos->[0] - 38 || $click->[0] > $self->klaymen->pos->[0] + 38)
 		) {
 			$self->klaymen->move_to(to => $click->[0]);
 		}
-		$Cursor->clicked(undef);
+		$self->cursor->clicked(undef);
 		return;
 	}
 }
@@ -283,7 +284,7 @@ sub _move_sprites {
 		# on_move is called inside the frame method
 		$self->frame($self->frame + 1) if $self->frames;
 
-		for my $sprite (@{$self->sprites}, $Cursor) {
+		for my $sprite (@{$self->sprites}, $self->cursor) {
 			# on_move is called inside the frame method
 			$sprite->frame($sprite->frame + 1);
 		}
@@ -422,7 +423,7 @@ sub show {
 
 	$self->on_show($time);
 
-	for my $sprite (reverse @{$self->sprites}, $Cursor) {
+	for my $sprite (reverse @{$self->sprites}, $self->cursor) {
 		$sprite->on_show;
 	}
 }
