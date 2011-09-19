@@ -3,15 +3,17 @@ use 5.01;
 use strict;
 use warnings;
 package Games::Neverhood;
-our $VERSION = 0.004;
+
+our $VERSION;
+BEGIN { $VERSION = 0.004 }
 
 use parent qw/SDLx::App/;
 
 use SDL;
 use SDL::Video;
 use SDL::Color;
-# use SDLx::Mixer;
 use SDL::Events;
+# use SDLx::Mixer;
 use File::Spec;
 
 use parent 'Exporter';
@@ -32,38 +34,35 @@ use overload
 ;
 
 # keeping track of the frame remainder of stepping
-our $Remainder = 0;
+our $Remainder;
 
 # globals from bin/nhc
 our ($Debug, $FPSLimit, $Fullscreen, $NoFrame, $ShareDir, $StartNew, $StartDestroy);
 BEGIN {
+	$Remainder = 0;
 #	$Debug;
 	$FPSLimit     //= 60;
 	$Fullscreen   //= 1;
-#	$NoFrame;
+	$NoFrame      //= 1;
 	$ShareDir     //= do { require File::ShareDir; File::ShareDir::dist_dir('Games-Neverhood') };
 	$StartNew     //= 'Scene::Nursery::One';
 	$StartDestroy //= $Games::Neverhood::StartNew;
 }
 
+# global sprites
 use Games::Neverhood::Sprite::Klaymen;
 use Games::Neverhood::Sprite::Cursor;
-
-my $Klaymen = Games::Neverhood::Sprite::Klaymen->new;
-my $Cursor  = Games::Neverhood::Sprite::Cursor->new;
-
+my ($Klaymen, $Cursor);
+BEGIN {
+	$Klaymen = Games::Neverhood::Sprite::Klaymen->new;
+	$Cursor  = Games::Neverhood::Sprite::Cursor->new;
+}
 sub klaymen { $Klaymen }
 sub cursor { $Cursor }
 
+# all game scenes
 use Games::Neverhood::Scene::Nursery::One;
 use Games::Neverhood::Scene::Test;
-
-BEGIN {
-	# making an unset object for set to use
-	my $unset = "Games::Neverhood::$StartDestroy";
-	$unset->new->set($StartNew);
-	$Game->set;
-}
 
 # SDLx::Mixer::init(
 	# frequency => 22050,
@@ -72,6 +71,11 @@ BEGIN {
 	# support => ['ogg'],
 	# streams => 8,
 # );
+
+# making an unset object for set to use
+my $unset = "Games::Neverhood::$StartDestroy";
+$unset->new->set($StartNew);
+$Game->set;
 
 sub set {
 	state $_set;
@@ -177,14 +181,14 @@ sub on_down {}
 
 # stop on quit event or alt-f4
 sub event_quit {
-	my ($e) = @_;
+	my ($e, $self) = @_;
 	if(
 		$e->type == SDL_QUIT
 		or
 		$e->type == SDL_KEYDOWN and $e->key_sym == SDLK_F4
 		and $e->key_mod & KMOD_ALT and not $e->key_mod & (KMOD_CTRL | KMOD_SHIFT | KMOD_META)
 	) {
-		$App->stop;
+		$self->stop;
 		return 1;
 	}
 	return;
@@ -192,11 +196,11 @@ sub event_quit {
 
 # pause when the app loses focus
 sub event_window {
-	my ($e) = @_;
+	my ($e, $self) = @_;
 	if($e->type == SDL_ACTIVEEVENT) {
 		if($e->active_state & SDL_APPINPUTFOCUS) {
 			return 1 if $e->active_gain;
-			pause(\&event_window);
+			$self->pause(\&event_window);
 		}
 	}
 	# if we're fullscreen we should unpause no matter what event we get
@@ -205,7 +209,7 @@ sub event_window {
 
 # toggle pause when either alt is pressed
 sub event_pause {
-	my ($e) = @_;
+	my ($e, $self) = @_;
 	state $lalt;
 	state $ralt;
 	if($e->type == SDL_KEYDOWN) {
@@ -222,22 +226,19 @@ sub event_pause {
 	}
 	elsif($e->type == SDL_KEYUP and $e->key_sym == SDLK_LALT && $lalt || $e->key_sym == SDLK_RALT && $ralt) {
 		undef($e->key_sym == SDLK_LALT ? $lalt : $ralt);
-		return 1 if $App->paused;
-		pause(\&event_pause);
+		return 1 if $self->paused;
+		$self->pause(\&event_pause);
 	}
 	return;
 }
 
-# extra sub for pause to go through
-# for pre and post-pause and quitting while paused
+# overloaded SDLx::App pause method for pre and post pause
 sub pause {
-	my ($callback) = @_;
+	my ($self, $callback) = @_;
 	# SDL::Mixer::Music::pause_music;
 	# SDL::Mixer::Channels::pause(-1);
 
-	$App->pause(sub {
-		&$callback or &event_quit;
-	});
+	$self->SUPER::pause($callback);
 
 	# SDL::Mixer::Music::resume_music;
 	# SDL::Mixer::Channels::resume(-1);

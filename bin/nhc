@@ -20,7 +20,7 @@ BEGIN {
 		'normal-window' => sub { $Games::Neverhood::Fullscreen = 0; $Games::Neverhood::NoFrame = 0 },
 		'share-dir=s'   => \$Games::Neverhood::ShareDir,
 		'start-set=s'   => sub { ($Games::Nevhood::StartUnset, $Games::Neverhood::StartSet) = split /,/, $_[0] },
-		'window'        => sub { $Games::Neverhood::Fullscreen = 0; $Games::Neverhood::NoFrame = 1 },
+		'window'        => sub { $Games::Neverhood::Fullscreen = 0; },
 	) or require Pod::Usage, Pod::Usage::pod2usage(2);
 }
 

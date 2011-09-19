@@ -6,6 +6,7 @@ package Games::Neverhood::Sprite::Klaymen;
 use parent 'Games::Neverhood::Sprite';
 
 use constant {
+	name => 'klaymen',
 	sequences => {
 		snore => {
 			file => 0,
@@ -94,6 +95,11 @@ use constant {
 		},
 	},
 };
+
+sub file {
+	my ($self) = @_;
+	$self->sequences_sequence->{file};
+}
 
 sub blink_in {
 	if(@_ > 1) { $_[0]->{blink_in} = $_[1]; return $_[0]; }

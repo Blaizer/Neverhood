@@ -23,9 +23,8 @@ our ($FastForward);
 our @EXPORT_OK = qw/$Cheat $FastForward/;
 
 our ($Remainder, $Debug);
-use Games::Neverhood         qw/$Remainder $Debug/;
+use Games::Neverhood qw/$Remainder $Debug/;
 use Games::Neverhood::Sprite;
-
 use Games::Neverhood::OrderedHash;
 
 # Overloadable Methods:
@@ -64,8 +63,8 @@ sub new {
 	my $self = bless {@_}, $class;
 
 	my $sprites = Games::Neverhood::OrderedHash->new;
-	my $name;
-	for my $sprite (@{$self->sprites_list}) {
+	my $name;my $z;
+	for my $sprite (@{$self->sprites_list}) {$z++;warn $z;
 		if(ref $sprite) {
 			$name = $sprite->name or Carp::confess("All sprites must have a (unique) name");
 		}
@@ -75,6 +74,7 @@ sub new {
 			my $sprite_class = $class .'::'. $name;
 			push @{$sprite_class . '::ISA'}, 'Games::Neverhood::Sprite';
 			$sprite = $sprite_class->new;
+			$sprite->{name} = $name;
 		}
 	} continue {
 		$sprites->{$name} = $sprite;

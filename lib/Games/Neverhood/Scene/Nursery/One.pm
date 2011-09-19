@@ -85,6 +85,7 @@ package Games::Neverhood::Scene::Nursery::One::window;
 			idle => { frames => [0] },
 			open => { frames => [1,2,3] },
 		},
+		no_cache => 1,
 	};
 	sub on_move {
 		if($_[0]->sequence eq 'idle' and $_->klaymen->sequence ~~ ['push_button_back', 53]) {

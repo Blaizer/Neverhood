@@ -3,12 +3,9 @@ use strict;
 use warnings;
 package Games::Neverhood::Sprite;
 
-use SDL::Image;
-use SDL::Video;
-use SDL::Rect;
+use parent 'Games::Neverhood::StorableRW';
+use Games::Neverhood::Surface;
 use SDL::GFX::Rotozoom;
-use SDL::Mixer::Channels;
-use SDL::Mixer::Samples;
 
 use File::Spec ();
 use Carp ();
@@ -18,15 +15,21 @@ use Carp ();
 # sub new
 	# frame
 	# sequence
+	# sequences_sequence
 	# pos
 	# hide
 	# mirror
+	# name
 
 # use constant
-	# name
 	# file
 	# dir
 	# sequences
+		# frames
+		# offset
+		# next_sequence
+	# no_cache
+	# dont_store
 
 # sub on_move
 # sub on_show
@@ -43,18 +46,15 @@ use Carp ();
 # sub move_klaymen_to
 # sub in_rect
 
-# sub this_sequence
-# sub this_sequence_surface
-# sub this_sequence_frame
-# sub this_sequence_frames
-# sub this_sequence_pos
-# sub this_sequence_offset
+# sub this_surface
+# sub this_frame
+# sub this_frames
+# sub this_offset
+# sub this_next_sequence
 
 sub new {
 	my $class = shift;
 	my $self = bless {@_}, ref $class || $class;
-
-	defined $self->file or Carp::confess("Sprite: '", $self->name // scalar caller, "' must specify a file");
 
 	if($self->sequence) {
 		$self->sequence($self->sequence, $self->frame // 0);
@@ -69,6 +69,8 @@ sub new {
 	$self->pos->[1] //= 0;
 	#hide
 	#mirror
+	#name
+	$self->{surfaces} = {};
 
 	$self;
 }
@@ -81,7 +83,7 @@ sub DESTROY {}
 sub frame {
 	my ($self, $frame) = @_;
 	if(@_ > 1) {
-		if($frame ne 'end' and $frame >= $self->this_sequence_frames) {
+		if($frame ne 'end' and $frame >= $self->this_frames) {
 			# loop back to frame 0, and signify being at the 'end' instead of just frame 0
 			$frame = 'end';
 		}
@@ -91,14 +93,18 @@ sub frame {
 		return $self;
 	}
 	# we return a dualvar that is both 0 and 'end' when we're signifying that the sprite just looped
+	# we're blindly relying on Storable storing this as "end" and not 0
 	return Scalar::Util::dualvar(0, 'end') if $self->{frame} eq 'end';
 	$self->{frame};
 }
 sub sequence {
 	my ($self, $sequence, $frame) = @_;
 	if(@_ > 1) {
-		# TODO: might wanna do error checking on $sequence here
+		my $ss = $self->sequences->{sequence} or
+			Carp::confess("Sprite: '", $self->name, "' has no sequence: '$sequence'");
+
 		$self->{sequence} = $sequence;
+		$self->sequences_sequence($ss);
 		if(@_ > 2) {
 			$self->frame($frame);
 		}
@@ -110,6 +116,10 @@ sub sequence {
 		return $self;
 	}
 	$self->{sequence};
+}
+sub sequences_sequence {
+	if(@_ > 1) { $_[0]->{sequences_sequence} = $_[1]; return $_[0]; }
+	$_[0]->{sequences_sequence};
 }
 sub pos {
 	if(@_ > 1) { $_[0]->{pos} = $_[1]; return $_[0]; }
@@ -123,15 +133,20 @@ sub mirror {
 	if(@_ > 1) { $_[0]->{mirror} = $_[1]; return $_[0]; }
 	$_[0]->{mirror};
 }
+sub name {
+	# overload this at will, but know that you can use this default behaviour
+	$_[0]->{name};
+}
 
 ###############################################################################
 # constant/subs
 
 use constant {
-	name      => undef, # TODO: might wanna make this a sub with error checking and a state var
-	file      => undef,
-	sequences => undef,
-	dir       => 'i',
+	file       => undef,
+	sequences  => undef,
+	dir        => 'i',
+	no_cache   => undef,
+	dont_store => [ 'name', 'surfaces' ],
 };
 
 ###############################################################################
@@ -165,6 +180,60 @@ sub on_up {}
 sub on_down {}
 
 ###############################################################################
+# sequence methods
+
+sub this_surface {
+	my ($self) = @_;
+	my $surfaces = $self->{surfaces};
+	my $surface;
+	my $frame;
+	if(defined $surfaces->{last_surface_frame} and $surfaces->{last_surface_frame} == ($frame = $self->this_frame)) {
+		$surface = $surfaces->{last_surface};
+	}
+	else {
+		if(!$surfaces->{cache} or not $surface = $surfaces->{cache}[$frame]) {
+			defined $self->file or Carp::confess("Sprite: '", $self->name, "' must specify a file");
+			$surface = Games::Neverhood::Surface->new($self->file, $frame);
+			$surfaces->{cache}[$frame] = $surface unless $self->no_cache;
+		}
+		$surfaces->{last_surface_frame} = $frame;
+		$surfaces->{last_surface} = $surface;
+	}
+	$self->mirror
+		# surface_xy( surface, angle, zoom_x, zoom_y, smooth )
+		? SDL::GFX::Rotozoom::surface_xy($surface, 0, -1, 1, 0)
+		: $surface
+	;
+}
+sub this_frames {
+	my ($self) = @_;
+	return 0 unless defined(my $ss = $self->sequences_sequence);
+	scalar @{$ss->{frames}};
+}
+sub this_frame {
+	my ($self) = @_;
+	return unless defined(my $ss = $self->sequences_sequence);
+	$ss->{frames}[$self->frame];
+}
+sub this_offset {
+	my ($self) = @_;
+	my $ss;
+		return [0, 0]
+	if !defined($ss = $self->sequences_sequence)
+	or !defined(my $offsets = $ss->{offsets});
+	
+	my $n;
+	my $x = $offsets->[$n = $self->frame * 2] // do { warn "Sprite: '", $self->name, "' didn't have an offset '$n'"; 0 };
+	my $y = $offsets->[++$n                 ] // do { warn "Sprite: '", $self->name, "' didn't have an offset '$n'"; 0 };
+	[$x, $y];
+}
+sub this_next_sequence {
+	my ($self) = @_;
+	return unless defined(my $ss = $self->sequences_sequence);
+	$ss->{next_sequence};
+}
+
+###############################################################################
 # other
 
 sub move_klaymen_to {
@@ -192,31 +261,12 @@ sub move_klaymen_to {
 
 sub in_rect {
 	my ($sprite, @rect) = @_;
-	my $click = Games::Neverhood->cursor->clicked;
+	my $click = $_->cursor->clicked;
 	return
 		$click and $rect[2] and $rect[3]
 		and $click->[0] >= $rect[0] and $click->[1] >= $rect[1]
 		and $click->[0] < $rect[0] + $rect[2] and $click->[1] < $rect[1] + $rect[3]
 	;
-}
-
-sub this_sequence {
-
-}
-sub this_sequence_surface {
-
-}
-sub this_sequence_frame {
-
-}
-sub this_sequence_frames {
-
-}
-sub this_sequence_pos {
-
-}
-sub this_sequence_offset {
-
 }
 
 1;
