@@ -8,7 +8,7 @@ our $VERSION;
 BEGIN { $VERSION = 0.004 }
 
 use SDL;
-use SDLx::App;
+use Games::Neverhood::App;
 use SDL::Video;
 use SDL::Color;
 use SDL::Events;

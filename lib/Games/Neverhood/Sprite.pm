@@ -88,7 +88,7 @@ sub frame {
 	}
 	# we return a dualvar that is both 0 and 'end' when we're signifying that the sprite just looped
 	# we're blindly relying on Storable storing this as "end" and not 0
-	return Scalar::Util::dualvar(0, 'end') if $self->{frame} eq 'end';
+	return Scalar::Util::dualvar(0, 'end') if defined $self->{frame} and $self->{frame} eq 'end';
 	$self->{frame};
 }
 sub sequence {
@@ -100,7 +100,7 @@ sub sequence {
 		$self->{sequence} = $sequence;
 		$self->sequences_sequence($ss);
 		if(@_ > 2) {
-			$self->frame($frame);
+			$self->frame($frame // 0);
 		}
 		else {
 			# we set the frame to 0 for safety, we don't trust you to do it yourself
@@ -109,7 +109,7 @@ sub sequence {
 		}
 		return $self;
 	}
-	$self->{sequence};
+	wantarray ? ($self->{sequence}, $self->frame) : $self->{sequence};
 }
 sub sequences_sequence {
 	if(@_ > 1) { $_[0]->{sequences_sequence} = $_[1]; return $_[0]; }

@@ -5,11 +5,9 @@ no warnings 'once';
 
 use Test::More;
 
-use_ok('Games::Neverhood');
-
 $Games::Neverhood::Fullscreen = 0;
-eval { Games::Neverhood->new };
-is( $@, undef, 'Games::Neverhood->new' );
+$Games::Neverhood::NoFrame = 0;
+use_ok('Games::Neverhood');
 
 isnt( $Games::Neverhood::ShareDir, undef, 'Have a share dir' );
 

@@ -65,7 +65,7 @@ package Games::Neverhood::Scene::Nursery::One::hammer;
 		},
 	};
 	sub on_move {
-		if($_->klaymen->sequence ~~ ['pull_lever', 42]) {
+		if([$_->klaymen->sequence] ~~ ['pull_lever', 42]) {
 			$_[0]->sequence('swing');
 		}
 	}
@@ -100,12 +100,12 @@ package Games::Neverhood::Scene::Nursery::One::door;
 		else { 'no' }
 	}
 	sub on_move {
-		if($_->klaymen->sequence ~~ ['pull_lever', 47]) {
+		if([$_->klaymen->sequence] ~~ ['pull_lever', 47]) {
 			$_[0]->sequence =~ /(\d)/;
 			# go from sequence idle_n to bash_n
 			$_[0]->sequence("bash_$1");
 		}
-		elsif($_[0]->sequence ~~ ['bash_3', 'end']) {
+		elsif([$_[0]->sequence] ~~ ['bash_3', 'end']) {
 			$_[0]->hide(1);
 		}
 	}
@@ -150,10 +150,10 @@ package Games::Neverhood::Scene::Nursery::One::window;
 		no_cache => 1,
 	};
 	sub on_move {
-		if($_[0]->sequence eq 'idle' and $_->klaymen->sequence ~~ ['push_button_back', 53]) {
+		if($_[0]->sequence eq 'idle' and [$_->klaymen->sequence] ~~ ['push_button_back', 53]) {
 			$_[0]->sequence('open');
 		}
-		elsif($_[0]->hide and $_->klaymen->sequence ~~ ['look_back', 'end']) {
+		elsif($_[0]->hide and [$_->klaymen->sequence] ~~ ['look_back', 'end']) {
 			$_->set('Scene::Nursery::One::OutWindow');
 		}
 	}
@@ -183,7 +183,7 @@ package Games::Neverhood::Scene::Nursery::One::lever;
 		else { 'no' }
 	}
 	sub on_move {
-		if($_[0]->sequence eq 'idle' and $_->klaymen->sequence ~~ ['pull_lever', 26]) {
+		if($_[0]->sequence eq 'idle' and [$_->klaymen->sequence] ~~ ['pull_lever', 26]) {
 			$_[0]->sequence('pull');
 		}
 	}

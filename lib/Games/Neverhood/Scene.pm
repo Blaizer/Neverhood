@@ -81,20 +81,18 @@ sub new {
 	}
 	$self->{sprites} = $sprites;
 
+	$self->frame(0);
+	$self->on_new($unset_name);
+
 	for my $sprite (@{$self->sprites}) {
-		if($sprite->sequence) {
-			$sprite->sequence($sprite->sequence, $sprite->frame // 0);
+		if(defined $sprite->sequence) {
+			$sprite->sequence($sprite->sequence);
 		}
 		else {
 			# gotta still call that on_move from within frame
 			$sprite->frame(0);
 		}
 	}
-
-	$self->frame(0);
-	
-	$self->on_new($unset_name);
-
 	$self;
 }
 sub on_new {}
