@@ -5,7 +5,7 @@ package Games::Neverhood::GG;
 
 sub new {
 	my ($class) = @_;
-	my $self = bless {} ref $class || $class;
+	my $self = bless {}, ref $class || $class;
 	
 		# 2, 1, 4, 5, 3, 11, 8, 6, 7, 9, 10, 17, 16, 18, 19, 20, 15, 14, 13, 12
 		# $nursery_1_window_open -- until jump down in nursery_2
@@ -78,3 +78,5 @@ sub new {
 }
 
 # and then here we have a buncha methods that set and get doing stuff
+
+1;

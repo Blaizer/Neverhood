@@ -12,16 +12,15 @@ use Carp ();
 
 # Overloadable Methods:
 
-# sub new
-	# frame
-	# sequence
-	# sequences_sequence
-	# pos
-	# hide
-	# mirror
-	# name
-
 # use constant
+	# vars
+		# frame
+		# sequence
+		# sequences_sequence
+		# pos
+		# hide
+		# mirror
+	# name
 	# file
 	# dir
 	# sequences
@@ -52,17 +51,11 @@ use Carp ();
 # sub this_offset
 # sub this_next_sequence
 
+# don't overload this. do your on_new in the game object's on_new
 sub new {
 	my $class = shift;
-	my $self = bless {@_}, ref $class || $class;
-
-	if($self->sequence) {
-		$self->sequence($self->sequence, $self->frame // 0);
-	}
-	else {
-		# gotta still call that on_move from within frame
-		$self->frame(0);
-	}
+	my $self = bless {}, ref $class || $class;
+	%$self = %{$self->vars};
 
 	$self->pos([]) unless defined $self->pos;
 	$self->pos->[0] //= 0;
@@ -75,7 +68,8 @@ sub new {
 	$self;
 }
 
-sub DESTROY {}
+# same here, but game object's on_destroy
+# sub DESTROY {}
 
 ###############################################################################
 # accessors
@@ -100,7 +94,7 @@ sub frame {
 sub sequence {
 	my ($self, $sequence, $frame) = @_;
 	if(@_ > 1) {
-		my $ss = $self->sequences->{sequence} or
+		my $ss = $self->sequences->{$sequence} or
 			Carp::confess("Sprite: '", $self->name, "' has no sequence: '$sequence'");
 
 		$self->{sequence} = $sequence;
@@ -143,6 +137,7 @@ sub name {
 
 use constant {
 	file       => undef,
+	vars       => {},
 	sequences  => undef,
 	dir        => 'i',
 	no_cache   => undef,

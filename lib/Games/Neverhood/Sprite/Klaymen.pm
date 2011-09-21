@@ -114,4 +114,131 @@ sub moving_to {
 	$_[0]->{moving_to};
 }
 
+# sub on_move {
+	# my ($self, $step, $app) = @_;
+	# return unless $self->klaymen;
+	# if($Klaymen->sprite eq 'idle') {
+		# if(defined $Klaymen->blink_in) {
+			# $Klaymen->blink_in($Klaymen->blink_in - $_[0]);
+			# $Klaymen->random_in($Klaymen->random_in - $_[0]);
+			# if($Klaymen->blink_in <= 0) {
+				# $Klaymen->sequence(1);
+				# $Klaymen->blink_in(undef);
+			# }
+			# if($Klaymen->random_in <= 0) {
+				# $Klaymen->sprite('idle_random_' . int rand 5);
+				# $Klaymen->random_in(undef);
+			# }
+		# }
+		# $Klaymen->blink_in(int rand(40) + 30) unless defined $Klaymen->blink_in;
+		# $Klaymen->random_in(int rand(40) + 600) unless defined $Klaymen->random_in;
+	# }
+	# else {
+		# $Klaymen->blink_in(undef);
+		# $Klaymen->random_in(undef);
+	# }
+	# if(my $move = $Klaymen->moving_to) {
+		# my ($to, @type);
+		# {
+			# no warnings 'uninitialized';
+			# my $min = 1e100;
+			# for(qw/left right to/) {
+				# my $v;
+				# if($_ eq 'to') {
+					# $v = $move->{to};
+				# }
+				# else {
+					# (undef, $v) = each @{$move->{$_}[0]};
+				# }
+				# next unless defined $v;
+				# my $new = abs($v - $Klaymen->pos->[0]);
+				# if($new < $min) {
+					# ($min, $to) = ($new, $v);
+					# @type = $_;
+				# }
+				# elsif($new == $min and $to == $v) {
+					# push @type, $_;
+				# }
+				# redo unless $_ eq 'to';
+			# }
+		# }
+		# ;#( $maximum, $minimum )
+		# my $adjust = (5,  );
+		# my @shuffle = (20, $adjust);
+		# my @slide = (100, $shuffle[0]);
+		# my @walk_stop = (40, $shuffle[0]);
+		# my $further = abs($to - $Klaymen->pos->[0]);
+		# my $dir = $to <=> $Klaymen->pos->[0];
+		# my $left = $dir - 1;
+
+		# if($further) {
+			# if($Klaymen->sprite eq 'idle') {
+				# if($further <= $adjust) {
+					# $Klaymen->pos->[0] += 2 * $_[0];
+				# }
+			# }
+		# }
+		# else {
+			# set or do
+		# }
+		# if($Klaymen->pos->[0] == $to) {
+			# if($Klaymen->get('idle')) {
+				# if(defined $move->{do}) {
+					# $M{scene}->call($move->{do}, $move->{sprite}, $click);
+				# }
+				# if(defined $move->{set}) {
+					# $Klaymen->set(@{$move->{set}});
+				# }
+				# elsif(!defined $move->{do}) {
+					# $Klaymen->set('idle');
+				# }
+				# delete $M{move_to};
+			# }
+		# }
+		# elsif($Klaymen->flip == ($Klaymen->pos->[0] > $to ? 1 : 0)) {
+			# if($Klaymen->get('idle_walk')) {
+				# if($further >= $walk_stop[0]) {
+					# if($Klaymen->to_frame > 0 and not $Klaymen->to_frame % 2) {
+						# $Klaymen->pos->[0] += 10 * $dir;
+					# }
+					# elsif($Klaymen->to_frame eq 'end') {
+						# $Klaymen->pos->[0] += 20 * $dir;
+					# }
+				# }
+				# elsif(1) { }
+			# }
+			# elsif($Klaymen->get('idle_walk_start')) {
+
+			# }
+			# elsif($Klaymen->get('idle_walk_end')) {
+
+			# }
+			# elsif($Klaymen->get('idle_shuffle')) {
+
+			# }
+			# elsif($Klaymen->get('idle_shuffle_end')) {
+
+			# }
+			# elsif($Klaymen->get('idle_slide')) {
+
+			# }
+			# elsif($Klaymen->get('idle_slide_end')) {
+
+			# }
+		# }
+		# elsif($further <= $adjust) {
+			# my $speed = 5;
+			# $Klaymen->flip($left);
+			# $Klaymen->pos->[0] += $speed * $dir * $_[0];
+			# $Klaymen->pos->[0] = $to if $further <= $speed * $_[0];
+		# }
+		# if($to > $Klaymen->pos->[0]) {
+			# $Klaymen->flip(0);
+		# }
+		# elsif($to < $Klaymen->pos->[0]) {
+			# $Klaymen->flip(1);
+		# }
+	# }
+# }
+
 1;

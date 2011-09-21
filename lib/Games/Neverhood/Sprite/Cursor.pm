@@ -40,4 +40,45 @@ use constant {
 	},
 };
 
+sub sequence {
+	my ($self) = @_;
+	my $type = $_->cursor_type;
+	my ($x, $y) = @{$self->pos};
+
+	return 'click' if $type eq 'click';
+	if($type eq 'out') {
+		my $out = 20;
+		return
+			$x <  $out       ? 'left'  :
+			$x >= 640 - $out ? 'right' : 'click';
+	}
+	my $return;
+	my $middle;
+
+	my $up_down = 50;
+	if($type =~ /up/) {
+		$middle = 1;
+		$return = 'up';
+	}
+	if($type =~ /forward/) {
+		$middle = 1;
+		$return = 'forward' if !$middle or $y >= $up_down;
+	}
+	if($type =~ /down/) {
+		$middle = 1;
+		$return = 'down' if !$middle or $y >= 480 - $up_down;
+	}
+	if($type =~ /sides/) {
+		if($middle) {
+			my $sides = 70;
+			if   ($x <  $sides      ) { $return = 'left'  }
+			elsif($x >= 640 - $sides) { $return = 'right' }
+		}
+		else {
+			$return = $x < 640/2 ? 'left' : 'right';
+		}
+	}
+	$return;
+}
+
 1;
