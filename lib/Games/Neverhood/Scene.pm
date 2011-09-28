@@ -13,7 +13,6 @@ use parent
 	'Games::Neverhood',
 	'Exporter',
 ;
-
 # The user entered text for the "cheat" system
 our $Cheat = '';
 
@@ -27,37 +26,35 @@ use Games::Neverhood qw/$Remainder $Debug/;
 use Games::Neverhood::Sprite;
 use Games::Neverhood::OrderedHash;
 
-# Overloadable Methods:
+# Overloadable Methods and what they should return:
 
 # sub on_new
 # sub on_destroy
 
 # use constant
-	# vars
-		# sprites
-		# frame
-	# sprites_list
-	# all_dir
-	# fps
-	# cursor_type
-	# klaymen_move_bounds
-	# music
+	# vars            {}
+		# sprites    Games::Neverhood::OrderedHash->new
+		# frame      0
+	# sprites_list    []
+	# fps             0
+	# cursor_type     ""
+	# music           0
+	# rect
 
-# sub event
-# sub move
-# sub show
+# event
+	# sub on_space
+	# sub on_out
+	# sub on_left
+	# sub on_right
+	# sub on_up
+	# sub on_down
+# move
+	# sub on_click
+	# sub on_move
+# show
+	# sub on_show
 
-# sub on_move
-# sub on_show
-# sub on_space
-# sub on_click
-# sub on_out
-# sub on_left
-# sub on_right
-# sub on_up
-# sub on_down
-
-# don't overload this, use on_new and vars
+# don't overload this, use on_new, sprites_list and vars
 sub new {
 	my ($self, $unset_name) = @_;
 	$self = $self->SUPER::new;
@@ -70,9 +67,13 @@ sub new {
 			$name = $sprite->name or Carp::confess("All sprites must have a (unique) name");
 		}
 		else {
-			no strict 'refs';
 			$name = $sprite;
 			my $sprite_class = ref($self) .'::'. $name;
+			my $sprite_isa = $sprite_class . '::ISA';
+			{
+				no strict 'refs';
+				@$sprite_isa = 'Games::Neverhood::Sprite' unless @$sprite_isa;
+			}
 			$sprite = $sprite_class->new;
 			$sprite->{name} = $name;
 		}
@@ -90,7 +91,7 @@ sub new {
 		}
 		else {
 			# gotta still call that on_move from within frame
-			$sprite->frame(0);
+			$sprite->frame($sprite->frame // 0);
 		}
 	}
 	$self;
@@ -122,22 +123,12 @@ use constant {
 	sprites_list        => [],
 	fps                 => 24,
 	cursor_type         => 'click',
-	move_klaymen_bounds => undef,
 	music               => undef,
+	rect                => undef,
 };
 
 ###############################################################################
 # handler subs
-
-sub on_move  {}
-sub on_show  {}
-sub on_space {}
-sub on_click { 'no' }
-sub on_out   {}
-sub on_left  {}
-sub on_right {}
-sub on_up    {}
-sub on_down  {}
 
 sub event {
 	my ($self, $e) = @_;
@@ -150,10 +141,13 @@ sub event {
 		if($self->cursor->sequence eq 'click') {
 			$self->cursor->clicked($pos);
 		}
+		elsif($self->cursor_type eq 'out') {
+			$self->cursor->clicked(undef);
+			$self->on_out;
+		}
 		else {
 			my $method = "on_" . $self->cursor->sequence;
 			$self->$method;
-			$self->cursor->clicked(undef);
 		}
 	}
 	elsif($e->type == SDL_KEYDOWN) {
@@ -161,7 +155,7 @@ sub event {
 		my $name = SDL::Events::get_key_name($e->key_sym);
 		given($name) {
 			when('escape') {
-				# $self->set('Menu');
+				$self->set('Menu');
 			}
 			when('space') {
 				$self->on_space;
@@ -173,11 +167,11 @@ sub event {
 			when('return') {
 				if($Cheat eq 'fastforward') {
 					$FastForward = !$FastForward;
-					$self->dt(1 / ($self->fps * 3));
+					$self->app->dt(1 / ($self->fps * 3));
 				}
 				elsif($Cheat eq 'screensnapshot') {
-					my $file = File::Spec->catfile('', 'NevShot.bmp');
-					SDL::Video::save_BMP($self, $file) and warn "Error saving screenshot to $file: ", SDL::get_error;
+					my $file = File::Spec->catfile('', 'NevShot.bmp'); # TODO: this is wrong on stuff other than windows...
+					SDL::Video::save_BMP($self->app, $file) and warn "Error saving screenshot to $file: ", SDL::get_error;
 				}
 				elsif($Cheat eq 'happybirthdayklaymen' and $self eq 'Scene::Nursery::One') {
 					$self->set('Scene::Nursery::Two');
@@ -199,80 +193,55 @@ sub event {
 		}
 	}
 }
+sub on_space   {}
+sub on_out     {}
+sub on_left    {}
+sub on_right   {}
+sub on_forward {}
+sub on_up      {}
+sub on_down    {}
 
 sub move {
 	my ($self, $step) = @_;
 	return unless $step;
-
-	&_move_click;
-	&_move_sprites;
-	# &_move_klaymen;
-}
-
-sub _move_click {
-	my ($self, $step) = @_;
-	my $click = $self->cursor->clicked;
-
-	my $return = $self->on_click // '';
-	if($return eq 'no_but_keep') {
-		return;
-	}
-	elsif($return ne 'no') {
-		$self->cursor->clicked(undef);
-		return;
-	}
-
-	for my $sprite (@{$self->sprites}) {
-		my $return = $self->on_click // '';
-		if($return eq 'no_but_keep') {
-			return;
-		}
-		elsif($return ne 'no') {
-			$self->cursor->clicked(undef);
-			return;
-		}
-	}
-	if($self->sprites->{klaymen} and !$self->klaymen->no_interrupt) {
-		my $bound;
-		if(
-			$bound = $self->move_klaymen_bounds and
-			$bound->[0] <= $click->[0] and $bound->[1] <= $click->[1] and
-			$bound->[2] >= $click->[0] and $bound->[3] >= $click->[1] and
-
-			!$self->klaymen->sprite eq 'idle' ||
-			($click->[0] < $self->klaymen->pos->[0] - 38 || $click->[0] > $self->klaymen->pos->[0] + 38)
-		) {
-			$self->klaymen->move_to(to => $click->[0]);
-		}
-		$self->cursor->clicked(undef);
-		return;
-	}
-}
-
-sub _move_sprites {
-	my ($self, $step) = @_;
 	$Remainder += $step;
 	if($Remainder >= 1) {
 		$Remainder--;
 
-		# on_move is called inside the frame method
-		$self->frame($self->frame + 1) if $self->frames;
+		$self->on_click if $self->cursor->clicked;
 
-		for my $sprite (@{$self->sprites}, $self->cursor) {
-			# on_move is called inside the frame method
-			$sprite->frame($sprite->frame + 1);
-		}
+		# on_move is called within the frame method
+		$self->frame($self->frame + 1);
+		$self->cursor->frame($self->cursor->frame + 1);
+	}
+}
+sub on_click {
+	my ($self) = @_;
+	$self->cursor->clicked(undef);
+}
+sub on_move {
+	my ($self) = @_;
+	for my $sprite (@{$self->sprites}) {
+		# on_move is called within the frame method
+		$sprite->frame($sprite->frame + 1);
 	}
 }
 
 sub show {
 	my ($self, $time) = @_;
-
 	$self->on_show($time);
-
-	for my $sprite (reverse @{$self->sprites}, $self->cursor) {
-		$sprite->on_show;
+	$self->cursor->show;
+}
+sub on_show {
+	my ($self) = @_;
+	for my $sprite (reverse @{$self->sprites}) {
+		$sprite->show;
 	}
 }
+
+###############################################################################
+# other
+
+BEGIN { *in_rect = \&Games::Neverhood::Sprite::in_rect }
 
 1;

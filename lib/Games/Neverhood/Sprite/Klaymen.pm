@@ -241,4 +241,45 @@ sub moving_to {
 	# }
 # }
 
+# sub move_bounds {
+	# if($self->sprites->{klaymen} and !$self->klaymen->no_interrupt) {
+		# my $bound;
+		# if(
+			# $bound = $self->move_klaymen_bounds and
+			# $bound->[0] <= $click->[0] and $bound->[1] <= $click->[1] and
+			# $bound->[2] >= $click->[0] and $bound->[3] >= $click->[1] and
+
+			# !$self->klaymen->sprite eq 'idle' ||
+			# ($click->[0] < $self->klaymen->pos->[0] - 38 || $click->[0] > $self->klaymen->pos->[0] + 38)
+		# ) {
+			# $self->klaymen->move_to(to => $click->[0]);
+		# }
+		# $self->cursor->clicked(undef);
+		# return;
+	# }
+# }
+
+# sub move_to {
+	# TODO: this needs to be finalised
+	# my ($sprite, %arg) = @_;
+	# for(grep defined, @arg{qw/left right/}) {
+		# if(ref) {
+			# $_->[0] = [@$_] if !ref $_->[0];
+		# }
+		# else {
+			# $_ = [[$_]];
+		# }
+	# }
+	# $_->klaymen->moving_to({
+		# %arg,
+		# sprite => $sprite,
+	# });
+	# sprite => $sprite,
+	# left => 1 || [1, 2, 3] || [[1, 2, 3], 4],
+	# right => 1 || [1, 2, 3] || [[1, 2, 3], 4],
+	# do => sub { $_[0]->hide = 1 },
+	# set => ['idle', 0, 2, 1],
+	# $sprite;
+# }
+
 1;

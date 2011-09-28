@@ -7,7 +7,7 @@ use parent 'Games::Neverhood::Scene';
 
 sub on_new {
 	my ($self) = @_;
-	if($self->GG->{nursery_1_window_open}) { $self->sprites->{window}->hide }
+	if($self->GG->{nursery_1_window_open}) { $self->sprites->{window}->hide(1) }
 	$self->klaymen
 		->pos([200, 43])
 		->sequence('snore')
@@ -19,44 +19,83 @@ sub on_destroy {
 	$self->GG->{nursery_1_window_open} = 1 if $self->sprites->{window}->hide;
 }
 
-sub sprites_list {
-	[
+sub sprites_list {[
+	# 'door_cover',
+	'foreground',
+	# $_[0]->klaymen,
+	'hammer',
+	'door',
+	# 'button',
+	'window',
+	'lever',
+	'background',
+]}
+
+sub on_show {
+	my ($self) = @_;
+		$_->show for
+	@{$self->sprites}{
+		# 'door_cover',
 		'foreground',
-		$_[0]->klaymen(),
+	},
+	# $_[0]->klaymen,
+	@{$self->sprites}{
 		'hammer',
 		'door',
-		'button',
+		# 'button',
 		'window',
 		'lever',
 		'background',
-	];
+	},
+	;
+	# $self->sprites->{background}->show_pos([640-59, 480-280], [640-59, 480-280, 59, 280]);
 }
 
-use constant {
-	move_klaymen_bounds => [151, 60, 500, 479],
-};
-
 sub on_click {
-	if($_[0]->klaymen->sequence eq 'snore') { $_[0]->klaymen->sequence('wake') }
-	else { 'no' }
+	my ($self) = @_;
+	if($self->klaymen->sequence eq 'snore') {
+		$self->klaymen->sequence('wake');
+	}
+	elsif($self->sprites->{door}->in_rect and $_[0]->klaymen->sprite ne 'think') {
+		if($self->sprites->{door}->hide) {
+			$self->klaymen->move_to(to => 700);
+		}
+		else {
+			$self->klaymen->move_to(left => 500, set => ['idle_think']);
+		}
+	}
+	elsif($self->sprites->{button}->in_rect) {
+		$self->klaymen->move_to(left => 370, set => ['push_button_back']);
+	}
+	elsif($self->sprites->{window}->in_rect and $self->sprites->{window}->hide) {
+		$self->klaymen->move_to(left => 300, right => [391, 370], set => ['turn_to_back']);
+	}
+	elsif($self->sprites->{lever}->in_rect) {
+		$self->klaymen->move_to(right => 150, set => ['pull_lever']);
+	}
+	elsif($self->in_rect) {
+		$self->klaymen->move_to(to => $self->cursor->clicked->[0]);
+	}
+	else {
+		return;
+	}
+	$self->clicked(undef);
 }
 
 package Games::Neverhood::Scene::Nursery::One::foreground;
-	our @ISA = qw/Games::Neverhood::Sprite/;
 	use constant {
-		file => 0,
-		vars => {
-			pos => [ 574, 246 ],
-		},
+		file => 505,
+		pos => [ 640-68, 480-280 ],
+		alpha => 1,
 	};
 
 package Games::Neverhood::Scene::Nursery::One::hammer;
-	our @ISA = qw/Games::Neverhood::Sprite/;
 	use constant {
-		file => 0,
+		file => 89,
 		dir => 's',
+		pos => [375, 30],
+		alpha => 1,
 		vars => {
-			pos => [375, 30],
 			sequence => 'idle',
 		},
 		sequences => {
@@ -65,18 +104,19 @@ package Games::Neverhood::Scene::Nursery::One::hammer;
 		},
 	};
 	sub on_move {
-		if([$_->klaymen->sequence] ~~ ['pull_lever', 42]) {
+		if([$;->klaymen->sequence] ~~ ['pull_lever', 42]) {
 			$_[0]->sequence('swing');
 		}
 	}
 
 package Games::Neverhood::Scene::Nursery::One::door;
-	our @ISA = qw/Games::Neverhood::Sprite/;
 	use constant {
-		file => 0,
+		file => 63,
 		dir => 's',
+		pos => [493, 212],
+		rect => [520, 200, 90, 250],
+		alpha => 1,
 		vars => {
-			pos => [493, 212],
 			sequence => 'idle_1',
 		},
 		sequences => {
@@ -88,19 +128,8 @@ package Games::Neverhood::Scene::Nursery::One::door;
 			bash_3 => { frames => [5,5,6,6] },
 		},
 	};
-	sub on_click {
-		if($_[0]->in_rect(520, 200, 90, 250) and $_->klaymen->sprite ne 'think') {
-			if($_[0]->hide) {
-				$_[0]->move_klaymen_to(to => 700);
-			}
-			else {
-				$_[0]->move_klaymen_to(left => 500, set => ['idle_think']);
-			}
-		}
-		else { 'no' }
-	}
 	sub on_move {
-		if([$_->klaymen->sequence] ~~ ['pull_lever', 47]) {
+		if([$;->klaymen->sequence] ~~ ['pull_lever', 47]) {
 			$_[0]->sequence =~ /(\d)/;
 			# go from sequence idle_n to bash_n
 			$_[0]->sequence("bash_$1");
@@ -111,66 +140,57 @@ package Games::Neverhood::Scene::Nursery::One::door;
 	}
 
 package Games::Neverhood::Scene::Nursery::One::button;
-	our @ISA = qw/Games::Neverhood::Sprite/;
 	use constant {
 		file => 0,
+		pos => [466, 339],
+		rect => [455, 325, 40, 40],
 		vars => {
-			pos => [466, 339],
 			hide => 1,
 		},
 	};
-	sub on_click {
-		if($_[0]->in_rect(455, 325, 40, 40)) { $_[0]->move_klaymen_to(left => 370, set => ['push_button_back']) }
-		else { 'no' }
-	}
 	sub on_move {
-		if($_->klaymen->sequence eq 'push_button_back') {
-			if($_->klaymen->frame == 51) {
+		if($;->klaymen->sequence eq 'push_button_back') {
+			if($;->klaymen->frame == 51) {
 				$_[0]->hide(0);
 			}
-			elsif($_->klaymen->frame == 58) {
+			elsif($;->klaymen->frame == 58) {
 				$_[0]->hide(1);
 			}
 		}
 	}
 
 package Games::Neverhood::Scene::Nursery::One::window;
-	our @ISA = qw/Games::Neverhood::Sprite/;
 	use constant {
-		file => 0,
-		dir => 's',
+		file => 504,
+		pos => [317, 211],
+		rect => [315, 200, 70, 140],
+		alpha => 1,
 		vars => {
-			pos => [317, 211],
 			sequence => 'idle',
 		},
 		sequences => {
 			idle => { frames => [0] },
 			open => { frames => [1,2,3] },
 		},
-		no_cache => 1,
 	};
 	sub on_move {
-		if($_[0]->sequence eq 'idle' and [$_->klaymen->sequence] ~~ ['push_button_back', 53]) {
+		if($_[0]->sequence eq 'idle' and [$;->klaymen->sequence] ~~ ['push_button_back', 53]) {
 			$_[0]->sequence('open');
 		}
-		elsif($_[0]->hide and [$_->klaymen->sequence] ~~ ['look_back', 'end']) {
-			$_->set('Scene::Nursery::One::OutWindow');
+		elsif($_[0]->hide and [$;->klaymen->sequence] ~~ ['look_back', 'end']) {
+			$;->set('Scene::Nursery::One::OutWindow');
 		}
-	}
-	sub on_click {
-		if($_[0]->in_rect(315, 200, 70, 140) and $_[0]->hide) {
-			$_[0]->move_klaymen_to(left => 300, right => [391, 370], set => ['turn_to_back'])
-		}
-		else { 'no' }
 	}
 
 package Games::Neverhood::Scene::Nursery::One::lever;
-	our @ISA = qw/Games::Neverhood::Sprite/;
 	use constant {
-		file => 0,
+		file => 37,
 		dir => 's',
+		pos => [65, 313],
+		rect => [40, 300, 70, 100],
+		mirror => 1,
+		alpha => 1,
 		vars => {
-			pos => [65, 313],
 			sequence => 'idle',
 		},
 		sequences => {
@@ -178,19 +198,15 @@ package Games::Neverhood::Scene::Nursery::One::lever;
 			pull => { frames => [1,1,2,2,3,3,4,4,5,5,6,6,4,4,3,3,2,2,1,1], next_sequence => 'idle' },
 		},
 	};
-	sub on_click {
-		if($_[0]->in_rect(40, 300, 70, 100)) { $_[0]->move_klaymen_to(right => 150, set => ['pull_lever']) }
-		else { 'no' }
-	}
 	sub on_move {
-		if($_[0]->sequence eq 'idle' and [$_->klaymen->sequence] ~~ ['pull_lever', 26]) {
+		if($_[0]->sequence eq 'idle' and [$;->klaymen->sequence] ~~ ['pull_lever', 26]) {
 			$_[0]->sequence('pull');
 		}
 	}
 
 package Games::Neverhood::Scene::Nursery::One::background;
-	our @ISA = qw/Games::Neverhood::Sprite/;
 	use constant {
-		file => 0,
+		file => 496,
 	};
+
 1;

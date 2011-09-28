@@ -19,13 +19,13 @@ BEGIN {
 		'help|?'        => sub { require Pod::Usage; Pod::Usage::pod2usage(1) },
 		'normal-window' => sub { $Games::Neverhood::Fullscreen = 0; $Games::Neverhood::NoFrame = 0 },
 		'share-dir=s'   => \$Games::Neverhood::ShareDir,
-		'start-name=s'  => sub { ($Games::Neverhood::StartSetName, $Games::Neverhood::StartUnsetName) = split /,/, $_[0] },
+		'start-name=s'  => sub { ($Games::Neverhood::StartSetName, $Games::Neverhood::StartUnsetName) = split /,/, $_[1] },
 		'window'        => sub { $Games::Neverhood::Fullscreen = 0; },
 	) or require Pod::Usage, Pod::Usage::pod2usage(2);
 }
 
 use Games::Neverhood;
-$_->app->run;
+$;->app->run;
 
 1;
 

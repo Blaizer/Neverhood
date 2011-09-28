@@ -102,7 +102,7 @@ sub app {
 			title      => 'The Neverhood',
 			width      => 640,
 			height     => 480,
-			depth      => 8,
+			depth      => 16,
 			min_t      => $FPSLimit && 1 / $FPSLimit,
 			init       => ['video', 'audio'],
 			no_cursor  => 1,
@@ -141,27 +141,29 @@ sub app {
 				},
 				$event_window_pause,
 				$event_pause,
-				sub{$_->event(@_)},
+				sub{$;->event(@_)},
 			],
 			move_handlers => [
-				sub{$_->move(@_)}
+				sub{$;->move(@_)}
 			],
 			show_handlers => [
-				sub{$_->show(@_)},
+				sub{SDL::Video::fill_rect($_[1], SDL::Rect->new(0, 0, 640, 480), 0)},
+				sub{$;->show(@_)},
 				sub{$_[1]->flip},
 				sub {
 					my (undef, $app) = @_;
-					return unless defined(my $set_name = $_->set);
-					$_->set(undef);
-					my $unset_name = "$_";
+					return unless defined(my $set_name = $;->set);
+					$;->set(undef);
+					my $unset_name = "$;";
 
-					$_->on_destroy($set_name);
-					undef $_;
+					$;->on_destroy($set_name);
+					$;->cursor->clicked(undef);
+					undef $;;
 
-					# inside this, $_ gets set to the new object
+					# inside this, $; gets set to the new object
 					"Games::Neverhood::$set_name"->new($unset_name);
 
-					$app->dt(1 / $_->fps);
+					$app->dt(1 / $;->fps);
 				},
 			],
 		);
@@ -179,7 +181,7 @@ sub app {
 sub new {
 	# TODO: what else should go here? Is this redundant?
 	my ($class) = @_;
-	$_ = bless {}, ref $class || $class;
+	$; = bless {}, ref $class || $class;
 }
 
 sub set {
@@ -187,11 +189,11 @@ sub set {
 	$_[0]->{set};
 }
 
-# inside this, $_ gets set to the new object
+# inside this, $; gets set to the new object
 "Games::Neverhood::$StartSetName"->new($StartUnsetName);
-$_->app->dt(1 / $_->fps);
+$;->app->dt(1 / $;->fps);
 
-# you're NOT allowed to use $_ to refer to the current app if you're a game class, okay? PROMISE?
+# you're NOT allowed to use $; to refer to the current app if you're a game class, okay? PROMISE?
 # no seriously, I mean it...
 # we're going on the assumption that if you're a sprite or something, you're only being asked to do something because you're in the current app
 # no two apps should ever access one another

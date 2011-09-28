@@ -5,7 +5,6 @@ package Games::Neverhood::Sprite;
 
 use parent 'Games::Neverhood::StorableRW';
 use Games::Neverhood::Surface;
-use SDL::GFX::Rotozoom;
 
 use File::Spec ();
 use Carp ();
@@ -16,36 +15,24 @@ use Carp ();
 	# vars
 		# frame
 		# sequence
-		# sequences_sequence
 		# pos
 		# hide
 		# mirror
 	# name
 	# file
 	# dir
+	# rect
+	# alpha
+	# dont_store
 	# sequences
 		# frames
-		# offset
+		# offsets
+		# clips
 		# next_sequence
-	# no_cache
-	# dont_store
 
 # sub on_move
 # sub on_show
-# sub on_space
-# sub on_click
-# sub on_out
-# sub on_left
-# sub on_right
-# sub on_up
-# sub on_down
 
-# Other Methods:
-
-# sub move_klaymen_to
-# sub in_rect
-
-# sub this_surface
 # sub this_frame
 # sub this_frames
 # sub this_offset
@@ -79,7 +66,7 @@ sub frame {
 	if(@_ > 1) {
 		if($frame ne 'end' and $frame >= $self->this_frames) {
 			# loop back to frame 0, and signify being at the 'end' instead of just frame 0
-			$frame = 'end';
+			$frame = defined $self->sequence ? 'end' : 0;
 		}
 		$self->{frame} = $frame;
 		# the sprite is moved here. As long as you call this method every frame, everything will be fine
@@ -88,17 +75,15 @@ sub frame {
 	}
 	# we return a dualvar that is both 0 and 'end' when we're signifying that the sprite just looped
 	# we're blindly relying on Storable storing this as "end" and not 0
-	return Scalar::Util::dualvar(0, 'end') if defined $self->{frame} and $self->{frame} eq 'end';
+	$self->{frame} //= 0;
+	return Scalar::Util::dualvar(0, 'end') if $self->{frame} eq 'end';
 	$self->{frame};
 }
 sub sequence {
 	my ($self, $sequence, $frame) = @_;
 	if(@_ > 1) {
-		my $ss = $self->sequences->{$sequence} or
-			Carp::confess("Sprite: '", $self->name, "' has no sequence: '$sequence'");
-
+		$self->sequences->{$sequence} or Carp::confess("Sprite: '", $self->name, "' has no sequence: '$sequence'");
 		$self->{sequence} = $sequence;
-		$self->sequences_sequence($ss);
 		if(@_ > 2) {
 			$self->frame($frame // 0);
 		}
@@ -110,10 +95,6 @@ sub sequence {
 		return $self;
 	}
 	wantarray ? ($self->{sequence}, $self->frame) : $self->{sequence};
-}
-sub sequences_sequence {
-	if(@_ > 1) { $_[0]->{sequences_sequence} = $_[1]; return $_[0]; }
-	$_[0]->{sequences_sequence};
 }
 sub pos {
 	if(@_ > 1) { $_[0]->{pos} = $_[1]; return $_[0]; }
@@ -140,8 +121,9 @@ use constant {
 	vars       => {},
 	sequences  => undef,
 	dir        => 'i',
-	no_cache   => undef,
-	dont_store => [ 'name', 'surfaces' ],
+	rect       => undef,
+	alpha      => undef,
+	dont_store => [ 'name' ],
 };
 
 ###############################################################################
@@ -149,118 +131,99 @@ use constant {
 
 sub on_move {}
 
+sub show {
+	# don't overload this
+	my ($self) = @_;
+	$self->on_show;
+}
 sub on_show {
 	my ($self) = @_;
 	return if $self->hide;
-	
+
 	my $surface = $self->this_surface;
 	my $pos     = $self->pos;
 	my $offset  = $self->this_offset;
-	
-	my $x = $pos->[0] + $self->mirror
+	my $clip    = $self->this_clip;
+
+	my $x = $pos->[0] + ($self->mirror
 		? 1 - $surface->w - $offset->[0]
 		: $offset->[0]
-	;
+	);
 	my $y = $pos->[1] + $offset->[1];
 
-	$surface->draw_xy($x, $y);
+	$surface->blit([$x, $y], $clip);
 }
-
-sub on_space {}
-sub on_click { 'no' }
-sub on_out {}
-sub on_left {}
-sub on_right {}
-sub on_up {}
-sub on_down {}
 
 ###############################################################################
 # sequence methods
 
 sub this_surface {
+	# don't overload this
 	my ($self) = @_;
-	my $surfaces = $self->{surfaces};
 	my $surface;
-	my $frame;
-	if(defined $surfaces->{last_surface_frame} and $surfaces->{last_surface_frame} == ($frame = $self->this_frame)) {
-		$surface = $surfaces->{last_surface};
-	}
-	else {
-		if(!$surfaces->{cache} or not $surface = $surfaces->{cache}[$frame]) {
-			defined $self->file or Carp::confess("Sprite: '", $self->name, "' must specify a file");
-			$surface = Games::Neverhood::Surface->new($self->file, $frame);
-			$surfaces->{cache}[$frame] = $surface unless $self->no_cache;
-		}
-		$surfaces->{last_surface_frame} = $frame;
-		$surfaces->{last_surface} = $surface;
-	}
-	$self->mirror
-		# surface_xy( surface, angle, zoom_x, zoom_y, smooth )
-		? SDL::GFX::Rotozoom::surface_xy($surface, 0, -1, 1, 0)
-		: $surface
-	;
+	my $frame = $self->this_frame;
+	
+	defined $self->file or Carp::confess("Sprite: '", $self->name, "' must specify a file");
+	$surface = Games::Neverhood::Surface->new($self->dir, $self->file, $frame);
+	
+	$surface->do_alpha if $self->alpha;
+	$surface->do_mirror if $self->mirror;
+	$surface;
 }
 sub this_frames {
 	my ($self) = @_;
-	return 0 unless defined(my $ss = $self->sequences_sequence);
-	scalar @{$ss->{frames}};
+	return 0 unless defined $self->sequence;
+	scalar @{$self->this_sequences->{frames}};
 }
 sub this_frame {
 	my ($self) = @_;
-	return unless defined(my $ss = $self->sequences_sequence);
-	$ss->{frames}[$self->frame];
+	return 0 unless defined $self->sequence;
+	$self->this_sequences->{frames}[$self->frame];
 }
 sub this_offset {
 	my ($self) = @_;
 	my $ss;
+	my $offsets;
 		return [0, 0]
-	if !defined($ss = $self->sequences_sequence)
-	or !defined(my $offsets = $ss->{offsets});
-	
-	my $n;
-	my $x = $offsets->[$n = $self->frame * 2] // do { warn "Sprite: '", $self->name, "' didn't have an offset '$n'"; 0 };
-	my $y = $offsets->[++$n                 ] // do { warn "Sprite: '", $self->name, "' didn't have an offset '$n'"; 0 };
-	[$x, $y];
+	if !defined $self->sequence
+	or not $offsets = $self->this_sequences->{offsets}
+	or @$offsets <= (my $n = $self->this_frame * 2) + 1;
+
+	[ @$offsets[$n, $n+1] ];
+}
+sub this_clip {
+	my ($self) = @_;
+	my $ss;
+	my $clips;
+		return
+	if !defined $self->sequence
+	or not $clips = $self->this_sequences->{clips}
+	or @$clips <= (my $n = $self->this_frame * 4) + 3;
+
+	[ @$clips[$n..$n+3] ];
 }
 sub this_next_sequence {
 	my ($self) = @_;
-	return unless defined(my $ss = $self->sequences_sequence);
-	$ss->{next_sequence};
+	return unless defined $self->sequence;
+	$self->this_sequences->{next_sequence};
+}
+sub this_sequences {
+	# you shouldn't overload this, it's just a convenience method
+	my ($self) = @_;
+	$self->sequences->{$self->sequence};
 }
 
 ###############################################################################
 # other
 
-sub move_klaymen_to {
-	# TODO: this needs to be finalised
-	my ($sprite, %arg) = @_;
-	for(grep defined, @arg{qw/left right/}) {
-		if(ref) {
-			$_->[0] = [@$_] if !ref $_->[0];
-		}
-		else {
-			$_ = [[$_]];
-		}
-	}
-	$_->klaymen->moving_to({
-		%arg,
-		sprite => $sprite,
-	});
-	# sprite => $sprite,
-	# left => 1 || [1, 2, 3] || [[1, 2, 3], 4],
-	# right => 1 || [1, 2, 3] || [[1, 2, 3], 4],
-	# do => sub { $_[0]->hide = 1 },
-	# set => ['idle', 0, 2, 1],
-	$sprite;
-}
-
 sub in_rect {
-	my ($sprite, @rect) = @_;
-	my $click = $_->cursor->clicked;
+	my ($self) = @_;
+	my $rect = $self->rect;
+	my $click = $;->cursor->clicked;
 	return
-		$click and $rect[2] and $rect[3]
-		and $click->[0] >= $rect[0] and $click->[1] >= $rect[1]
-		and $click->[0] < $rect[0] + $rect[2] and $click->[1] < $rect[1] + $rect[3]
+		$click and $rect->[2] and $rect->[3]
+		and $click->[0] >= $rect->[0] and $click->[1] >= $rect->[1]
+		and $click->[0] < $rect->[0] + $rect->[2] and $click->[1] < $rect->[1] + $rect->[3]
 	;
 }
 
