@@ -64,12 +64,19 @@ sub do_mirror {
 
 sub set_palette {
 	my ($self, $file) = @_;
-	$file = File::Spec->catfile($ShareDir, 'i', $file . '.03');
-	open PALETTE, $file or Carp::confess("Could not open palette '$file': $!");
-	binmode PALETTE;
-	my $buf;
-	my @colors = map SDL::Color->new(unpack 'CCC', do{ read PALETTE, $buf, 4; $buf }), 0..255;
-	SDL::Video::set_palette($self, SDL_LOGPAL, 0, @colors) or Carp::confess("Setting palette '$file' failed: ", SDL::get_error);
+	my @colors;
+	if(eval { $file->isa('Games::Neverhood::Sprite') }) {
+		my $palette = $file->this_surface->format->palette;
+		@colors = map $palette->color_index($_), 0..255;
+	}
+	else {
+		$file = File::Spec->catfile($ShareDir, 'i', $file . '.03');
+		open PALETTE, $file or Carp::confess("Could not open palette '$file': $!");
+		binmode PALETTE;
+		my $buf;
+		@colors = map SDL::Color->new(unpack 'CCC', do{ read PALETTE, $buf, 4; $buf }), 0..255;
+	}
+	SDL::Video::set_colors($self, 0, @colors) or Carp::confess("Setting palette '$file' failed: ", SDL::get_error);
 }
 
 1;

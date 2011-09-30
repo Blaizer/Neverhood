@@ -63,7 +63,9 @@ sub on_click {
 	}
 	$self->clicked(undef);
 }
-sub on_space { $_[0]->sprites->{button}->hide(!$_[0]->sprites->{button}->hide) }
+sub on_space {
+	$_[0]->sprites->{button}->hide(!$_[0]->sprites->{button}->hide);
+}
 
 package Games::Neverhood::Scene::Nursery::One::door_cover;
 	use constant {
@@ -71,6 +73,7 @@ package Games::Neverhood::Scene::Nursery::One::door_cover;
 		pos => [ 640-68, 480-280 ],
 		alpha => 0,
 	};
+	sub palette { $;->sprites->{background} }
 	sub on_show {
 		$;->sprites->{background}->this_surface->blit([581, 200], [581, 200, 59, 262]);
 	}
@@ -81,6 +84,7 @@ package Games::Neverhood::Scene::Nursery::One::hammer_cover;
 		pos => [541, 188],
 		alpha => 0,
 	};
+	sub palette { $;->sprites->{background} }
 	
 package Games::Neverhood::Scene::Nursery::One::hammer;
 	use constant {
@@ -142,6 +146,7 @@ package Games::Neverhood::Scene::Nursery::One::button;
 			hide => 1,
 		},
 	};
+	sub palette { $;->sprites->{background} }
 	sub on_move {
 		if($;->klaymen->sequence eq 'push_button_back') {
 			if($;->klaymen->frame == 51) {
@@ -159,6 +164,7 @@ package Games::Neverhood::Scene::Nursery::One::window_cover;
 		pos => [317, 211],
 		alpha => 0,
 	};
+	sub palette { $;->sprites->{background} }
 	sub on_show {
 		my $surf = $;->sprites->{background}->this_surface;
 		$surf->blit([317, 338], [317, 338, 66, 2]);
@@ -195,6 +201,8 @@ package Games::Neverhood::Scene::Nursery::One::lever_cover;
 		pos => [42, 330],
 		alpha => 0,
 	};
+	sub palette { $;->sprites->{background} }
+	
 package Games::Neverhood::Scene::Nursery::One::lever;
 	use constant {
 		file => 37,
