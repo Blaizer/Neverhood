@@ -209,7 +209,7 @@ sub this_surface {
 		or Carp::confess("Sprite '", $self->name, "could not load image '$filename': ", SDL::get_error);
 
 	if($mirror) {
-		$surface = SDL::GFX::Rotozoom::surface_xy($surface, 0, -1, 1, 0);
+		# $surface = SDL::GFX::Rotozoom::surface_xy($surface, 0, -1, 1, 0);
 	}
 
 	if(defined $palette) {

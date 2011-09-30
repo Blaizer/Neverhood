@@ -10,7 +10,7 @@ my $build = My::Module::Build->new(
 	share_dir     => 'share',
 	requires => {
 		'perl'           => 5.010,
-		'SDL'            => 2.560,
+		'SDL'            => 2.534,
 		'File::ShareDir' => 0,
 	},
 	meta_merge => {
@@ -19,8 +19,9 @@ my $build = My::Module::Build->new(
 			repository => 'http://github.com/Blaizer/Neverhood',
 		},
 	},
-	# add_to_cleanup => [
-	# ],
+	add_to_cleanup => [
+		'MANIFEST',
+	],
 );
 
 $build->create_build_script;

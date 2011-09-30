@@ -4,7 +4,7 @@ Blaise Roth
 The game works without installing as long as you have:
 
  Perl 5.10.0
- SDL 2.540
+ SDL 2.534
 
 Then just run:
  perl nhc.pl
