@@ -20,34 +20,22 @@ sub on_destroy {
 }
 
 sub sprites_list {[
-	# 'door_cover',
-	'foreground',
+	'door_cover',
 	# $_[0]->klaymen,
+	'hammer_cover',
 	'hammer',
 	'door',
-	# 'button',
+	'button',
+	'window_cover',
 	'window',
+	'lever_cover',
 	'lever',
 	'background',
 ]}
 
 sub on_show {
 	my ($self) = @_;
-		$_->show for
-	@{$self->sprites}{
-		# 'door_cover',
-		'foreground',
-	},
-	# $_[0]->klaymen,
-	@{$self->sprites}{
-		'hammer',
-		'door',
-		# 'button',
-		'window',
-		'lever',
-		'background',
-	},
-	;
+	$_->show for reverse @{$self->sprites};
 	# $self->sprites->{background}->show_pos([640-59, 480-280], [640-59, 480-280, 59, 280]);
 }
 
@@ -81,25 +69,33 @@ sub on_click {
 	}
 	$self->clicked(undef);
 }
+sub on_space { $_[0]->sprites->{button}->hide(!$_[0]->sprites->{button}->hide) }
 
-package Games::Neverhood::Scene::Nursery::One::foreground;
+package Games::Neverhood::Scene::Nursery::One::door_cover;
 	use constant {
 		file => 505,
 		pos => [ 640-68, 480-280 ],
-		alpha => 1,
+		alpha => 0,
 	};
 
+package Games::Neverhood::Scene::Nursery::One::hammer_cover;
+	use constant {
+		file => 501,
+		pos => [541, 188],
+		alpha => 0,
+	};
+	
 package Games::Neverhood::Scene::Nursery::One::hammer;
 	use constant {
 		file => 89,
 		dir => 's',
-		pos => [375, 30],
-		alpha => 1,
+		pos => [499, 29],
+		alpha => 0,
 		vars => {
 			sequence => 'idle',
 		},
 		sequences => {
-			idle => { frames => [0] },
+			idle => { frames => [14] },
 			swing => { frames => [1,1,2,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13], next_sequence => 'idle' },
 		},
 	};
@@ -113,9 +109,9 @@ package Games::Neverhood::Scene::Nursery::One::door;
 	use constant {
 		file => 63,
 		dir => 's',
-		pos => [493, 212],
+		pos => [535, 215],
 		rect => [520, 200, 90, 250],
-		alpha => 1,
+		alpha => 0,
 		vars => {
 			sequence => 'idle_1',
 		},
@@ -141,9 +137,10 @@ package Games::Neverhood::Scene::Nursery::One::door;
 
 package Games::Neverhood::Scene::Nursery::One::button;
 	use constant {
-		file => 0,
-		pos => [466, 339],
+		file => 503,
+		pos => [462, 335],
 		rect => [455, 325, 40, 40],
+		alpha => 0,
 		vars => {
 			hide => 1,
 		},
@@ -159,12 +156,19 @@ package Games::Neverhood::Scene::Nursery::One::button;
 		}
 	}
 
+package Games::Neverhood::Scene::Nursery::One::window_cover;
+	use constant {
+		file => 504,
+		pos => [317, 211],
+		alpha => 0,
+	};
+	
 package Games::Neverhood::Scene::Nursery::One::window;
 	use constant {
 		file => 504,
 		pos => [317, 211],
 		rect => [315, 200, 70, 140],
-		alpha => 1,
+		alpha => 0,
 		vars => {
 			sequence => 'idle',
 		},
@@ -182,14 +186,21 @@ package Games::Neverhood::Scene::Nursery::One::window;
 		}
 	}
 
+package Games::Neverhood::Scene::Nursery::One::lever_cover;
+	use constant {
+		file => 502,
+		pos => [42, 330],
+		alpha => 0,
+		palette => 478,
+	};
 package Games::Neverhood::Scene::Nursery::One::lever;
 	use constant {
 		file => 37,
 		dir => 's',
-		pos => [65, 313],
+		pos => [100, 313],
 		rect => [40, 300, 70, 100],
 		mirror => 1,
-		alpha => 1,
+		alpha => 0,
 		vars => {
 			sequence => 'idle',
 		},

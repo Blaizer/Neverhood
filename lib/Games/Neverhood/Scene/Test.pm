@@ -23,8 +23,9 @@ use constant {
 	file => 142,
 	dir => 's',
 	sequence => 'blink',
-	# alpha => 1,
-	# mirror => 1,
+	alpha => 1,
+	mirror => 1,
+	pos => [255, 255],
 	sequences => {
 		blink => { frames => [0,1,2,3] },
 	},

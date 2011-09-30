@@ -10,6 +10,7 @@ use constant {
 	file => 38,
 	dir => 'c',
 	this_frames => 6,
+	alpha => 0,
 	sequences => {
 		click => {
 			offset => [0, 0],

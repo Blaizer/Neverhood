@@ -123,6 +123,7 @@ use constant {
 	dir        => 'i',
 	rect       => undef,
 	alpha      => undef,
+	palette    => undef,
 	dont_store => [ 'name' ],
 };
 
@@ -166,8 +167,9 @@ sub this_surface {
 	defined $self->file or Carp::confess("Sprite: '", $self->name, "' must specify a file");
 	$surface = Games::Neverhood::Surface->new($self->dir, $self->file, $frame);
 	
-	$surface->do_alpha if $self->alpha;
-	$surface->do_mirror if $self->mirror;
+	# $surface->do_mirror if $self->mirror;
+	$surface->set_palette($self->palette) if defined $self->palette;
+	$surface->alpha_index($self->alpha) if defined $self->alpha;
 	$surface;
 }
 sub this_frames {

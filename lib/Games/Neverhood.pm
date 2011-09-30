@@ -104,6 +104,7 @@ sub app {
 			height     => 480,
 			depth      => 16,
 			min_t      => $FPSLimit && 1 / $FPSLimit,
+			eoq        => 1,
 			init       => ['video', 'audio'],
 			no_cursor  => 1,
 			centered   => 1,
@@ -125,20 +126,7 @@ sub app {
 			},
 
 			event_handlers => [
-				sub {
-					# stop on quit event or alt-f4
-					my ($e, $app) = @_;
-					if(
-						$e->type == SDL_QUIT
-						or
-						$e->type == SDL_KEYDOWN and $e->key_sym == SDLK_F4
-						and $e->key_mod & KMOD_ALT and not $e->key_mod & (KMOD_CTRL | KMOD_SHIFT | KMOD_META)
-					) {
-						$app->stop;
-						return 1;
-					}
-					return;
-				},
+
 				$event_window_pause,
 				$event_pause,
 				sub{$;->event(@_)},
