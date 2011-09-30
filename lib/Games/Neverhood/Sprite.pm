@@ -44,14 +44,6 @@ sub new {
 	my $self = bless {}, ref $class || $class;
 	%$self = %{$self->vars};
 
-	$self->pos([]) unless defined $self->pos;
-	$self->pos->[0] //= 0;
-	$self->pos->[1] //= 0;
-	#hide
-	#mirror
-	#name
-	$self->{surfaces} = {};
-
 	$self;
 }
 
@@ -98,7 +90,7 @@ sub sequence {
 }
 sub pos {
 	if(@_ > 1) { $_[0]->{pos} = $_[1]; return $_[0]; }
-	$_[0]->{pos};
+	$_[0]->{pos} ||= [0, 0];
 }
 sub hide {
 	if(@_ > 1) { $_[0]->{hide} = $_[1]; return $_[0]; }
@@ -133,11 +125,7 @@ use constant {
 sub on_move {}
 
 sub show {
-	# don't overload this
-	my ($self) = @_;
-	$self->on_show;
-}
-sub on_show {
+	# don't overload this, overload pos, this_offset, this_clip, etc.
 	my ($self) = @_;
 	return if $self->hide;
 
@@ -153,6 +141,10 @@ sub on_show {
 	my $y = $pos->[1] + $offset->[1];
 
 	$surface->blit([$x, $y], $clip);
+	$self->on_show;
+}
+sub on_show {
+	# overload this if you wanna do something after showing the sprite
 }
 
 ###############################################################################
@@ -167,7 +159,7 @@ sub this_surface {
 	defined $self->file or Carp::confess("Sprite: '", $self->name, "' must specify a file");
 	$surface = Games::Neverhood::Surface->new($self->dir, $self->file, $frame);
 	
-	# $surface->do_mirror if $self->mirror;
+	$surface->do_mirror if $self->mirror;
 	$surface->set_palette($self->palette) if defined $self->palette;
 	$surface->alpha_index($self->alpha) if defined $self->alpha;
 	$surface;

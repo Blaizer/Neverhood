@@ -21,7 +21,7 @@ sub on_destroy {
 
 sub sprites_list {[
 	'door_cover',
-	# $_[0]->klaymen,
+	$_[0]->klaymen,
 	'hammer_cover',
 	'hammer',
 	'door',
@@ -32,12 +32,6 @@ sub sprites_list {[
 	'lever',
 	'background',
 ]}
-
-sub on_show {
-	my ($self) = @_;
-	$_->show for reverse @{$self->sprites};
-	# $self->sprites->{background}->show_pos([640-59, 480-280], [640-59, 480-280, 59, 280]);
-}
 
 sub on_click {
 	my ($self) = @_;
@@ -77,6 +71,9 @@ package Games::Neverhood::Scene::Nursery::One::door_cover;
 		pos => [ 640-68, 480-280 ],
 		alpha => 0,
 	};
+	sub on_show {
+		$;->sprites->{background}->this_surface->blit([581, 200], [581, 200, 59, 262]);
+	}
 
 package Games::Neverhood::Scene::Nursery::One::hammer_cover;
 	use constant {
@@ -162,10 +159,16 @@ package Games::Neverhood::Scene::Nursery::One::window_cover;
 		pos => [317, 211],
 		alpha => 0,
 	};
+	sub on_show {
+		my $surf = $;->sprites->{background}->this_surface;
+		$surf->blit([317, 338], [317, 338, 66, 2]);
+		$surf->blit([381, 211], [381, 211, 2, 127]);
+	}
 	
 package Games::Neverhood::Scene::Nursery::One::window;
 	use constant {
-		file => 504,
+		file => 261,
+		dir => 's',
 		pos => [317, 211],
 		rect => [315, 200, 70, 140],
 		alpha => 0,
@@ -191,7 +194,6 @@ package Games::Neverhood::Scene::Nursery::One::lever_cover;
 		file => 502,
 		pos => [42, 330],
 		alpha => 0,
-		palette => 478,
 	};
 package Games::Neverhood::Scene::Nursery::One::lever;
 	use constant {
