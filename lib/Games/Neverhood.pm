@@ -132,7 +132,7 @@ sub app {
 				sub{$;->event(@_)},
 			],
 			move_handlers => [
-				sub{$;->move(@_)}
+				sub{$;->move(@_)},
 			],
 			show_handlers => [
 				sub{SDL::Video::fill_rect($_[1], SDL::Rect->new(0, 0, 640, 480), 0)},

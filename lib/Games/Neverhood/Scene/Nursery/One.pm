@@ -7,11 +7,11 @@ use parent 'Games::Neverhood::Scene';
 
 sub on_new {
 	my ($self) = @_;
-	if($self->GG->{nursery_1_window_open}) { $self->sprites->{window}->hide(1) }
 	$self->klaymen
 		->pos([200, 43])
 		->sequence('snore')
 	;
+	if($self->GG->{nursery_1_window_open}) { $self->sprites->{window}->hide(1) }
 	$self;
 }
 sub on_destroy {
@@ -75,7 +75,7 @@ package Games::Neverhood::Scene::Nursery::One::door_cover;
 	};
 	sub palette { $;->sprites->{background} }
 	sub on_show {
-		$;->sprites->{background}->this_surface->blit([581, 200], [581, 200, 59, 262]);
+		$;->sprites->{background}->show_at([581, 200], [581, 200, 59, 262]);
 	}
 
 package Games::Neverhood::Scene::Nursery::One::hammer_cover;
@@ -166,9 +166,9 @@ package Games::Neverhood::Scene::Nursery::One::window_cover;
 	};
 	sub palette { $;->sprites->{background} }
 	sub on_show {
-		my $surf = $;->sprites->{background}->this_surface;
-		$surf->blit([317, 338], [317, 338, 66, 2]);
-		$surf->blit([381, 211], [381, 211, 2, 127]);
+		my $background = $;->sprites->{background};
+		$background->show_at([317, 338], [317, 338, 66, 2]);
+		$background->show_at([381, 211], [381, 211, 2, 127]);
 	}
 	
 package Games::Neverhood::Scene::Nursery::One::window;

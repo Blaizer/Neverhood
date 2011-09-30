@@ -82,7 +82,7 @@ sub new {
 	}
 	$self->{sprites} = $sprites;
 
-	$self->frame(0);
+	$self->{frame} = 0;
 	$self->on_new($unset_name);
 
 	for my $sprite (@{$self->sprites}) {
