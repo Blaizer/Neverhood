@@ -16,6 +16,7 @@ my $build = My::Module::Build->new(
 	},
 	extra_linker_flags   => [ Alien::SDL->config('libs') ],
 	extra_compiler_flags => [ Alien::SDL->config('cflags') ],
+	typemap_files        => { 'typemap' => 'lib/Games/Neverhood/typemap' },
 	meta_merge => {
 		resources => {
 			license    => 'http://dev.perl.org/licenses/',
@@ -27,4 +28,6 @@ my $build = My::Module::Build->new(
 	],
 );
 
+$build->add_build_element('typemap');
 $build->create_build_script;
+

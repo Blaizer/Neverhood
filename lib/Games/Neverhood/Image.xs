@@ -24,3 +24,15 @@ Neverhood_Image_load(filename, mirror)
 		RETVAL = NHC_IMG_Load(filename, mirror);
 	OUTPUT:
 		RETVAL
+
+SDL_Surface*
+Neverhood_Image_load_sequence(filename, frame, mirror)
+		char* filename
+		int frame
+		int mirror
+	PREINIT:
+		char* CLASS = "SDL::Surface";
+	CODE:
+		RETVAL = NHC_IMG_Load(filename, mirror);
+	OUTPUT:
+		RETVAL
