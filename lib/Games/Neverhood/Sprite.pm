@@ -199,7 +199,7 @@ sub this_surface {
 	my $surface;
 	my $is_sequence;
 	do {
-		if(-f $filename . '.04') {
+		if(-e $filename . '.04') {
 			$is_sequence = 1;
 			$surface = Games::Neverhood::Image::load_sequence($filename . '.04', $frame, $mirror);
 		}
