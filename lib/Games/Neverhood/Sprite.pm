@@ -7,7 +7,7 @@ use parent 'Games::Neverhood::StorableRW';
 use Games::Neverhood qw/$ShareDir/;
 
 use SDL;
-use SDL::Image;
+use Games::Neverhood::Image;
 use SDL::Video;
 use SDL::Rect;
 use SDL::PixelFormat;
@@ -195,22 +195,18 @@ sub this_surface {
 		}
 	}
 
-	my ($filename, $is_sequence);
-	if(-d File::Spec->catdir($ShareDir, $dir, $file)) {
-		$is_sequence = 1;
-		$filename = File::Spec->catfile($ShareDir, $dir, $file, $frame);
-	}
-	else {
-		$filename = File::Spec->catfile($ShareDir, $dir, $file);
-	}
-	$filename .= '.tga';
-
-	my $surface = SDL::Image::load($filename)
-		or Carp::confess("Sprite '", $self->name, "could not load image '$filename': ", SDL::get_error);
-
-	if($mirror) {
-		# $surface = SDL::GFX::Rotozoom::surface_xy($surface, 0, -1, 1, 0);
-	}
+	my $filename = File::Spec->catdir($ShareDir, $dir, $file);
+	my $surface;
+	my $is_sequence;
+	do {
+		if(-f $filename . '.04') {
+			$is_sequence = 1;
+			$surface = Games::Neverhood::Image::load_sequence($filename . '.04', $frame, $mirror);
+		}
+		else {
+			$surface = Games::Neverhood::Image::load($filename . '.02', $mirror);
+		}
+	} or Carp::confess("Sprite '", $self->name, "' could not load image '$filename': ", SDL::get_error);
 
 	if(defined $palette) {
 		my @colors;
