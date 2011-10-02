@@ -6,6 +6,12 @@
 #include <stdio.h>
 #include "SDL.h"
 
+SDL_Color default_palette[256];
+int i;
+for(i = 0; i < 256; i++) {
+	default_palette[i] = {i, i, i, 0};
+}
+
 SDL_Surface* NHC_IMG_Load(const char* filename, int mirror) {
 	printf("\n\n%s\n\n", filename);
 	SDL_Surface* surface = SDL_CreateRGBSurface(SDL_SWSURFACE, 1, 1, 8, 0, 0, 0, 0);

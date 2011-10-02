@@ -108,14 +108,13 @@ sub app {
 			init       => ['video', 'audio'],
 			no_cursor  => 1,
 			centered   => 1,
-			flags      => 0,
 			fullscreen => $Fullscreen,
 			no_frame   => $NoFrame,
 			hw_surface => 1, double_buf => 1,
-	#		sw_surface => 1,
-	#		any_format => 1,
-	#		async_blit => 1,
-	#		hw_palette => 1,
+#			sw_surface => 1,
+#			any_format => 1,
+#			async_blit => 1,
+#			hw_palette => 1,
 
 			icon => do {
 				my $icon;
