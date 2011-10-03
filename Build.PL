@@ -25,6 +25,9 @@ my $build = My::Module::Build->new(
 	},
 	add_to_cleanup => [
 		'MANIFEST',
+		'META.yml',
+		'META.json',
+		'lib/Games/Neverhood/typemap',
 	],
 );
 

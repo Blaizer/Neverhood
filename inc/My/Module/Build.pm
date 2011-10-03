@@ -4,15 +4,16 @@ use warnings;
 use base 'Module::Build';
 use autodie ':all';
 
+$ENV{SDL_VIDEODRIVER} = 'dummy';
+$ENV{SDL_AUDIODRIVER} = 'dummy';
+
 sub ACTION_uninstall {
 	require File::ShareDir;
 	require File::Spec;
 	eval { require Games::Neverhood };
 	$! and leave("Games::Neverhood wouldn't load: $@. Maybe install before uninstalling?");
-	my $packlist = File::Spec->catfile(
-		File::ShareDir::module_dir('Games::Neverhood'),
-		'.packlist'
-	);
+	my $dir = File::ShareDir::module_dir('Games::Neverhood');
+	my $packlist = File::Spec->catfile($dir, '.packlist');
 	open LIST, ">>$packlist"; #Just makin' sure we can write in it later
 	open LIST, $packlist;
 	my $leftover;
@@ -33,20 +34,21 @@ sub ACTION_uninstall {
 		}
 		$total++;
 	}
-	print "$deleted of $total files successfully deleted\n";
 	if(defined $leftover and $deleted) {
+		print "$deleted of $total files successfully deleted\n";
 		print "Updating .packlist with remaining files\n";
 		open LIST, ">$packlist";
 		print LIST $leftover;
 		print ".packlist updated with remaining files\n";
 	}
 	else {
+		print "all files successfully deleted\n";
 		if(do { no autodie; unlink $packlist }) {
 			print ".packlist deleted\n";
 		}
 		else {
-			print "Emptying .packlist\n";
 			open LIST, ">$packlist";
+			print ".packlist emptied\n";
 		}
 	}
 	close LIST;

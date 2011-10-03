@@ -6,7 +6,9 @@ _build*
 *.bak
 MANIFEST
 META.yml
+META.json
 MYMETA.yml
+MYMETA.json
 img*
 blb*
 blbconv*
