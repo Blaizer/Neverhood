@@ -13,3 +13,6 @@ blbconv*
 UNDATA*
 *.txt
 unshare*
+*.c
+*.o
+lib/Games/Neverhood/typemap

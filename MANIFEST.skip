@@ -14,3 +14,5 @@
 ^UNDATA/
 \.txt$
 ^unshare/
+\.[co]$
+^lib/Games/Neverhood/typemap$
