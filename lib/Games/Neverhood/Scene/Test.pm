@@ -11,8 +11,7 @@ use constant {
 };
 sub sprites_list {
 	[
-		'test',
-		'background',
+		'test'
 	];
 }
 
@@ -20,16 +19,11 @@ package Games::Neverhood::Scene::Test::test;
 our @ISA = qw/Games::Neverhood::Sprite/;
 
 use constant {
-	file => 142,
-	dir => 's',
-	sequence => 'blink',
-	alpha => 1,
-	mirror => 1,
+	file => 505,
+	alpha => 0,
 	pos => [255, 255],
-	sequences => {
-		blink => { frames => [0,1,2,3] },
-	},
 };
+sub palette { state $foo = Games::Neverhood::Scene::Test::background->new }
 
 package Games::Neverhood::Scene::Test::background;
 	our @ISA = qw/Games::Neverhood::Sprite/;
