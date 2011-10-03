@@ -39,15 +39,15 @@ typedef struct {
 	Uint32 data_offset;
 } NHC_IMG_Frame_Header;
 
-void NHC_IMG_Read_Palette(SDL_RWops *src, SDL_Surface *surface) {
+void NHC_IMG_Read_Palette(SDL_RWops* src, SDL_Surface* surface) {
 	SDL_Color palette[256];
 	SDL_RWread(src, palette, 1024, 1);
 	SDL_SetPalette(surface, SDL_LOGPAL, palette, 0, 256);
 }
 
-void NHC_IMG_Read_Runs(SDL_RWops *src, SDL_Surface *surface) {
+void NHC_IMG_Read_Runs(SDL_RWops* src, SDL_Surface* surface) {
 	int ypos = 0;
-	Uint8 *pixels = surface->pixels;
+	Uint8* pixels = surface->pixels;
 
 	for(;;) {
 		Uint16 rows, cols;
@@ -69,7 +69,7 @@ void NHC_IMG_Read_Runs(SDL_RWops *src, SDL_Surface *surface) {
 	}
 }
 
-SDL_Surface* NHC_IMG_Load_Image(SDL_RWops *src, int mirror) {
+SDL_Surface* NHC_IMG_Load_Image(SDL_RWops* src) {
 	NHC_IMG_Image_Header header;
 	SDL_RWread(src, &header, 6, 1);
 
@@ -92,7 +92,7 @@ SDL_Surface* NHC_IMG_Load_Image(SDL_RWops *src, int mirror) {
 	}
 	else {
 		// uncompressed
-		Uint8 *pixels = surface->pixels;
+		Uint8* pixels = surface->pixels;
 		int surface_len = header.height * surface->pitch;
 		int ypos;
 		for(ypos = 0; ypos < surface_len; ypos += surface->pitch) {
@@ -104,7 +104,7 @@ SDL_Surface* NHC_IMG_Load_Image(SDL_RWops *src, int mirror) {
 	return surface;
 }
 
-SDL_Surface* NHC_IMG_Load_Sequence(SDL_RWops *src, int frame, int mirror) {
+SDL_Surface* NHC_IMG_Load_Sequence(SDL_RWops* src, int frame) {
 	NHC_IMG_Sequence_Header header;
 	SDL_RWread(src, &header, 20, 1);
 
@@ -130,10 +130,10 @@ SDL_Surface* NHC_IMG_Load_Sequence(SDL_RWops *src, int frame, int mirror) {
 	return surface;
 }
 
-SDL_Surface* NHC_IMG_Load(const char* filename, int type, int frame, int mirror) {
-	SDL_RWops *src = SDL_RWFromFile(filename, "rb");
+SDL_Surface* NHC_IMG_Load(const char* filename, int type, int frame) {
+	SDL_RWops* src = SDL_RWFromFile(filename, "rb");
 
-	SDL_Surface *surface;
+	SDL_Surface* surface;
 	if(type == 2) {
 		surface = NHC_IMG_Load_Image(src, mirror);
 	}
@@ -146,17 +146,33 @@ SDL_Surface* NHC_IMG_Load(const char* filename, int type, int frame, int mirror)
 	return surface;
 }
 
+void NHC_IMG_Mirror(SDL_Surface* surface) {
+	Uint8* pixels = surface->pixels;
+	Uint8* new_pixels = malloc(surface->h * surface->pitch);
+	int xpos, ypos;
+	for() {
+		for(xpos = 0; xpos < surface->w; xpos++) {
+		
+		}
+	}
+}
+
 MODULE = Games::Neverhood::Image		PACKAGE = Games::Neverhood::Image		PREFIX = Neverhood_Image_
 
 SDL_Surface*
-Neverhood_Image_load(filename, type, frame, mirror)
+Neverhood_Image_load(filename, type, frame)
 		char* filename
 		int type
 		int frame
-		int mirror
 	PREINIT:
 		char* CLASS = "SDL::Surface";
 	CODE:
-		RETVAL = NHC_IMG_Load(filename, type, frame, mirror);
+		RETVAL = NHC_IMG_Load(filename, type, frame);
 	OUTPUT:
 		RETVAL
+
+void
+Neverhood_Image_mirror(surface)
+		SDL_Surface* surface
+	CODE:
+		NHC_IMG_Mirror(surface);
