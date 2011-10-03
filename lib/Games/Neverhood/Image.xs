@@ -61,7 +61,7 @@ void NHC_IMG_Read_Runs(SDL_RWops* src, SDL_Surface* surface) {
 				Uint16 xpos, fragment_len;
 				SDL_RWread(src, &xpos, 2, 1);
 				SDL_RWread(src, &fragment_len, 2, 1);
-				
+
 				SDL_RWread(src, pixels + ypos + xpos, fragment_len, 1);
 			}
 			ypos += surface->pitch;
@@ -146,15 +146,20 @@ SDL_Surface* NHC_IMG_Load(const char* filename, int type, int frame) {
 	return surface;
 }
 
-void NHC_IMG_Mirror(SDL_Surface* surface) {
-	// Uint8* pixels = surface->pixels;
-	// Uint8* new_pixels = malloc(surface->h * surface->pitch);
-	// int xpos, ypos;
-	// for() {
-		// for(xpos = 0; xpos < surface->w; xpos++) {
-		
-		// }
-	// }
+SDL_Surface* NHC_IMG_Mirror(SDL_Surface* surface) {
+	int surface_len = surface->h * surface->pitch;
+	Uint8* pixels = surface->pixels;
+	Uint8* pixels_copy = malloc(surface_len);
+	memcpy(pixels_copy, pixels, surface_len);
+
+	int ypos, xpos;
+	for(ypos = 0; ypos < surface_len; ypos += surface->pitch) {
+		for(xpos = 0; xpos < surface->w; xpos++) {
+			pixels[ypos + xpos] = pixels_copy[ypos + surface->w - xpos - 1];
+		}
+	}
+	
+	free(pixels_copy);
 }
 
 MODULE = Games::Neverhood::Image		PACKAGE = Games::Neverhood::Image		PREFIX = Neverhood_Image_
