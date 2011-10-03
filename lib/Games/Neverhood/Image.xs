@@ -10,7 +10,7 @@ typedef struct {
 	Uint16 format;
 	Uint16 width;
 	Uint16 height;
-} NHC_IMG_Header;
+} NHC_IMG_Image_Header;
 
 typedef struct {
 	Uint16 format;
@@ -39,16 +39,6 @@ typedef struct {
 	Uint32 data_offset;
 } NHC_IMG_Frame_Header;
 
-typedef struct {
-	Uint16 rows;
-	Uint16 cols;
-} NHC_IMG_Run_Header;
-
-typedef struct {
-	Uint16 xpos;
-	Uint16 fragment_len;
-} NHC_IMG_Run_Data;
-
 void NHC_IMG_Read_Palette(SDL_RWops *src, SDL_Surface *surface) {
 	SDL_Color palette[256];
 	SDL_RWread(src, palette, 1024, 1);
@@ -56,30 +46,31 @@ void NHC_IMG_Read_Palette(SDL_RWops *src, SDL_Surface *surface) {
 }
 
 void NHC_IMG_Read_Runs(SDL_RWops *src, SDL_Surface *surface, int width) {
-	int ypos = 0;
 	Uint8 *pixels = (Uint8 *)surface->pixels;
+	int ypos = 0;
 	
-	while(1) {
-		NHC_IMG_Run_Header run_header;
-		SDL_RWread(src, &run_header, 4, 1);
-		if(!run_header.rows && !run_header.cols) break;
+	for(;;) {
+		Uint16 rows, cols;
+		SDL_RWread(src, &rows, 2, 1);
+		SDL_RWread(src, &cols, 2, 1);
+		if(!rows && !cols) break;
 
 		int i, j;
-		for(i = 0; i < run_header.rows; i++) {
-			for(j = 0; j < run_header.cols; j++) {
-				NHC_IMG_Run_Data run_data;
-				SDL_RWread(src, &run_data, 4, 1);
-				SDL_RWread(src, &pixels[ypos + run_data.xpos], run_data.fragment_len, 1);
+		for(i = 0; i < rows; i++) {
+			for(j = 0; j < cols; j++) {
+				Uint16 xpos, fragment_len;
+				SDL_RWread(src, &xpos, 2, 1);
+				SDL_RWread(src, &fragment_len, 2, 1);
+				
+				SDL_RWread(src, pixels + ypos + xpos, fragment_len, 1);
 			}
 			ypos += width;
 		}
 	}
 }
 
-SDL_Surface* NHC_IMG_Load(const char* filename, int mirror) {
-	SDL_RWops *src = SDL_RWFromFile(filename, "rb");
-	
-	NHC_IMG_Header header;
+SDL_Surface* NHC_IMG_Load_Image(SDL_RWops *src, int mirror) {
+	NHC_IMG_Image_Header header;
 	SDL_RWread(src, &header, 6, 1);
 
 	SDL_Surface* surface = SDL_CreateRGBSurface(SDL_SWSURFACE, header.width, header.height, 8, 0, 0, 0, 0);
@@ -94,6 +85,7 @@ SDL_Surface* NHC_IMG_Load(const char* filename, int mirror) {
 		SDL_RWseek(src, 4, SEEK_CUR);
 	}
 	
+	SDL_LockSurface(surface);
 	if(header.format & 0x1) {
 		// compressed
 		NHC_IMG_Read_Runs(src, surface, header.width);
@@ -102,14 +94,12 @@ SDL_Surface* NHC_IMG_Load(const char* filename, int mirror) {
 		// uncompressed
 		SDL_RWread(src, surface->pixels, header.width * header.height, 1);
 	}
-	
-	SDL_RWclose(src);
+	SDL_UnlockSurface(surface);
+
 	return surface;
 }
 
-SDL_Surface* NHC_IMG_Load_Sequence(const char* filename, int frame, int mirror) {
-	SDL_RWops *src = SDL_RWFromFile(filename, "rb");
-
+SDL_Surface* NHC_IMG_Load_Sequence(SDL_RWops *src, int frame, int mirror) {
 	NHC_IMG_Sequence_Header header;
 	SDL_RWread(src, &header, 20, 1);
 	
@@ -128,7 +118,24 @@ SDL_Surface* NHC_IMG_Load_Sequence(const char* filename, int frame, int mirror) 
 	NHC_IMG_Read_Palette(src, surface);
 
 	SDL_RWseek(src, header.data_offset + frame_header.data_offset, SEEK_SET);
+	SDL_LockSurface(surface);
 	NHC_IMG_Read_Runs(src, surface, frame_header.width);
+	SDL_UnlockSurface(surface);
+	
+	return surface;
+}
+
+SDL_Surface* NHC_IMG_Load(const char* filename, int type, int frame, int mirror) {
+	SDL_RWops *src = SDL_RWFromFile(filename, "rb");
+
+	SDL_Surface *surface;
+	if(type == 2) {
+		surface = NHC_IMG_Load_Image(src, mirror);
+	}
+	else if(type == 4) {
+		surface = NHC_IMG_Load_Sequence(src, frame, mirror);
+	}
+	else { /* error */ }
 	
 	SDL_RWclose(src);
 	return surface;
@@ -137,24 +144,14 @@ SDL_Surface* NHC_IMG_Load_Sequence(const char* filename, int frame, int mirror) 
 MODULE = Games::Neverhood::Image		PACKAGE = Games::Neverhood::Image		PREFIX = Neverhood_Image_
 
 SDL_Surface*
-Neverhood_Image_load(filename, mirror)
+Neverhood_Image_load(filename, type, frame, mirror)
 		char* filename
-		int mirror
-	PREINIT:
-		char* CLASS = "SDL::Surface";
-	CODE:
-		RETVAL = NHC_IMG_Load(filename, mirror);
-	OUTPUT:
-		RETVAL
-
-SDL_Surface*
-Neverhood_Image_load_sequence(filename, frame, mirror)
-		char* filename
+		int type
 		int frame
 		int mirror
 	PREINIT:
 		char* CLASS = "SDL::Surface";
 	CODE:
-		RETVAL = NHC_IMG_Load_Sequence(filename, frame, mirror);
+		RETVAL = NHC_IMG_Load(filename, type, frame, mirror);
 	OUTPUT:
 		RETVAL

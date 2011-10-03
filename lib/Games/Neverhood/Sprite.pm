@@ -201,10 +201,10 @@ sub this_surface {
 	do {
 		if(-e $filename . '.04') {
 			$is_sequence = 1;
-			$surface = Games::Neverhood::Image::load_sequence($filename . '.04', $frame, $mirror);
+			$surface = Games::Neverhood::Image::load($filename . '.04', 4, $frame, $mirror);
 		}
 		else {
-			$surface = Games::Neverhood::Image::load($filename . '.02', $mirror);
+			$surface = Games::Neverhood::Image::load($filename . '.02', 2, 0, $mirror);
 		}
 	} or Carp::confess("Sprite '", $self->name, "' could not load image '$filename': ", SDL::get_error);
 
