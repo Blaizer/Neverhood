@@ -4,6 +4,10 @@ use warnings;
 use lib 'inc';
 use My::Module::Build;
 use Alien::SDL;
+use ExtUtils::CBuilder;
+
+my @cflags = ( Alien::SDL->config('cflags'), File::Spec->catfile('-I' . Alien::SDL->config('prefix'), 'include') );
+my @lflags = Alien::SDL->config('libs', '-lSDL_mixer');
 
 my $build = My::Module::Build->new(
 	module_name   => 'Games::Neverhood',
@@ -16,8 +20,9 @@ my $build = My::Module::Build->new(
 		'File::ShareDir' => 0,
 	},
 	configure_requires   => { 'Module::Build' => 0.38 },
-	extra_linker_flags   => [ Alien::SDL->config('libs') ],
-	extra_compiler_flags => [ Alien::SDL->config('cflags') ],
+	dynamic_config       => 1,
+	extra_compiler_flags => \@cflags,
+	extra_linker_flags   => \@lflags,
 	include_dirs         => [ '.' ],
 	typemap_files        => { 'typemap' => 'lib/Games/Neverhood/typemap' },
 	add_to_cleanup => [

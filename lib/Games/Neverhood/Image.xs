@@ -4,7 +4,7 @@
 #include "ppport.h"
 
 #include <stdio.h>
-#include "SDL.h"
+#include <SDL.h>
 
 typedef struct {
 	Uint16 format;
@@ -135,10 +135,10 @@ SDL_Surface* NHC_IMG_Load(const char* filename, int type, int frame) {
 
 	SDL_Surface* surface;
 	if(type == 2) {
-		surface = NHC_IMG_Load_Image(src, mirror);
+		surface = NHC_IMG_Load_Image(src);
 	}
 	else if(type == 4) {
-		surface = NHC_IMG_Load_Sequence(src, frame, mirror);
+		surface = NHC_IMG_Load_Sequence(src, frame);
 	}
 	else { /* error */ }
 
@@ -147,14 +147,14 @@ SDL_Surface* NHC_IMG_Load(const char* filename, int type, int frame) {
 }
 
 void NHC_IMG_Mirror(SDL_Surface* surface) {
-	Uint8* pixels = surface->pixels;
-	Uint8* new_pixels = malloc(surface->h * surface->pitch);
-	int xpos, ypos;
-	for() {
-		for(xpos = 0; xpos < surface->w; xpos++) {
+	// Uint8* pixels = surface->pixels;
+	// Uint8* new_pixels = malloc(surface->h * surface->pitch);
+	// int xpos, ypos;
+	// for() {
+		// for(xpos = 0; xpos < surface->w; xpos++) {
 		
-		}
-	}
+		// }
+	// }
 }
 
 MODULE = Games::Neverhood::Image		PACKAGE = Games::Neverhood::Image		PREFIX = Neverhood_Image_
