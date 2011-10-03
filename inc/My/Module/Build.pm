@@ -7,6 +7,16 @@ use autodie ':all';
 $ENV{SDL_VIDEODRIVER} = 'dummy';
 $ENV{SDL_AUDIODRIVER} = 'dummy';
 
+=pod
+
+=item uninstall
+
+[version 0.01]
+
+This action will find the .packlist file made when the distribution was installed and attempt to delete all files listed in it. The process of finding the .packlist file requires the module to be installed, so you will need to install the distribution again to reatempt an uninstall.
+
+=cut
+
 sub ACTION_uninstall {
 	require File::ShareDir;
 	require File::Spec;

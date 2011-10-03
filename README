@@ -10,6 +10,9 @@ To install the game:
 Once installed, run the game with:
  nhc
 
+And to uninstall it:
+ ./Build uninstall
+
 Press Alt-F4 at any time to quit.
 
 

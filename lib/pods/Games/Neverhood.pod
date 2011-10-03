@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-Games::Neverhood - The Neverhood - gloriously remade in Perl
+Games::Neverhood - The Neverhood remade in SDL Perl
 
 =head1 AUTHOR
 
