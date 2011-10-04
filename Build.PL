@@ -2,14 +2,14 @@
 use strict;
 use warnings;
 use lib 'inc';
-use My::Module::Build;
+use My::Builder;
 use Alien::SDL;
 use ExtUtils::CBuilder;
 
 my @cflags = ExtUtils::CBuilder->new->split_like_shell( File::Spec->catfile('-I' . Alien::SDL->config('prefix'), 'include') );
 my @lflags = ExtUtils::CBuilder->new->split_like_shell( Alien::SDL->config('libs', '-lSDL_mixer') );
 
-my $build = My::Module::Build->new(
+my $build = My::Builder->new(
 	module_name   => 'Games::Neverhood',
 	dist_abstract => 'The Neverhood remade in SDL Perl',
 	license       => 'perl',

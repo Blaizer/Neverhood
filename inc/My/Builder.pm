@@ -1,4 +1,4 @@
-package My::Module::Build;
+package My::Builder;
 use strict;
 use warnings;
 use base 'Module::Build';
@@ -9,19 +9,28 @@ $ENV{SDL_AUDIODRIVER} = 'dummy';
 
 =pod
 
+=head1 ACTIONS
+
+=over
+
 =item uninstall
 
-[version 0.01]
+[version 0.01] (Blaise Roth, experimental)
 
-This action will find the .packlist file made when the distribution was installed and attempt to delete all files listed in it. The process of finding the .packlist file requires the module to be installed, so you will need to install the distribution again to reatempt an uninstall.
+This action will find the .packlist file made when the distribution was
+installed and attempt to delete all files listed in it. The process of finding
+the .packlist file requires the module to be installed, so you will need to
+install the distribution again to reatempt an uninstall.
+
+=back
 
 =cut
 
 sub ACTION_uninstall {
-	require File::ShareDir;
-	require File::Spec;
 	eval { require Games::Neverhood };
 	$! and leave("Games::Neverhood wouldn't load: $@. Maybe install before uninstalling?");
+	require File::ShareDir;
+	require File::Spec;
 	my $dir = File::ShareDir::module_dir('Games::Neverhood');
 	my $packlist = File::Spec->catfile($dir, '.packlist');
 	open LIST, ">>$packlist"; #Just makin' sure we can write in it later
