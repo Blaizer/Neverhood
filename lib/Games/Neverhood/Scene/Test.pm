@@ -4,6 +4,8 @@ use warnings;
 package Games::Neverhood::Scene::Test;
 
 use parent qw/Games::Neverhood::Scene/;
+use Games::Neverhood::Video;
+use File::Spec;
 
 use constant {
 	fps => 24,
@@ -11,7 +13,7 @@ use constant {
 };
 sub sprites_list {
 	[
-		'test'
+		Games::Neverhood::Video->new(File::Spec->catfile($Games::Neverhood::ShareDir, 'hd', '73.0A')),
 	];
 }
 

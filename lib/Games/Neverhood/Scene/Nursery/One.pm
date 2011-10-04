@@ -70,7 +70,7 @@ sub on_space {
 package Games::Neverhood::Scene::Nursery::One::door_cover;
 	use constant {
 		file => 505,
-		pos => [ 640-68, 480-280 ],
+		pos => [ 572, 200 ],
 		alpha => 0,
 	};
 	sub palette { $;->sprites->{background} }
