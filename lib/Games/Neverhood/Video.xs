@@ -96,12 +96,7 @@ typedef struct {
 } NHC_VID_Huffman_Trees;
 
 typedef struct {
-	NHC_BS* bs;
 	NHC_VID_Header* header;
-	Uint32* frame_sizes;
-	Uint8* frame_types;
-	NHC_VID_Huffman_Trees* huffman_trees;
-	Uint8* frames_data;
 } NHC_VID;
 
 // typedef struct {
@@ -109,9 +104,12 @@ typedef struct {
 // } NHC_VID_Huffman_Tree;
 
 NHC_VID* NHC_VID_new(const char* filename) {
-	NHC_VID* vid;
-	// SDL_RWops* file = SDL_RWFromFile(filename, "rb");
+	NHC_VID* vid = (NHC_VID*)safemalloc(sizeof(NHC_VID));
+	
+	SDL_RWops* file = SDL_RWFromFile(filename, "rb");
+	Uint32 safe[31];
 	// SDL_RWread(file, vid->header, 104, 1);
+	SDL_RWread(file, safe, 104, 1);
 
 	// vid->frame_sizes = malloc(vid->header->frames * 4);
 	// SDL_RWread(file, vid->frame_sizes, vid->header->frames * 4, 1);
@@ -126,7 +124,7 @@ NHC_VID* NHC_VID_new(const char* filename) {
 	// vid->huffman_trees->full = NHC_VID_Huffman_Tree_new(vid->bs, vid->header->full_size);
 	// vid->huffman_trees->type = NHC_VID_Huffman_Tree_new(vid->bs, vid->header->type_size);
 	
-	return vid;
+	return NULL;
 }
 
 MODULE = Games::Neverhood::Video		PACKAGE = Games::Neverhood::Video		PREFIX = Neverhood_Video_
