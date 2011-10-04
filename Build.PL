@@ -6,8 +6,8 @@ use My::Module::Build;
 use Alien::SDL;
 use ExtUtils::CBuilder;
 
-my @cflags = ( Alien::SDL->config('cflags'), File::Spec->catfile('-I' . Alien::SDL->config('prefix'), 'include') );
-my @lflags = Alien::SDL->config('libs', '-lSDL_mixer');
+my @cflags = ExtUtils::CBuilder->new->split_like_shell( File::Spec->catfile('-I' . Alien::SDL->config('prefix'), 'include') );
+my @lflags = ExtUtils::CBuilder->new->split_like_shell( Alien::SDL->config('libs', '-lSDL_mixer') );
 
 my $build = My::Module::Build->new(
 	module_name   => 'Games::Neverhood',

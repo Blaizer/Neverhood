@@ -4,7 +4,7 @@
 #include "ppport.h"
 
 #include <stdio.h>
-#include <SDL.h>
+#include <SDL/SDL.h>
 
 typedef struct {
 	Uint16 format;
