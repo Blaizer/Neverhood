@@ -143,10 +143,11 @@ SDL_Surface* NHC_IMG_Load(const char* filename, int type, int frame) {
 	else { /* error */ }
 
 	SDL_RWclose(file);
+	SDL_FreeRW(file);
 	return surface;
 }
 
-SDL_Surface* NHC_IMG_Mirror(SDL_Surface* surface) {
+void NHC_IMG_Mirror(SDL_Surface* surface) {
 	int surface_len = surface->h * surface->pitch;
 	Uint8* pixels = surface->pixels;
 	Uint8* pixels_copy = malloc(surface_len);
