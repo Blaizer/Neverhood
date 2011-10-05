@@ -21,9 +21,6 @@ sub new {
 	my $hash = bless {@_}, $class;
 	my $self;
 	
-	warn $hash->dir;
-	warn $hash->dir;
-	
 	my ($dir, $file) = ($hash->dir, $hash->file);
 	
 	defined $file or Carp::confess("Video '", $hash->name, "' must specify a file");
@@ -31,10 +28,10 @@ sub new {
 	
 	my $filename = File::Spec->catfile($ShareDir, $dir, $file . '.0A');
 	
-	# $self = bless $class->xs_new($filename, {%$hash});warn $self->{file};
+	$self = bless $class->xs_new($filename, {%$hash});
+	$self->xs_frame($self->start_frame) if $self->start_frame;
 	
-	# return $self;
-	return $hash;
+	return $self;
 }
 
 # These are called with a blessed $hash instead of the full object
@@ -50,6 +47,21 @@ sub file {
 sub name {
 	if(@_ > 1) { $_[0]->{name} = $_[1]; return $_[0]; }
 	$_[0]->{name} ||= 'video';
+}
+
+sub start_frame {
+	if(@_ > 1) { $_[0]->{start_frame} = $_[1]; return $_[0]; }
+	$_[0]->{start_frame} ||= 0;
+}
+
+# You shouldn't overload this. Simply call it to change the frame
+sub frame {
+	my ($self, $frame) = @_;
+	if(@_ > 1) {
+		$self->xs_frame($frame);
+		return $self;
+	}
+	$self->xs_frame(-1);
 }
 
 sub pos {

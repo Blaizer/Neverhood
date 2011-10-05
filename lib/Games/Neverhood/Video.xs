@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <SDL/SDL.h>
 
-#define BUFFER_LEN 1024
+#define BUFFER_LEN 1048576
 
 typedef struct {
 	SDL_RWops* file;
@@ -23,19 +23,23 @@ NHC_BS* NHC_BS_new(SDL_RWops* file) {
 	return bs;
 }
 
-int NHC_BS_read(NHC_BS* bs, int bits) {
-	return SDL_RWread(bs->file, bs->buffer, ceil(((float)(bits + bs->bit_offset)) / 8), 1);
+int NHC_BS_read(NHC_BS* bs, int bytes) {
+	return SDL_RWread(bs->file, bs->buffer, bytes, 1);
 }
 
-int NHC_BS_seek(NHC_BS* bs, int bits) {
-	int ret = SDL_RWseek(bs->file, (int)(bits / 8), SEEK_SET);
+int NHC_BS_seek(NHC_BS* bs, int bytes) {
 	bs->byte_offset = 0;
-	bs->bit_offset = bits % 8;
-	return ret;
+	bs->bit_offset = 0;
+	return SDL_RWseek(bs->file, bytes, SEEK_SET);
+}
+
+int NHC_BS_offset(NHC_BS* bs, int bytes) {
+	bs->byte_offset = bytes;
+	
 }
 
 int NHC_BS_tell(NHC_BS* bs) {
-	return SDL_RWtell(bs->file) * 8 + bs->bit_offset;
+	return SDL_RWtell(bs->file);
 }
 
 Uint8 NHC_BS_get_1(NHC_BS* bs) {
@@ -60,9 +64,9 @@ Uint8 NHC_BS_get_8(NHC_BS* bs) {
 Uint16 NHC_BS_get_16(NHC_BS* bs) {
 	if(bs->bit_offset) {
 		return
-			(Uint16)((bs->buffer)[bs->byte_offset] >> bs->bit_offset
+			(Uint16) ((bs->buffer)[bs->byte_offset] >> bs->bit_offset
 			| (bs->buffer)[++bs->byte_offset] << 8 - bs->bit_offset & 0xFF)
-			| (Uint16)((bs->buffer)[++bs->byte_offset]) << 16 - bs->bit_offset & 0xFFFF;
+			| ((Uint16) (bs->buffer)[++bs->byte_offset]) << 16 - bs->bit_offset & 0xFFFF;
 		;
 	}
 	return
@@ -70,6 +74,8 @@ Uint16 NHC_BS_get_16(NHC_BS* bs) {
 		| (Uint16)((bs->buffer)[++bs->byte_offset])
 	;
 }
+
+#define NHC_VID_READ_FRAMES 5
 
 const Uint8 palmap[64] = {
 	0x00, 0x04, 0x08, 0x0C, 0x10, 0x14, 0x18, 0x1C,
@@ -145,8 +151,10 @@ typedef struct {
     NHC_VID_Tree* mclr_tree;
     NHC_VID_Tree* full_tree;
     NHC_VID_Tree* type_tree;
-	Uint8* frames_data;
 	SV* hash;
+	SDL_Surface* surface;
+	int frame;
+	int last_read_frame;
 } NHC_VID;
 
 void NHC_VID_Byte_Tree_Recurse(NHC_BS* bs, NHC_VID_Node* node) {
@@ -265,13 +273,73 @@ NHC_VID* NHC_VID_new(const char* filename) {
 	// SDL_RWread(file, vid->frame_types, vid->header->frames, 1);
 
 	// vid->bs = NHC_BS_new(file);
+	// NHC_BS_read(vid->bs, vid->header->trees_size);
 	
 	// vid->mmap_tree = NHC_VID_Tree_New(vid->bs);
 	// vid->mclr_tree = NHC_VID_Tree_New(vid->bs);
 	// vid->full_tree = NHC_VID_Tree_New(vid->bs);
 	// vid->type_tree = NHC_VID_Tree_New(vid->bs);
 	
+	// vid->surface = SDL_CreateRGBSurface(SDL_SWSURFACE, vid->header->width, vid->header->height, 8, 0, 0, 0, 0);
+	// vid->last_read_frame = -1;
+	
 	return vid;
+}
+
+int NHC_VID_frame(NHC_VID* vid, int frame) {
+	if(frame >= 0) {
+		if(frame < vid->header->frames) {
+			// vid->frame = frame;
+		}
+		else {
+			// vid->frame = 0;
+		}
+	}
+	return vid->frame;
+}
+
+int NHC_VID_Read_Palette(NHC_VID* vid) {
+
+}
+
+int NHC_VID_Read_Audio(NHC_VID* vid) {
+
+}
+
+int NHC_VID_Read_Video(NHC_VID* vid) {
+
+}
+
+int NHC_VID_read_frame(NHC_VID* vid) {
+	if(vid->frame == vid->last_read_frame) {
+		return;
+	}
+	if(vid->frame < vid->last_read_frame) {
+		int surface_len = vid->surface->h * vid->surface->pitch;
+		Uint8* pixels = vid->surface->pixels;
+		int i;
+		for(i = 0; i < surface_len; i++) {
+			pixels[i] = 0;
+		}
+		
+		vid->last_read_frame = -1;
+		NHC_BS_seek(vid->bs, 104 + 5 * vid->header->frames + vid->header->trees_size);
+	}
+	
+	int frame;
+	for(frame = vid->last_read_frame + 1; frame <= vid->frame; frame++) {
+		int tell = NHC_BS_tell(vid->bs);
+		
+		if(vid->frame - frame < NHC_VID_READ_FRAMES) {
+			NHC_BS_read(vid->bs, vid->frame_sizes[frame]);
+			
+			NHC_VID_Read_Palette(vid);
+			NHC_VID_Read_Audio(vid);
+			NHC_VID_Read_Video(vid);
+		}
+		
+		NHC_BS_seek(vid->bs, tell + vid->frame_sizes[frame]);
+	}
 }
 
 MODULE = Games::Neverhood::Video		PACKAGE = Games::Neverhood::Video		PREFIX = Neverhood_Video_
@@ -289,14 +357,25 @@ Neverhood_Video_xs_new(CLASS, filename, hash)
 		RETVAL
 
 SV*
-Neverhood_Video_hash(SV* vid)
+Neverhood_Video_hash(vid)
+		SV* vid
 	CODE:
-		// if(SvTYPE(SvRV(vid)) == SVt_PVHV) {
+		if(SvTYPE(SvRV(vid)) == SVt_PVHV) {
 			RETVAL = vid;
-		// }
-		// else {
-			// RETVAL = ((NHC_VID*)SvIV(SvRV(vid)))->hash;
-		// }
+		}
+		else {
+			RETVAL = ((NHC_VID*) SvIV(SvRV(vid)))->hash;
+		}
+		SvREFCNT_inc(RETVAL);
+	OUTPUT:
+		RETVAL
+
+int
+Neverhood_Video_xs_frame(vid, frame)
+		NHC_VID* vid
+		int frame
+	CODE:
+		RETVAL = NHC_VID_frame(vid, frame);
 	OUTPUT:
 		RETVAL
 
