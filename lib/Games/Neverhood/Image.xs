@@ -130,7 +130,7 @@ SDL_Surface* NHC_IMG_Load_Sequence(SDL_RWops* file, int frame) {
 	return surface;
 }
 
-SDL_Surface* NHC_IMG_Load(const char* filename, int type, int frame) {
+SDL_Surface* NHC_IMG_load(const char* filename, int type, int frame) {
 	SDL_RWops* file = SDL_RWFromFile(filename, "rb");
 
 	SDL_Surface* surface;
@@ -147,7 +147,7 @@ SDL_Surface* NHC_IMG_Load(const char* filename, int type, int frame) {
 	return surface;
 }
 
-void NHC_IMG_Mirror(SDL_Surface* surface) {
+void NHC_IMG_mirror(SDL_Surface* surface) {
 	int surface_len = surface->h * surface->pitch;
 	Uint8* pixels = surface->pixels;
 	Uint8* pixels_copy = malloc(surface_len);
@@ -173,7 +173,7 @@ Neverhood_Image_load(filename, type, frame)
 	PREINIT:
 		char* CLASS = "SDL::Surface";
 	CODE:
-		RETVAL = NHC_IMG_Load(filename, type, frame);
+		RETVAL = NHC_IMG_load(filename, type, frame);
 	OUTPUT:
 		RETVAL
 
@@ -181,4 +181,4 @@ void
 Neverhood_Image_mirror(surface)
 		SDL_Surface* surface
 	CODE:
-		NHC_IMG_Mirror(surface);
+		NHC_IMG_mirror(surface);

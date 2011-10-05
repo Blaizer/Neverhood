@@ -13,7 +13,7 @@ use constant {
 };
 sub sprites_list {
 	[
-		Games::Neverhood::Video->new(File::Spec->catfile($Games::Neverhood::ShareDir, 'hd', '73.0A')),
+		Games::Neverhood::Video->new(file => 73, dir => 'hd'),
 	];
 }
 
