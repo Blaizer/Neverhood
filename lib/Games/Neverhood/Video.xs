@@ -35,7 +35,7 @@ int NHC_BS_seek(NHC_BS* bs, int bytes) {
 
 int NHC_BS_offset(NHC_BS* bs, int bytes) {
 	bs->byte_offset = bytes;
-
+	bs->bit_offset = 0;
 }
 
 int NHC_BS_tell(NHC_BS* bs) {
@@ -70,8 +70,8 @@ Uint16 NHC_BS_get_16(NHC_BS* bs) {
 		;
 	}
 	return
-		(Uint16)bs->buffer[bs->byte_offset++] |
-		(Uint16)bs->buffer[++bs->byte_offset] << 8
+		bs->buffer[bs->byte_offset++] |
+		bs->buffer[++bs->byte_offset] << 8
 	;
 }
 
@@ -287,6 +287,12 @@ NHC_VID* NHC_VID_new(const char* filename) {
 	vid->bs = NHC_BS_new(file);
 	NHC_BS_read(vid->bs, vid->header->trees_size);
 
+	printf("%d\n", vid->header->trees_size);
+	printf("%d\n", vid->header->mmap_size);
+	printf("%d\n", vid->header->mclr_size);
+	printf("%d\n", vid->header->full_size);
+	printf("%d\n", vid->header->type_size);
+	
 	// vid->mmap_tree = NHC_VID_Tree_New(vid->bs);
 	// vid->mclr_tree = NHC_VID_Tree_New(vid->bs);
 	// vid->full_tree = NHC_VID_Tree_New(vid->bs);
