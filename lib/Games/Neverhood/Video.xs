@@ -35,7 +35,7 @@ int NHC_BS_seek(NHC_BS* bs, int bytes) {
 
 int NHC_BS_offset(NHC_BS* bs, int bytes) {
 	bs->byte_offset = bytes;
-	
+
 }
 
 int NHC_BS_tell(NHC_BS* bs) {
@@ -43,7 +43,7 @@ int NHC_BS_tell(NHC_BS* bs) {
 }
 
 Uint8 NHC_BS_get_1(NHC_BS* bs) {
-	Uint8 ret = (bs->buffer)[bs->byte_offset] >> bs->bit_offset & 1;
+	Uint8 ret = bs->buffer[bs->byte_offset] >> bs->bit_offset & 1;
 	if(++bs->bit_offset >= 8) {
 		bs->bit_offset = 0;
 		bs->byte_offset++;
@@ -54,24 +54,24 @@ Uint8 NHC_BS_get_1(NHC_BS* bs) {
 Uint8 NHC_BS_get_8(NHC_BS* bs) {
 	if(bs->bit_offset) {
 		return
-			(bs->buffer)[bs->byte_offset] >> bs->bit_offset
-			| (bs->buffer)[++bs->byte_offset] << 8 - bs->bit_offset & 0xFF
+			bs->buffer[bs->byte_offset] >> bs->bit_offset |
+			bs->buffer[++bs->byte_offset] << 8 - bs->bit_offset & 0xFF
 		;
 	}
-	return (bs->buffer)[bs->byte_offset++];
+	return bs->buffer[bs->byte_offset++];
 }
 
 Uint16 NHC_BS_get_16(NHC_BS* bs) {
 	if(bs->bit_offset) {
 		return
-			(Uint16) ((bs->buffer)[bs->byte_offset] >> bs->bit_offset
-			| (bs->buffer)[++bs->byte_offset] << 8 - bs->bit_offset & 0xFF)
-			| ((Uint16) (bs->buffer)[++bs->byte_offset]) << 16 - bs->bit_offset & 0xFFFF;
+			bs->buffer[bs->byte_offset] >> bs->bit_offset |
+			bs->buffer[++bs->byte_offset] |
+			bs->buffer[++bs->byte_offset] << 16 - bs->bit_offset & 0xFFFF;
 		;
 	}
 	return
-		(Uint16)((bs->buffer)[bs->byte_offset])
-		| (Uint16)((bs->buffer)[++bs->byte_offset])
+		(Uint16)bs->buffer[bs->byte_offset++] |
+		(Uint16)bs->buffer[++bs->byte_offset] << 8
 	;
 }
 
@@ -157,14 +157,19 @@ typedef struct {
 	int last_read_frame;
 } NHC_VID;
 
-void NHC_VID_Byte_Tree_Recurse(NHC_BS* bs, NHC_VID_Node* node) {
+NHC_VID_Node* NHC_VID_Byte_Tree_Recurse(NHC_BS* bs, NHC_VID_Node* node) {
 	if(NHC_BS_get_1(bs)) {
-		node->branch[0] = malloc(sizeof(NHC_VID_Node));
-		NHC_VID_Byte_Tree_Recurse(bs, node->branch[0]);
-		
+		NHC_VID_Node* left = malloc(sizeof(NHC_VID_Node));
+		NHC_VID_Byte_Tree_Recurse(bs, left);
+		if (node == NULL) {
+			return left;
+		}
+		else {
+			node->branch[0] = left;
+		}
 		node->branch[1] = malloc(sizeof(NHC_VID_Node));
 		NHC_VID_Byte_Tree_Recurse(bs, node->branch[1]);
-		
+
 		return;
 	}
 	node->leaf = NHC_BS_get_8(bs);
@@ -174,35 +179,39 @@ void NHC_VID_Byte_Tree_Recurse(NHC_BS* bs, NHC_VID_Node* node) {
 NHC_VID_Node* NHC_VID_Byte_Tree_New(NHC_BS* bs) {
 	if(!NHC_BS_get_1(bs)) return NULL;
 
-	NHC_VID_Node* tree = malloc(sizeof(NHC_VID_Node));
-	NHC_VID_Byte_Tree_Recurse(bs, tree);
-	
+	NHC_VID_Node* tree = NHC_VID_Byte_Tree_Recurse(bs, NULL);
+
 	NHC_BS_get_1(bs);
 
 	return tree;
 }
 
-Uint16 NHC_VID_Byte_Tree_Decode(NHC_BS* bs, NHC_VID_Node* tree) {
-	NHC_VID_Node** node = &tree;
-	while(!(*node)->is_leaf) {
-		node = &((*node)->branch[NHC_BS_get_1(bs)]);
+Uint16 NHC_VID_Byte_Tree_Decode(NHC_BS* bs, NHC_VID_Node* node) {
+	if(node == NULL) return 0;
+	while(!node->is_leaf) {
+		node = node->branch[NHC_BS_get_1(bs)];
 	}
-	return (*node)->leaf;
+	return node->leaf;
 }
 
-void NHC_VID_Tree_Recurse(NHC_BS* bs, NHC_VID_Tree* tree, NHC_VID_Node* low_byte_tree, NHC_VID_Node* high_byte_tree, NHC_VID_Node* node) {
+NHC_VID_Node* NHC_VID_Tree_Recurse(NHC_BS* bs, NHC_VID_Tree* tree, NHC_VID_Node* low_byte_tree, NHC_VID_Node* high_byte_tree, NHC_VID_Node* node) {
 	if(NHC_BS_get_1(bs)) {
-		node->branch[0] = malloc(sizeof(NHC_VID_Node));
-		NHC_VID_Tree_Recurse(bs, tree, low_byte_tree, high_byte_tree, node->branch[0]);
-		
+		NHC_VID_Node* left = malloc(sizeof(NHC_VID_Node));
+		NHC_VID_Tree_Recurse(bs, tree, low_byte_tree, high_byte_tree, left);
+		if(node == NULL) {
+			return left;
+		}
+		else {
+			node->branch[0] = left;
+		}
 		node->branch[1] = malloc(sizeof(NHC_VID_Node));
 		NHC_VID_Tree_Recurse(bs, tree, low_byte_tree, high_byte_tree, node->branch[1]);
-		
+
 		return;
 	}
 	Uint16 leaf =
-		NHC_VID_Byte_Tree_Decode(bs, low_byte_tree)
-		| NHC_VID_Byte_Tree_Decode(bs, high_byte_tree) << 8
+		NHC_VID_Byte_Tree_Decode(bs, low_byte_tree) |
+		NHC_VID_Byte_Tree_Decode(bs, high_byte_tree) << 8
 	;
 	if(leaf == tree->marker_1) {
 		tree->marker_1_node = node;
@@ -216,14 +225,13 @@ void NHC_VID_Tree_Recurse(NHC_BS* bs, NHC_VID_Tree* tree, NHC_VID_Node* low_byte
 		tree->marker_3_node = node;
 		leaf = 0;
 	}
-	
 	node->leaf = leaf;
 	node->is_leaf = 1;
 }
 
 NHC_VID_Tree* NHC_VID_Tree_New(NHC_BS* bs) {
 	if(!NHC_BS_get_1(bs)) return NULL;
-	
+
 	NHC_VID_Tree* tree = malloc(sizeof(NHC_VID_Tree));
 
 	NHC_VID_Node* low_byte_tree = NHC_VID_Byte_Tree_New(bs);
@@ -233,20 +241,24 @@ NHC_VID_Tree* NHC_VID_Tree_New(NHC_BS* bs) {
 	tree->marker_2 = NHC_BS_get_16(bs);
 	tree->marker_3 = NHC_BS_get_16(bs);
 
-	tree->node = malloc(sizeof(NHC_VID_Node));
-	NHC_VID_Tree_Recurse(bs, tree, low_byte_tree, high_byte_tree, tree->node);
+	tree->node = NHC_VID_Tree_Recurse(bs, tree, low_byte_tree, high_byte_tree, NULL);
 
 	NHC_BS_get_1(bs);
+
+	if(tree->marker_1_node == NULL) tree->marker_1_node = malloc(sizeof(NHC_VID_Node));
+	if(tree->marker_2_node == NULL) tree->marker_2_node = malloc(sizeof(NHC_VID_Node));
+	if(tree->marker_3_node == NULL) tree->marker_3_node = malloc(sizeof(NHC_VID_Node));
 
 	return tree;
 }
 
 Uint16 NHC_VID_Tree_Decode(NHC_BS* bs, NHC_VID_Tree* tree) {
-	NHC_VID_Node** node = &(tree->node);
-	while(!(*node)->is_leaf) {
-		node = &((*node)->branch[NHC_BS_get_1(bs)]);
+	NHC_VID_Node* node = tree->node;
+	if(node == NULL) return 0;
+	while(!node->is_leaf) {
+		node = node->branch[NHC_BS_get_1(bs)];
 	}
-	Uint16 leaf = (*node)->leaf;
+	Uint16 leaf = node->leaf;
 	if(leaf != tree->marker_1) {
 		tree->marker_3 = tree->marker_2;
 		tree->marker_2 = tree->marker_1;
@@ -261,38 +273,38 @@ Uint16 NHC_VID_Tree_Decode(NHC_BS* bs, NHC_VID_Tree* tree) {
 
 NHC_VID* NHC_VID_new(const char* filename) {
 	NHC_VID* vid = malloc(sizeof(NHC_VID));
-	// SDL_RWops* file = SDL_RWFromFile(filename, "rb");
-	
-	// vid->header = malloc(104);
-	// SDL_RWread(file, vid->header, 104, 1);
+	SDL_RWops* file = SDL_RWFromFile(filename, "rb");
 
-	// vid->frame_sizes = malloc(vid->header->frames * 4);
-	// SDL_RWread(file, vid->frame_sizes, vid->header->frames * 4, 1);
+	vid->header = malloc(104);
+	SDL_RWread(file, vid->header, 104, 1);
 
-	// vid->frame_types = malloc(vid->header->frames);
-	// SDL_RWread(file, vid->frame_types, vid->header->frames, 1);
+	vid->frame_sizes = malloc(vid->header->frames * 4);
+	SDL_RWread(file, vid->frame_sizes, vid->header->frames * 4, 1);
 
-	// vid->bs = NHC_BS_new(file);
-	// NHC_BS_read(vid->bs, vid->header->trees_size);
-	
+	vid->frame_types = malloc(vid->header->frames);
+	SDL_RWread(file, vid->frame_types, vid->header->frames, 1);
+
+	vid->bs = NHC_BS_new(file);
+	NHC_BS_read(vid->bs, vid->header->trees_size);
+
 	// vid->mmap_tree = NHC_VID_Tree_New(vid->bs);
 	// vid->mclr_tree = NHC_VID_Tree_New(vid->bs);
 	// vid->full_tree = NHC_VID_Tree_New(vid->bs);
 	// vid->type_tree = NHC_VID_Tree_New(vid->bs);
-	
-	// vid->surface = SDL_CreateRGBSurface(SDL_SWSURFACE, vid->header->width, vid->header->height, 8, 0, 0, 0, 0);
-	// vid->last_read_frame = -1;
-	
+
+	vid->surface = SDL_CreateRGBSurface(SDL_SWSURFACE, vid->header->width, vid->header->height, 8, 0, 0, 0, 0);
+	vid->last_read_frame = -1;
+
 	return vid;
 }
 
 int NHC_VID_frame(NHC_VID* vid, int frame) {
 	if(frame >= 0) {
 		if(frame < vid->header->frames) {
-			// vid->frame = frame;
+			vid->frame = frame;
 		}
 		else {
-			// vid->frame = 0;
+			vid->frame = 0;
 		}
 	}
 	return vid->frame;
@@ -321,24 +333,20 @@ int NHC_VID_read_frame(NHC_VID* vid) {
 		for(i = 0; i < surface_len; i++) {
 			pixels[i] = 0;
 		}
-		
+
 		vid->last_read_frame = -1;
 		NHC_BS_seek(vid->bs, 104 + 5 * vid->header->frames + vid->header->trees_size);
 	}
-	
+
 	int frame;
 	for(frame = vid->last_read_frame + 1; frame <= vid->frame; frame++) {
-		int tell = NHC_BS_tell(vid->bs);
-		
+		NHC_BS_read(vid->bs, vid->frame_sizes[frame]);
+
 		if(vid->frame - frame < NHC_VID_READ_FRAMES) {
-			NHC_BS_read(vid->bs, vid->frame_sizes[frame]);
-			
 			NHC_VID_Read_Palette(vid);
 			NHC_VID_Read_Audio(vid);
 			NHC_VID_Read_Video(vid);
 		}
-		
-		NHC_BS_seek(vid->bs, tell + vid->frame_sizes[frame]);
 	}
 }
 
