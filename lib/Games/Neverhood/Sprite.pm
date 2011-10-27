@@ -211,7 +211,7 @@ sub this_surface {
 	if($mirror) {
 		Games::Neverhood::Image::mirror($surface);
 	}
-	
+
 	if(defined $palette) {
 		my @colors;
 		if(eval { $palette->isa('Games::Neverhood::Sprite') }) {

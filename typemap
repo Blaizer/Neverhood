@@ -17,7 +17,7 @@ Sint16			T_IV
 Sint16 *		T_PTR
 Sint32			T_IV
 Sint32 *		T_PTR
-SDL_Event *		O_OBJECT	
+SDL_Event *		O_OBJECT
 SDL_ActiveEvent * 	O_OBJECT
 SDL_KeyboardEvent * 	O_OBJECT
 SDL_TextInputEvent * 	O_OBJECT
@@ -46,7 +46,7 @@ SDL_VideoInfo *		O_OBJECT
 SDL_version *		O_OBJECT
 const SDL_version *		O_OBJECT
 SDL_SysWMInfo *		O_OBJECT
-SDL_Cursor *		O_OBJECT	
+SDL_Cursor *		O_OBJECT
 SDL_AudioSpec *		O_OBJECT
 SDL_AudioCVT *		O_OBJECT
 Mix_Fading		T_UV
@@ -65,17 +65,17 @@ int **			T_PTR
 void *			T_PTR
 SDL_TimerID		T_PTR
 SDL_NewTimerCallback	T_PTR
-SDL_Joystick *		O_OBJECT	
+SDL_Joystick *		O_OBJECT
 FPSmanager *	O_OBJECT
 SDLNet_SocketSet	T_PTR
 TCPsocket		T_PTR
 UDPsocket		T_PTR
 UDPpacket *		T_PTR
 UDPpacket **		T_PTR
-IPaddress*		O_OBJECT			
+IPaddress*		O_OBJECT
 SDLNet_GenericSocket	T_PTR
 TTF_Font *		O_OBJECT
-SDL_Overlay *		O_OBJECT	
+SDL_Overlay *		O_OBJECT
 SMPEG_Info *		O_OBJECT
 SMPEG *			O_OBJECT
 SMPEGstatus		T_IV
@@ -118,7 +118,7 @@ O_OBJECT
         Uint32 *threadid = (Uint32 *)safemalloc(sizeof(Uint32));
         *threadid        = SDL_ThreadID();
         pointers[2]      = (void*)threadid;
-        sv_setref_pv( $arg, CLASS, (void*)pointers ); 
+        sv_setref_pv( $arg, CLASS, (void*)pointers );
     } else {
         XSRETURN_UNDEF;
     }

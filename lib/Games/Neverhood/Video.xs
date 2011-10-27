@@ -292,7 +292,7 @@ NHC_VID* NHC_VID_new(const char* filename) {
 	printf("%d\n", vid->header->mclr_size);
 	printf("%d\n", vid->header->full_size);
 	printf("%d\n", vid->header->type_size);
-	
+
 	// vid->mmap_tree = NHC_VID_Tree_New(vid->bs);
 	// vid->mclr_tree = NHC_VID_Tree_New(vid->bs);
 	// vid->full_tree = NHC_VID_Tree_New(vid->bs);
