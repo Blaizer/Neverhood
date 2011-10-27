@@ -159,7 +159,7 @@ void NHC_IMG_mirror(SDL_Surface* surface) {
 			pixels[ypos + xpos] = pixels_copy[ypos + surface->w - xpos - 1];
 		}
 	}
-	
+
 	free(pixels_copy);
 }
 

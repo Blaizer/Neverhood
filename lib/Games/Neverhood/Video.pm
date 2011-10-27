@@ -20,17 +20,17 @@ sub new {
 	$class = ref $class || $class;
 	my $hash = bless {@_}, $class;
 	my $self;
-	
+
 	my ($dir, $file) = ($hash->dir, $hash->file);
-	
+
 	defined $file or Carp::confess("Video '", $hash->name, "' must specify a file");
 	defined $dir  or Carp::confess("Video '", $hash->name, "' must specify a dir");
-	
+
 	my $filename = File::Spec->catfile($ShareDir, $dir, $file . '.0A');
-	
+
 	$self = bless $class->xs_new($filename, {%$hash});
 	$self->xs_frame($self->start_frame) if $self->start_frame;
-	
+
 	return $self;
 }
 

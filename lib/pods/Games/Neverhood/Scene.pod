@@ -76,21 +76,21 @@ An anonymous hash is accepted, which will be turned into a sprite for you like t
 =head2 set
 
  $Nursery1->set
- 
+
 Sets the new current scene, calls C<load_sprites>, sets the new framerate.
 Returns the scene.
 
 =head2 load_sprites
 
  $Nursery1->load_sprites
- 
+
 Loads all images for the sprites of the scene, if they haven't already been loaded.
 Returns the scene.
 
 =head2 unload_sprites
 
  $Nursery1->unload_sprites
- 
+
 Forgets all the image data for the sprites of the scene, if they haven't already been unloaded.
 Returns the scene.
 
