@@ -187,11 +187,15 @@ sub ACTION_license {
 		or die "Could not open ./LICENSE for writing";
 
 	my $fulltext = $sl->fulltext;
+	my $notice = $sl->notice;
+
+	$_ =~ s/copyright \(c\)/Copyright (C)/gi for $fulltext, $notice; # for consistency
+
 	$fulltext =~ s/[ \t]+$//gm; # remove whitespace from the end of all lines
 	$fulltext =~ s/\n+$//;      # remove newlines from the end
 	say LICENSE $fulltext;      # add back one newline to the end
 
-	say $sl->notice;
+	say $notice;
 	say $sl->url;
 }
 

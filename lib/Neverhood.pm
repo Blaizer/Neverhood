@@ -13,7 +13,7 @@ Blaise Roth <blaizer@cpan.org>
 
 =head1 LICENSE AND COPYRIGHT
 
-This software is copyright (c) 2013 by Blaise Roth.
+This software is Copyright (C) 2014 by Blaise Roth.
 
 This is free software; you can redistribute and/or modify it under
 the same terms as the Perl 5 programming language system itself.

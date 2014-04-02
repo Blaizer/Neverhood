@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 # Build.PL - creates a build script to install Neverhood
 
-# This software is copyright (c) 2013 by Blaise Roth.
+# This software is Copyright (C) 2014 by Blaise Roth.
 #
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
