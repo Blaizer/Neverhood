@@ -1,0 +1,74 @@
+TODO and Milestones for Neverhood
+
+TODO
+    Start worrying about different sizes of Uints?
+    Make smacker audio resync with video
+    Put audio speeding up code into Copy
+    Make smacker audio work sped up
+    Make sure the disk keeps spinning
+    Copy what I need from SDL2_mixer and stop using it
+    Add more error checking on loading and playing resources
+    Make all of the resource error checking non-fatal, use SDL assertations instead of C ones, and use dummy resources if we can't load something
+    Music fading code to fade between volumes
+    Load and play sounds in the same thread
+    Stop using data types and use Method::Signatures::Simple instead of Method::Signatures
+
+Milestones (points that are tabbed in extra are done)
+        0.2 - Main resources loading from archives and functional
+    0.3 - Nursery scenes done
+        Scene
+        Sprite
+        Sequence
+        SoundVerb
+        Draw
+        z-values and Order
+        Cursor implemented
+        Klaymen movement worked out
+        Game Vars working
+        Nursery 1
+        Nursery 2
+        Mail scene looking good, but don't need reading the mail done yet
+    0.32 - Movie and travel scenes designed
+        Cutscene/Travel scene designed
+        Travel space outside the nursery done
+    0.36 - Dynamite shack done
+        First person puzzle done
+        Disk item pickups done
+        Travel scenes outside the shack done, including bush and fountain
+        Blowing up weasel done
+    0.4 - Info resources and cart working
+        The cart moves correctly, plays sounds, handles branching paths
+        Scenes past meeting the weasel done, including foghorn button
+    0.5 - Game done up to bridge, text resources working
+        h puzzle
+        hall
+        elevator
+        disk scene
+        music door
+        music house insides
+        menu and saving
+        mail reading
+    0.6 - Game done up to lab place
+        bridge puzzle
+        slow puzzle viewer
+        cannon
+        radio
+        lake wall
+    0.7 - Game done up to whale place
+        shrinker
+        lab chemical mixing
+        teleporter
+    0.8 - Game done up to final area
+        fast door
+        mouse puzzle
+        memory
+        slow puzzle
+        bil
+    0.9 - Game done
+        projector
+        keys
+        finale
+    1.0 - Everything done
+        easter eggs
+        other extra things
+        polish

@@ -1,5 +1,43 @@
 Neverhood
-Blaise Roth
+  An engine for The Neverhood in Perl
+    Blaise Roth <blaizer@cpan.org>
+      http://www.github.com/Blaizer/Neverhood
 
-This branch is currently on hiatus. :-)
-Check out the new branch if you're feeling adventurous.
+Neverhood is going to be an open-source, Perl reimplementation of the 1996 "The
+Neverhood". Not much is done yet, though, so don't expect to see much even if
+you do manage to get it running.
+
+A lot of what is done is based on the Neverhood ScummVM engine. That engine
+recently merged with the master branch of the ScummVM GitHub repository so go
+check it out!
+
+
+INSTALLATION
+
+You must install Neverhood before you can run the game. Run the following
+commands:
+
+ perl -MCPAN -e "install Alien::SDL2"
+ perl Build.PL
+ ./Build installdeps
+ ./Build test
+ ./Build install
+
+
+RUNNING THE GAME
+
+Run the game with:
+
+ nhc
+
+Press Alt-F4 at any time to quit.
+
+
+LICENSE AND COPYRIGHT
+
+This software is copyright (c) 2013 by Blaise Roth.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+See <http://dev.perl.org/licenses/> for more information.

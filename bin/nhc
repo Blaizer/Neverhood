@@ -1,0 +1,15 @@
+#!/usr/bin/env perl
+
+# bin/nhc - script that should be run to play Neverhood.
+# sets it up with options from the command line
+
+# This software is copyright (c) 2013 by Blaise Roth.
+#
+# This is free software; you can redistribute it and/or modify it under
+# the same terms as the Perl 5 programming language system itself.
+#
+# See <http://dev.perl.org/licenses/> for more information.
+
+use Neverhood;
+
+Neverhood->new_from_options->run;

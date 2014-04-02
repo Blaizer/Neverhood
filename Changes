@@ -1,0 +1,19 @@
+Revision history and other notes for Neverhood
+
+0.000 - 2010-09-27
+    Started working on this mess.
+
+
+
+Here's a collection of my notes about how this game engine differs from the original game engine.
+
+* major changes
+- minor changes
+
+GENERAL
+- No fixed framerate (but everything but the cursor still moves at an FPS)
+- No animation artefacts from bad dirty rects
+- No one-frame palette glitch on scene change
+- Scaling and letterboxing to any screen resolution
+- All animations are loaded on scene change; no lag on playing animations
+- If sounds don't load in time they may never get played; no lag on playing sounds

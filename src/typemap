@@ -1,0 +1,103 @@
+TYPEMAP
+Archive*           O_OBJECT_NPGC
+ArchiveEntry*      O_OBJECT_NPGC
+SmackerResource*   O_OBJECT_NPGC
+MusicResource*     O_OBJECT_NPGC
+Blitter*           O_OBJECT_STASHER
+SpriteResource*    O_OBJECT_NPGC
+SequenceResource*  O_OBJECT_NPGC
+SequenceFrame*     O_OBJECT_NPGC
+Stash*             O_OBJECT_STASH
+
+SDL_Surface*      T_PTRREF
+SDL_Palette*      T_PTRREF
+PaletteResource*  T_PTRREF
+SDL_Rect*         T_AVRECT
+ArchiveKey        T_HEXSTRING_8
+
+Uint8   T_UV
+Sint8   T_IV
+Uint16  T_UV
+Sint16  T_IV
+Uint32  T_UV
+Sint32  T_IV
+Uint64  T_UV
+Sint64  T_IV
+
+INPUT
+
+O_OBJECT_NPGC
+	if (!SvOK($arg)) {
+		$var = NULL;
+	}
+	else if (sv_isobject($arg)) {
+	    $var = INT2PTR($type, SvIV((SV*)SvRV($arg)));
+	}
+	else
+	    Perl_croak(aTHX_ \"%s: %s is not blessed\",
+			${$ALIAS?\q[GvNAME(CvGV(cv))]:\qq[\"$pname\"]},
+			\"$var\")
+
+O_OBJECT_STASHER
+	Stash_GET($var, ${\do{ (my $t = $type) =~ s/\s*\*\s*$//; $t }}, $arg)
+
+O_OBJECT_STASH
+	$var = INT2PTR($type, Stash_get_iv($arg))
+
+T_PTRREF
+	if (!SvOK($arg)) {
+		$var = NULL;
+	}
+	else if (SvROK($arg)) {
+	    $var = INT2PTR($type, SvIV((SV*)SvRV($arg)));
+	}
+	else
+	    Perl_croak(aTHX_ \"%s: %s is not a reference\",
+			${$ALIAS?\q[GvNAME(CvGV(cv))]:\qq[\"$pname\"]},
+			\"$var\")
+
+T_AVRECT
+	if (!SvOK($arg)) {
+		$var = NULL;
+	}
+	else {
+		SDL_Rect xsub_tmp_rect;
+		$var = &xsub_tmp_rect;
+		SV* const xsub_tmp_sv = $arg;
+		SvGETMAGIC(xsub_tmp_sv);
+		if (SvROK(xsub_tmp_sv) && SvTYPE(SvRV(xsub_tmp_sv)) == SVt_PVAV){
+			AV* nums = (AV*)SvRV(xsub_tmp_sv);
+			SV** i;
+			i = av_fetch(nums, 0, 0); xsub_tmp_rect.x = i && SvOK(*i) ? SvIV(*i) : 0;
+			i = av_fetch(nums, 1, 0); xsub_tmp_rect.y = i && SvOK(*i) ? SvIV(*i) : 0;
+			i = av_fetch(nums, 2, 0); xsub_tmp_rect.w = i && SvOK(*i) ? SvIV(*i) : 0;
+			i = av_fetch(nums, 3, 0); xsub_tmp_rect.h = i && SvOK(*i) ? SvIV(*i) : 0;
+		}
+		else
+		    Perl_croak(aTHX_ \"%s: %s is not an ARRAY reference\",
+				${$ALIAS?\q[GvNAME(CvGV(cv))]:\qq[\"$pname\"]},
+				\"$var\");
+	}
+
+OUTPUT
+
+O_OBJECT_NPGC
+	sv_setref_pv($arg, CLASS, (void*)$var);
+
+O_OBJECT_STASHER
+	Stash_set_sv($var, $arg);
+
+T_AVRECT
+	if ($var) {
+		SV* nums [4];
+		nums[0] = newSViv($var->x);
+		nums[1] = newSViv($var->y);
+		nums[2] = newSViv($var->w);
+		nums[3] = newSViv($var->h);
+		sv_setsv($arg, newRV_noinc((SV*)av_make(4, nums)));
+	}
+	else
+		XSRETURN_UNDEF;
+
+T_HEXSTRING_8
+	sv_setpvf($arg, "%08X", $var);
