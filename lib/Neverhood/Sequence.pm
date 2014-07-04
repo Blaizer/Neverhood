@@ -7,6 +7,7 @@ Neverhood::Sequence - drawable sequence of frames
 class Neverhood::Sequence {
 extends Neverhood::SuperSprite;
 
+rw resource => coerce => 1, check => 1;
 rw_ _frame =>;
 rw cur_frame => 0;
 rw cur_frame_ticks => -1;
@@ -21,18 +22,16 @@ method surface_resource {
 	return $self->_frame;
 }
 
-# trigger resource {
-# 	say $self->resource;
-# 	if (ref $self->resource) {
-# 		$self->_change_frame;
-# 	}
-# }
-around set_resource ($new) {
-	say $self->resource;
-	if (!ref $new) {
-		$self->$orig($;->load_sequence($new));
+method _coerce_resource ($new) {
+	return $new if !defined $new or blessed $new;
+	assert(!ref $new);
+	$;->load_sequence($new);
+}
+
+method _check_resource {
+	if (ref $self->resource) {
+		$self->_change_frame;
 	}
-	say $self->resource;
 }
 
 method frame_count {

@@ -12,13 +12,13 @@ use File::Basename;
 use File::Copy 'copy';
 
 # Complete override of process_support_files to do things a different way.
-# C files in my_c_source are checked for a MODULE = ... line.
-# If they have that then they're processed as XS, then processed as C
-# Otherwise they're processed normally
+# C files in my_c_source are checked for a MODULE = ... line. If they have
+# that then they're processed as XS, then processed as C. Otherwise they're
+# processed normally
 sub process_support_files {
 	my $self = shift;
 	my $p = $self->{properties};
-	return unless $p->{my_c_source};
+	return if !$p->{my_c_source};
 
 	my $c_source = $p->{my_c_source};
 	my $typemap_files = $p->{typemap_files};
@@ -81,22 +81,20 @@ sub process_support_files {
 	}
 }
 
-# default properties
-__PACKAGE__->add_property(my_c_source => {});
-
 =head1 ACTIONS
 
 =over
 
 =item run
 
-[version 0.23] (Blaise Roth)
+[version 0.24] (Blaise Roth)
 
-This action will build, install, and run Neverhood for you. Arguments passed to
-this action will be given verbatim to the run program. This action is more for
-speedy testing purposes. Several options, such as --debug, are specified for you
-by default. It also passes --run to the "build" action in order to disable some
-compiler warnings of the "unused" category that get in the way of development.
+This action will build, install, and run Neverhood for you. Arguments passed
+to this action will be given verbatim to the run program. This action is more
+for speedy testing purposes. Several options, such as --debug, are specified
+for you by default. It also passes --run to the "build" action in order to
+disable some compiler warnings of the "unused" category that get in the way of
+development.
 
 =back
 
@@ -120,7 +118,7 @@ sub ACTION_run {
 
 	$self->depends_on('install');
 
-	my $nhc = catfile qw/bin nhc/;
+	my $nhc = catfile qw(bin nhc);
 	my @args = qw(--debug --noframeless --resizable --nofullscreen --novsync);
 	shift @ARGV; # remove 'run' from args to pass to nhc
 
@@ -145,7 +143,7 @@ sub ACTION_build {
 
 =item license
 
-[version 0.32] (Blaise Roth)
+[version 0.33] (Blaise Roth)
 
 This action will generate a copy of this distribution's license. This requires
 Software::License to be installed. It will write it into a file called LICENSE
@@ -189,11 +187,11 @@ sub ACTION_license {
 	my $fulltext = $sl->fulltext;
 	my $notice = $sl->notice;
 
-	$_ =~ s/copyright \(c\)/Copyright (C)/gi for $fulltext, $notice; # for consistency
+	s/copyright \(c\)/Copyright (C)/gi for $fulltext, $notice; # for consistency
 
-	$fulltext =~ s/[ \t]+$//gm; # remove whitespace from the end of all lines
-	$fulltext =~ s/\n+$//;      # remove newlines from the end
-	say LICENSE $fulltext;      # add back one newline to the end
+	$fulltext =~ s/\h+$//gm; # remove whitespace from the end of all lines
+	$fulltext =~ s/\n+$//;   # remove newlines from the end
+	say LICENSE $fulltext;   # add back one newline to the end
 
 	say $notice;
 	say $sl->url;

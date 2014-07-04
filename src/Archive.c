@@ -1,82 +1,116 @@
 #include <Archive.h>
 
+#define AR_HEADER 16
+#define AR_KEY 4
+#define AR_ENTRY 20
+#define AR_BOTH (AR_KEY + AR_ENTRY)
+
 Archive* Archive_new (Archive* self, char* filename)
 {
-	SDL_RWops* stream = SDL_RWopen(filename);
+	self->stream   = NULL;
+	self->keys     = NULL;
+	self->ext_data = NULL;
+	self->entries  = NULL;
+
+	SDL_RWops* stream = SDL_RWFromFile(filename, "rb");
+	SDL_assert_release(stream);
+
 	self->filename = filename;
 	self->stream = stream;
 
-	Uint32 id1          = SDL_ReadLE32(stream);
-	Uint16 id2          = SDL_ReadLE16(stream);
-	self->ext_data_size = SDL_ReadLE16(stream);
-	self->file_size     = SDL_ReadLE32(stream);
-	self->file_count    = SDL_ReadLE32(stream);
+	Sint64 size = SDL_RWsize(stream);
+	SDL_assert_release(size >= 0);
 
-	// get the size of the file just for an error check
-	Sint64 size = SDL_RWseek(stream, 0, SEEK_END);
-	if (id1 != 0x02004940 || id2 != 7 || self->file_size != size)
-		error("Archive %s seems to be corrupt", filename);
+	Uint8 header [AR_HEADER];
+	int read = SDL_RWread(stream, header, AR_HEADER, 1);
+	SDL_assert_release(read == AR_HEADER);
+
+	Uint32 magic        = SDL_READ_BE32(header);
+	Uint16 id           = SDL_READ_LE16(header + 4);
+	self->ext_data_size = SDL_READ_LE16(header + 6);
+	self->file_size     = SDL_READ_LE32(header + 8);
+	self->file_count    = SDL_READ_LE32(header + 12);
+
+	SDL_assert_release(magic == 0x40490002);
+	SDL_assert_release(id == 7);
+	SDL_assert_release((Sint64)self->file_size == size);
+	SDL_assert_release(self->file_count >= 0);
+	SDL_assert_release(self->file_count <= (0xFFFFFFFF - AR_HEADER - self->ext_data_size) / AR_BOTH);
+
+	self->keys = New(self->file_count, AR_KEY);
+	SDL_assert_release(self->keys);
+
+	read = SDL_RWread(stream, self->keys, self->file_count * AR_KEY, 1);
+	SDL_assert_release(read == self->file_count * AR_KEY);
+	SDL_SwapLE32n(self->keys, self->file_count);
 
 	if (self->ext_data_size) {
-		// ext_data_pos = header_size + file_count * (key_size + entry_size)
-		Sint32 ext_data_pos = 16 + self->file_count * (4 + 20);
-		SDL_RWseek(stream, ext_data_pos, SEEK_SET);
+		Uint32 ext_data_pos = AR_HEADER + self->file_count * AR_BOTH;
+		Sint64 seek = SDL_RWseek(stream, ext_data_pos, SEEK_SET);
+		SDL_assert_release(seek == ext_data_pos);
+
 		self->ext_data = New(self->ext_data_size, Uint8);
-		SDL_RWread(stream, self->ext_data, self->ext_data_size, 1);
-	}
-	else {
-		self->ext_data = NULL;
+		SDL_assert_release(self->ext_data);
+
+		read = SDL_RWread(stream, self->ext_data, self->ext_data_size, 1);
+		SDL_assert_release(read == self->ext_data_size);
 	}
 
-	// seek back to where the keys are
-	SDL_RWseek(stream, 16, SEEK_SET);
-	self->keys = New(self->file_count, ArchiveKey);
-	int i;
-	for (i = 0; i < self->file_count; i++) {
-		self->keys[i] = SDL_ReadLE32(stream);
-	}
-	// now we're where we need to be for loading the entries with next_entry
-
-	self->iterator = 0;
+	self->iterator = -1;
 	return self;
 }
 
 ArchiveEntry* Archive_next_entry (Archive* self)
 {
-	if (self->iterator >= self->file_count) {
-		self->iterator = 0; // so we can start again next time
+	if (self->iterator == -1) {
+		Uint32 entries_pos = AR_HEADER + self->file_count * AR_KEY;
+		Sint64 seek = SDL_RWseek(self->stream, entries_pos, SEEK_SET) < 0;
+		SDL_assert_release(seek == entries_pos);
+		self->iterator = 0;
+	}
+	else if (self->iterator >= self->file_count) {
+		// so we can start again next time
+		self->iterator = -1;
 		return NULL;
 	}
 
 	ArchiveEntry* entry = New(1, ArchiveEntry);
-	SDL_RWops* stream = self->stream;
+	SDL_assert_release(entry);
 
-	entry->filename        = self->filename;
+	Uint8 buffer [AR_ENTRY];
+	int read = SDL_RWread(entry->stream, buffer, AR_ENTRY, 1);
+	SDL_assert_release(read == AR_ENTRY);
+
 	entry->key             = self->keys[self->iterator];
-	entry->type            = SDL_Read8(stream);
-	entry->compr_type      = SDL_Read8(stream);
-	Uint16 ext_data_offset = SDL_ReadLE16(stream);
-	entry->time_stamp      = SDL_ReadLE32(stream);
-	entry->offset          = SDL_ReadLE32(stream);
-	entry->disk_size       = SDL_ReadLE32(stream);
-	entry->size            = SDL_ReadLE32(stream);
+	entry->type            =             *(buffer);
+	entry->compr_type      =             *(buffer + 1);
+	Uint16 ext_data_offset = SDL_READ_LE16(buffer + 2);
+	entry->time_stamp      = SDL_READ_LE32(buffer + 4);
+	entry->offset          = SDL_READ_LE32(buffer + 8);
+	entry->disk_size       = SDL_READ_LE32(buffer + 12);
+	entry->size            = SDL_READ_LE32(buffer + 16);
 
-	entry->ext_data
-		= self->ext_data && ext_data_offset
-		? self->ext_data + ext_data_offset - 1
-		: NULL;
+	if (self->ext_data && ext_data_offset-- && ext_data_offset < self->ext_data_size)
+		entry->ext_data = self->ext_data + ext_data_offset;
+	else
+		entry->ext_data = NULL;
 
 	self->iterator++;
-
 	return entry;
+
+	ERROR:
+	Free(entry);
+	SDL_SetError("Error in \"%s\", entry %08X: %s", self->filename, self->keys[self->iterator], SDL_GetError());
+	self->iterator++; // continue to the next entry anyway
+	return NULL;
 }
 
 void Archive_DESTROY (Archive* self)
 {
 	SDL_RWclose(self->stream);
 	Free(self->keys);
-	// ext_data isn't freed here because we need it forever anyways
-	// filenames are also needed
+	Free(self->ext_data);
+	Free(self);
 }
 
 // callbacks for blast
@@ -179,85 +213,3 @@ void ArchiveEntry_redirect (ArchiveEntry* self, ArchiveEntry* entry)
 	self->disk_size  = entry->disk_size;
 	self->size       = entry->size;
 }
-
-/*
-
-MODULE=Neverhood::Archive  PACKAGE=Neverhood::Archive  PREFIX=Archive_
-
-Archive*
-Archive_new (const char* CLASS, char* filename)
-		Archive* self = New(1, Archive);
-	C_ARGS: self, filename
-
-void
-Archive_DESTROY (Archive* SELF)
-	CLEANUP:
-		Free(SELF);
-
-ArchiveEntry*
-Archive_next_entry (Archive* SELF)
-		const char* CLASS = "Neverhood::ArchiveEntry";
-
-MODULE=Neverhood::Archive  PACKAGE=Neverhood::ArchiveEntry  PREFIX=ArchiveEntry_
-
-void
-ArchiveEntry_DESTROY (ArchiveEntry* SELF)
-
-void
-ArchiveEntry_redirect (ArchiveEntry* SELF, ArchiveEntry* entry)
-
-ArchiveKey
-ArchiveEntry_key_from_int (Uint32 key)
-	CODE:
-		RETVAL = key;
-	OUTPUT: RETVAL
-
-const char*
-ArchiveEntry_filename (ArchiveEntry* SELF)
-	CODE:
-		RETVAL = SELF->filename;
-	OUTPUT: RETVAL
-
-ArchiveKey
-ArchiveEntry_key (ArchiveEntry* SELF)
-	CODE:
-		RETVAL = SELF->key;
-	OUTPUT: RETVAL
-
-Uint8
-ArchiveEntry_type (ArchiveEntry* SELF)
-	CODE:
-		RETVAL = SELF->type;
-	OUTPUT: RETVAL
-
-Uint8
-ArchiveEntry_compr_type (ArchiveEntry* SELF)
-	CODE:
-		RETVAL = SELF->compr_type;
-	OUTPUT: RETVAL
-
-Uint32
-ArchiveEntry_time_stamp (ArchiveEntry* SELF)
-	CODE:
-		RETVAL = SELF->time_stamp;
-	OUTPUT: RETVAL
-
-Sint32
-ArchiveEntry_offset (ArchiveEntry* SELF)
-	CODE:
-		RETVAL = SELF->offset;
-	OUTPUT: RETVAL
-
-Sint32
-ArchiveEntry_disk_size (ArchiveEntry* SELF)
-	CODE:
-		RETVAL = SELF->disk_size;
-	OUTPUT: RETVAL
-
-Sint32
-ArchiveEntry_size (ArchiveEntry* SELF)
-	CODE:
-		RETVAL = SELF->size;
-	OUTPUT: RETVAL
-
-# */

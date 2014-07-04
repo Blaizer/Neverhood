@@ -1,31 +1,38 @@
 #include <helper.h>
 
+void* My_new_ (int size)
+{
+	void* ptr = SDL_malloc(size);
+	if (!ptr) SDL_OutOfMem();
+	return ptr;
+}
+
 void* My_renew_ (void* ptr, int* oldnitems, int nitems, int size)
 {
 	if (!ptr) {
 		*oldnitems = nitems;
-		return SDL_malloc(nitems * size);
+		ptr = SDL_malloc(nitems * size);
+		if (!ptr) SDL_OutOfMem();
 	}
 	else if (nitems > *oldnitems) {
 		*oldnitems = nitems;
-		return SDL_realloc(ptr, nitems * size);
+		ptr = SDL_realloc(ptr, nitems * size);
+		if (!ptr) SDL_OutOfMem();
 	}
 	return ptr;
 }
 
-Uint8 SDL_Read8 (SDL_RWops* stream)
-{
-	Uint8 num;
-	SDL_RWread(stream, &num, 1, 1);
-	return num;
+void SDL_SwapLE32n_ (Uint32* buf, int nitems) {
+	Uint32* end = buf + nitems;
+	while (buf < end)
+		*buf++ = SDL_SwapLE32(*buf);
+	}
 }
-
-// open a RWops file for reading and set error properly
-SDL_RWops* SDL_RWopen (const char* filename)
-{
-	SDL_RWops* stream = SDL_RWFromFile(filename, "rb");
-	if (!stream) SDL_SetError("Couldn't open %s: %s", filename, SDL_GetError());
-	return stream;
+void SDL_SwapLE16n_ (Uint16* buf, int nitems) {
+	Uint16* end = buf + nitems;
+	while (buf < end)
+		*buf++ = SDL_SwapLE16(*buf);
+	}
 }
 
 void My_isa_ (const char* isa, const char* parent)

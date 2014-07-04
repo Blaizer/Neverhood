@@ -80,3 +80,22 @@ typedef struct {
 } SoundChannel;
 
 #include <Smacker.h>
+
+/*
+
+MODULE=Neverhood::Audio  PACKAGE=Neverhood::MusicResource  PREFIX = MusicResource_
+
+MusicResource*
+MusicResource_new (const char* CLASS, ArchiveEntry* entry)
+	C_ARGS: entry
+
+void
+MusicResource_fade_in (MusicResource* SELF, int ms)
+
+void
+MusicResource_fade_out (MusicResource* SELF, int ms)
+
+void
+MusicResource_DESTROY (MusicResource* SELF)
+
+# */

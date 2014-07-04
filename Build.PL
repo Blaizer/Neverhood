@@ -40,9 +40,11 @@ unless (defined $cflags and defined $libs) {
 		$libs   //= $line[1];
 	}
 	else {
-		eval { require Alien::SDL2 } or die <<"ERROR";
-		Build.PL requires Alien::SDL2 to be installed. Maybe try:
-		$^X -MCPAN -e "install Alien::SDL2"
+		eval { require Alien::SDL23 } or die <<"ERROR";
+$@
+Alien::SDL2 must be installed to build with it. Specify --use-config to use
+your sdl2-config script instead, or install Alien::SDL2 with
+perl -MCPAN -e "install Alien::SDL2"
 ERROR
 		$cflags //= Alien::SDL2->config('cflags');
 		$libs   //= Alien::SDL2->config('libs');
@@ -66,7 +68,7 @@ my $build = My::Build->new(
 		'perl'                  => 5.01,
 		'Module::Build'         => 0.40,
 		'Module::Build::XSUtil' => 0.01,
-		'Alien::SDL2'           => 0.002,
+		('Alien::SDL2'          => 0.002) x !$use_config,
 		'ExtUtils::CBuilder'    => 0,
 		'feature'               => 0,
 		'strict'                => 0,
@@ -87,7 +89,7 @@ my $build = My::Build->new(
 	requires => {
 		'perl'                 => 5.01,
 		'Mouse'                => 1.12,
-		'File::ShareDir'       => 1.00,
+		'File::HomeDir'        => 1.00,
 		'YAML::XS'             => 0.37,
 		'Devel::Declare'       => 0.006011,
 		'mro'                  => 0,
@@ -119,8 +121,11 @@ my $build = My::Build->new(
 	],
 	meta_merge => {
 		resources => {
-			license    => 'http://dev.perl.org/licenses/',
+			# homepage   => 'http://yourwebsitehere.com',
+			# IRC        => 'irc://irc.perl.org/#Neverhood',
+			license    => ['http://dev.perl.org/licenses/'],
 			repository => 'http://github.com/Blaizer/Neverhood',
+			bugtracker => 'https://github.com/Blaizer/Neverhood/issues',
 		},
 	},
 );

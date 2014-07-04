@@ -3,11 +3,9 @@ Archive*           O_OBJECT_NPGC
 ArchiveEntry*      O_OBJECT_NPGC
 SmackerResource*   O_OBJECT_NPGC
 MusicResource*     O_OBJECT_NPGC
-Blitter*           O_OBJECT_STASHER
 SpriteResource*    O_OBJECT_NPGC
 SequenceResource*  O_OBJECT_NPGC
 SequenceFrame*     O_OBJECT_NPGC
-Stash*             O_OBJECT_STASH
 
 SDL_Surface*      T_PTRREF
 SDL_Palette*      T_PTRREF
@@ -37,12 +35,6 @@ O_OBJECT_NPGC
 	    Perl_croak(aTHX_ \"%s: %s is not blessed\",
 			${$ALIAS?\q[GvNAME(CvGV(cv))]:\qq[\"$pname\"]},
 			\"$var\")
-
-O_OBJECT_STASHER
-	Stash_GET($var, ${\do{ (my $t = $type) =~ s/\s*\*\s*$//; $t }}, $arg)
-
-O_OBJECT_STASH
-	$var = INT2PTR($type, Stash_get_iv($arg))
 
 T_PTRREF
 	if (!SvOK($arg)) {
@@ -83,9 +75,6 @@ OUTPUT
 
 O_OBJECT_NPGC
 	sv_setref_pv($arg, CLASS, (void*)$var);
-
-O_OBJECT_STASHER
-	Stash_set_sv($var, $arg);
 
 T_AVRECT
 	if ($var) {

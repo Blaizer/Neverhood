@@ -14,48 +14,13 @@ rw_ _archives  => sub { {} };
 method load_archive ($filename) {
 	state $virgin = 1;
 
-	my $size;
-	if (!-f $filename or ($size = -s _) <= 0) {
-		return;
-	}
-
-	if (!open FILE, "<", $filename) {
-		say STDERR "Couldn't open $filename: $!";
-		return;
-	}
-
-	binmode FILE;
-	my $read = read FILE, my $data, 16;
-	close FILE;
-
-	if (!defined $read) {
-		say STDERR "Couldn't read from $filename: $!";
-		return;
-	}
-
-	if ($read < 16) {
-		say STDERR "$filename is invalid";
-		return;
-	}
-
-	my ($id1, $id2, $ext_data_size, $file_size, $file_count) = unpack '(LSsll)<', $data;
-	if ($id1 != 0x2004940 or $id2 != 7) {
-		say STDERR "$filename is invalid";
-		return;
-	}
-
-	my $ext_data_pos = 16 + $file_count * (4 + 20);
-	if ($file_size != $size or $ext_data_pos + $ext_data_size > $file_size) {
-		say STDERR "$filename is corrupt";
-		return;
-	}
-
 	if ($self->info) {
 		my $data_dir  = $self->data_dir;
 		my $share_dir = $self->share_dir;
 		if ($virgin) {
 			say " Data dir: $data_dir\nShare dir: $share_dir";
 			say "Data files:";
+			undef $virgin;
 		}
 		my $name = $filename;
 		$name =~ s/^$data_dir/<Data dir>/
@@ -65,12 +30,14 @@ method load_archive ($filename) {
 
 	push @{$self->_files}, $filename;
 	my $archive = Neverhood::Archive->new($self->_files->[-1]);
-	$archive
-		or error "Couldn't load archive: $filename";
+	return if !$archive;
 
 	$self->_archives->{$filename} = $archive;
 
-	while ((my $entry = $archive->next_entry)) {
+	while ($archive->has_next_entry) {
+		my $entry = $archive->next_entry;
+		next if !$entry;
+
 		# keys are formatted as 8 uppercase hex digits
 		my $existing_entry = \$self->_entries->{$entry->key};
 
@@ -80,7 +47,6 @@ method load_archive ($filename) {
 		}
 	}
 
-	undef $virgin;
 	return 1;
 }
 

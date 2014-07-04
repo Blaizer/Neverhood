@@ -21,8 +21,6 @@ func draw_all () {
 	@_draw_queue = ();
 }
 
-map { $_->[1] } sort { $a->[0] <=> $b->[0] } map { [ monkeys($_), $_ ] } @list;
-
 method draw_z () {
 	$self->z;
 }

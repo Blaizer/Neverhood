@@ -16,14 +16,10 @@ method BUILDARGS {
 	if (@_ == 1 and ref $_[0] ne "HASH" or @_ > 1 and @_ & 1) {
 		return { resource => @_ };
 	}
-	else {
-		return $self->next::buildargs(@_);
-	}
+	$self->next::buildargs(@_);
 }
 
 method BUILD ($args) {
-	$self->set_resource($self->resource);
-
 	$self->set_surface   (delete $self->{surface})   if exists $self->{surface};
 	$self->set_clip_rect (delete $self->{clip_rect}) if exists $self->{clip_rect};
 	$self->set_src_rect  (delete $self->{src_rect})  if exists $self->{src_rect};

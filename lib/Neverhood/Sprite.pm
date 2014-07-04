@@ -7,6 +7,8 @@ Neverhood::Sprite - drawable single image sprites
 class Neverhood::Sprite {
 extends Neverhood::SuperSprite;
 
+rw [<x y>] => 0, check => 1;
+rw resource => coerce => 1, check => 1;
 rw [<offset_x offset_y>] => 0;
 rw_ _default_pos => 1;
 
@@ -21,20 +23,19 @@ method reset_pos () {
 	$self->_set_default_pos(1);
 }
 
-trigger resource {
+method _coerce_resource ($new) {
+	return $new if !defined $new or blessed $new;
+	assert(!ref $new);
+	$;->load_sprite($new);
+}
+
+method _check_resource {
 	if (ref $self->resource) {
 		$self->reset_pos if $self->_default_pos;
 	}
 }
-around set_resource ($new) {
-	say $self->resource;
-	if (!ref $new) {
-		$self->$orig($;->load_sprite($new));
-	}
-	say $self->resource;
-}
 
-trigger [<x y>] {
+method _check_x__y {
 	$self->_set_default_pos(0);
 }
 

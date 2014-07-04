@@ -8,10 +8,10 @@ class Neverhood::Scene {
 use Symbol qw/qualify/;
 
 rw_ items      => sub { [] };
-rw_ background =>;
+rw_ background => coerce => 1;
 rw_ cursor     =>;
-rw_ movie      =>;
-rw_ music      =>;
+rw_ movie      => coerce => 1;
+rw_ music      => coerce => 1;
 rw_ klaymen    =>;
 rw_ rect_list  => sub { [] };
 
@@ -134,21 +134,19 @@ method add_sequence {
 	$self->add($name, $sequence);
 }
 
-# around set_movie ($movie, @args) {
-# 	if ($movie->isa(ResourceKey)) {
-# 		$movie = Neverhood::MoviePlayer->new(resource => $movie, @args);
-# 	}
-# 	if ($self->replace($movie, $self->movie)) {
-# 		$self->movie->stop;
-# 	}
-# 	else {
-# 		$self->add($movie);
-# 	}
-# 	$self->$orig($movie);
-# 	$movie->set_name('movie') if !length $movie->name;
-# }
+method _coerce_movie ($movie) {
+	assert(defined $movie and !ref $movie || blesed $movie);
+	if (!ref $movie) {
+		$movie = Neverhood::MoviePlayer->new(resource => $movie);
+	}
 
-around set_background ($background) {
+	$self->movie->stop if $self->movie;
+	$self->replace($movie, $self->movie) or $self->add(movie => $movie);
+
+	$movie;
+}
+
+method _coerce_background ($background) {
 	assert(defined $background and !ref $background || blessed $background);
 	if (!ref $background) {
 		$background = Neverhood::Sprite->new(resource => $background);
@@ -156,15 +154,15 @@ around set_background ($background) {
 	$self->replace($background, $self->background) or $self->add(background => $background);
 	$background->use_palette;
 	$background->set_z(0);
-	$self->$orig($background);
+	$background;
 }
 
-around set_music ($music) {
+method _coerce_music ($music) {
 	assert(defined $music and !ref $music || blessed $music);
 	if (!ref $music) {
 		$music = $;->load_music($music);
 	}
-	$self->$orig($music);
+	$music;
 }
 
 method add_klaymen {}

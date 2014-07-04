@@ -101,3 +101,66 @@ bool SmackerResource_is_stopped (SmackerResource*);
 void SmackerResource_play_audio (SmackerResource*, Uint8* buf, int size);
 void SmackerResource_use_palette (SmackerResource* self);
 void SmackerResource_DESTROY (SmackerResource*);
+
+/*
+
+MODULE=Neverhood::Smacker  PACKAGE=Neverhood::SmackerResource  PREFIX=SmackerResource_
+
+SmackerResource*
+SmackerResource_new (const char* CLASS, ArchiveEntry* entry)
+	C_ARGS: entry
+
+void
+SmackerResource_DESTROY (SmackerResource* SELF)
+
+void
+SmackerResource_next (SmackerResource* SELF)
+
+void
+SmackerResource_stop (SmackerResource* SELF)
+
+bool
+SmackerResource_is_stopped (SmackerResource* SELF)
+
+void
+SmackerResource_use_palette (SmackerResource* SELF)
+
+void
+SmackerResource_draw_surface (SmackerResource* SELF, int x, int y)
+
+void
+SmackerResource_set_use_palette (SmackerResource* SELF, bool new)
+	CODE:
+		SELF->use_palette = new;
+
+int
+SmackerResource_cur_frame (SmackerResource* SELF)
+	CODE:
+		RETVAL = SELF->cur_frame;
+	OUTPUT: RETVAL
+
+Sint32
+SmackerResource_frame_count (SmackerResource* SELF)
+	CODE:
+		RETVAL = SELF->frame_count;
+	OUTPUT: RETVAL
+
+double
+SmackerResource_frame_ticks (SmackerResource* SELF)
+	CODE:
+		RETVAL = SELF->frame_ticks;
+	OUTPUT: RETVAL
+
+int
+SmackerResource_w (SmackerResource* SELF)
+	CODE:
+		RETVAL = SELF->surface->w;
+	OUTPUT: RETVAL
+
+int
+SmackerResource_h (SmackerResource* SELF)
+	CODE:
+		RETVAL = SELF->surface->h;
+	OUTPUT: RETVAL
+
+# */

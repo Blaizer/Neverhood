@@ -2,9 +2,6 @@
 
 App _app;
 
-// This is all Perl code, so ignore the entire file if we're not using Perl
-#ifndef NEVERHOOD_NO_PERL
-
 static void App_init_options ();
 static void App_quit ();
 
@@ -564,41 +561,3 @@ static char* App_get_format_name (Uint32 format)
 {
 	return (char*)SDL_GetPixelFormatName(format) + 16;
 }
-
-#endif
-
-/*
-
-MODULE=Neverhood::App  PACKAGE=Neverhood::App  PREFIX=App_
-
-void
-App_init ()
-
-void
-App_run ()
-
-void
-App_stop ()
-
-void
-App_restart ()
-
-void
-App_set_texture_surface_rect (int x, int y, int w, int h)
-
-void
-App_set_frame_ticks (double ticks)
-
-void
-App_set_palette (SDL_Palette* palette)
-
-void
-App_set_render_color (Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-
-void
-App_render_rect (SDL_Rect* rect)
-
-void
-App_render_bounds (SDL_Rect* bounds)
-
-# */

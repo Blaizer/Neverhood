@@ -47,3 +47,39 @@ char* App_get_option_PV (const char* name);
 void App_set_texture_surface_rect (int x, int y, int w, int h);
 void App_set_vsync (bool vsync);
 void App_render_texture_surface ();
+
+/*
+
+MODULE=Neverhood::App  PACKAGE=Neverhood::App  PREFIX=App_
+
+void
+App_init ()
+
+void
+App_run ()
+
+void
+App_stop ()
+
+void
+App_restart ()
+
+void
+App_set_texture_surface_rect (int x, int y, int w, int h)
+
+void
+App_set_frame_ticks (double ticks)
+
+void
+App_set_palette (SDL_Palette* palette)
+
+void
+App_set_render_color (Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+
+void
+App_render_rect (SDL_Rect* rect)
+
+void
+App_render_bounds (SDL_Rect* bounds)
+
+# */

@@ -6,12 +6,12 @@ rw window_open =>;
 
 method load ($file) {
 	my $hash = retrieve($file);
-	for ($self->meta->get_attribute_list) {
-		my $val = valid_value($hash->$_);
-		next if !$val;
-		my $set = "set_$_";
-		$self->$set($val);
-	}
+	$hash && ref $hash eq "HASH"
+		or die "Couldn't load $file";
+
+	$self->new(
+		map valid_value($hash->{$_}), $self->meta->get_attribute_list,
+	);
 }
 
 method save ($file) {
@@ -22,12 +22,12 @@ method save ($file) {
 }
 
 func valid_value ($val) {
-	return if !$val;
-	!ref $val
-	||
-	(ref $val eq "ARRAY" && @$val || ref $val eq "HASH" && %$val)
-		? ($_ => $val)
-		: ();
+	return if !$val
+		or ref $val and not
+			ref $val eq "ARRAY" && @$val ||
+			ref $val eq "HASH"  && %$val;
+
+	($_ => $val);
 }
 
 } 1;

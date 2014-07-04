@@ -27,7 +27,6 @@ Mouse::Exporter->setup_import_methods(
 		qw( maybe ),
 		qw( max min weaken blessed ),
 	],
-	also => [ 'Neverhood::Base::Declare' ],
 );
 
 BEGIN {
@@ -56,7 +55,7 @@ BEGIN {
 		if (!$boot_symbol_ref) {
 			# dying during begin looks ugly, so let's do this
 			eval { die "Can't find '$boot_name' symbol in $file" };
-			exit print $@;
+			exit print STDERR $@;
 		}
 
 		# install the symbol and call it
