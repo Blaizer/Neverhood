@@ -41,7 +41,7 @@ ok archive($magic . $id . $ext_data_size . $file_size . $file_count . "x" x 8, "
 
 $ext_data_size = pack "s", 64;
 $file_size = pack "l<", 16;
-$file_count = pack "l<", 178956968
+$file_count = pack "l<", 178956968;
 
 ok !archive($magic . $id . $ext_data_size . $file_size . $file_count, "With ext_data file count too high, will overflow");
 
@@ -49,7 +49,7 @@ $file_count = pack "l<", 178956967;
 
 ok !archive($magic . $id . $ext_data_size . $file_size . $file_count, "With ext_data header ok but keys too short");
 
-$file_count = pack "l<", 178956968
+$file_count = pack "l<", 178956968;
 $ext_data_size = pack "s", 32;
 
 ok !archive($magic . $id . $ext_data_size . $file_size . $file_count, "With lower ext_data header ok but keys too short");
